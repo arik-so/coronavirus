@@ -31,8 +31,14 @@
         <label for="delta_radio">Delta</label>
 
     </div>
+    <input id="cruise_ship" type="checkbox" v-model="includeCruiseShip"/>
+    <label for="cruise_ship" style="font-style: italic;">Cruise Ship (Modifier for Others)</label>
+    <br/>
+    <input id="cruise_ship_descendants" type="checkbox" v-model="includeCruiseShipDescendants"/>
+    <label for="cruise_ship_descendants" style="font-style: italic;">Abroad from Cruise Ship (Modifier)</label>
+    <br/>
     <input id="select_all_checkbox" type="checkbox" v-model="selectAll" :indeterminate.prop="partialSelection"/>
-    <label for="select_all_checkbox">Select All</label>
+    <label for="select_all_checkbox" style="font-weight: bold;">Select All Countries</label>
     <br/>
     <span v-for="country in countries">
         <input type="checkbox" v-bind:id="country" v-bind:value="country" v-model="checkedCountries"/>
@@ -178,7 +184,9 @@
                 showCases: true,
                 showDeaths: true,
                 axes: 'joint',
-                derivative: false
+                derivative: false,
+                includeCruiseShip: false,
+                includeCruiseShipDescendants: false,
             },
             watch: {
                 selectAll: function (newValue) {
@@ -235,7 +243,14 @@
                     {
                         for (const currentLocation of this.cases) {
                             const currentCountry = currentLocation['Country/Region'];
+                            const currentState = currentLocation['Province/State'];
                             if (!this.checkedCountries.includes(currentCountry)) {
+                                continue;
+                            }
+                            if (!this.includeCruiseShip && currentState === 'Diamond Princess cruise ship') {
+                                continue;
+                            }
+                            if (!this.includeCruiseShipDescendants && currentState.includes('From Diamond Princess')) {
                                 continue;
                             }
                             let dateIndex = 0;
