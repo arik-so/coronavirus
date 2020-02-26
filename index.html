@@ -99,12 +99,17 @@
             countryStates[currentCountry].add(currentState);
         }
 
+        const ticks = {
+            beginAtZero: true,
+            callback: function (value) {
+                return Number(value).toLocaleString();
+            }
+        };
+
         const doubleAxes = [
             {
                 id: 'cases-axis',
-                ticks: {
-                    beginAtZero: true
-                },
+                ticks,
                 scaleLabel: {
                     display: true,
                     labelString: 'Cases'
@@ -114,9 +119,7 @@
             },
             {
                 id: 'deaths-axis',
-                ticks: {
-                    beginAtZero: true
-                },
+                ticks,
                 position: 'right',
                 scaleLabel: {
                     display: true,
@@ -125,11 +128,7 @@
                 color: 'red'
             }
         ];
-        const singleAxis = [{
-            ticks: {
-                beginAtZero: true
-            },
-        }];
+        const singleAxis = [{ticks}];
 
 
         // initialize data set context
@@ -164,7 +163,13 @@
                 tooltips: {
                     // mode: 'x',
                     mode: 'index',
-                    intersect: false
+                    intersect: false,
+                    callbacks: {
+                        label: function(tooltipItem, data) {
+                            const value = tooltipItem.value;
+                            return Number(value).toLocaleString();
+                        }
+                    }
                 }
             }
         };
