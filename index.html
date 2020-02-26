@@ -11,9 +11,11 @@
 <div id="app">
     {{message}}
     <span v-for="country in countries">
-        <input type="checkbox" v-bind:id="country" v-bind:value="country" v-model="checkedCountries" /><label v-bind:for="country">{{country}}</label><br/>
+        <input type="checkbox" v-bind:id="country" v-bind:value="country" v-model="checkedCountries"/><label
+            v-bind:for="country">{{country}}</label><br/>
     </span>
-    <span>Checked countries: {{checkedCountries}}</span>
+    <span>Checked countries ({{selectionLength}}): {{checkedCountries}}</span>
+    <p>{{timeSeries}}</p>
 </div>
 <script type="application/javascript">
 
@@ -55,6 +57,38 @@
                 countries,
                 cases: data,
                 checkedCountries: []
+            },
+            computed: {
+                selectionLength: function () {
+                    return this.checkedCountries.length;
+                },
+                timeSeries: function () {
+                    const yValues = [];
+                    const dates = {};
+                    console.log(this.cases);
+                    for (const currentLocation of this.cases) {
+                        const currentCountry = currentLocation['Country/Region'];
+                        const currentState = currentLocation['Province/State'];
+                        if (!this.checkedCountries.includes(currentCountry)) {
+                            continue;
+                        }
+                        console.log('included country!', currentCountry);
+                        let dateIndex = 0;
+                        for (const [key, value] of Object.entries(currentLocation)) {
+                            if(['Province/State', 'Country/Region', 'Lat', 'Long'].includes(key)){
+                                continue;
+                            }
+                            const currentDate = key;
+                            const currentCount = parseInt(value);
+                            dates[currentDate] = dates[currentDate] || 0;
+                            yValues[dateIndex] = yValues[dateIndex] || 0;
+                            dates[currentDate] += currentCount;
+                            yValues[dateIndex] += currentCount;
+                            dateIndex++;
+                        }
+                    }
+                    return yValues;
+                }
             }
         })
 
