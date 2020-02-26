@@ -69,12 +69,6 @@
             countryStates[currentCountry].add(currentState);
         }
 
-        // debugger
-
-        console.dir(countries);
-        console.dir(states);
-
-
         const doubleAxes = [
             {
                 id: 'cases-axis',
@@ -115,7 +109,6 @@
                         borderColor: 'rgba(240, 200, 50, 1)',
                         fill: false,
                         cubicInterpolationMode: 'monotone',
-                        yAxisID: 'cases-axis'
                     },
                     {
                         label: 'Deaths',
@@ -124,7 +117,6 @@
                         borderColor: 'rgba(220, 50, 50, 1)',
                         fill: false,
                         cubicInterpolationMode: 'monotone',
-                        yAxisID: 'deaths-axis'
                     }
                 ],
             },
@@ -231,7 +223,6 @@
                     {
                         for (const currentLocation of this.deaths) {
                             const currentCountry = currentLocation['Country/Region'];
-                            const currentState = currentLocation['Province/State'];
                             if (!this.checkedCountries.includes(currentCountry)) {
                                 continue;
                             }
@@ -261,7 +252,6 @@
                     } else {
                         chartConfig.data.datasets[1].data = [];
                     }
-
 
                     graph.update();
 
