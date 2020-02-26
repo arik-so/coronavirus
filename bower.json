@@ -1,0 +1,24 @@
+{
+  "name": "coronavirus",
+  "description": "",
+  "main": "index.js",
+  "authors": [
+    "Arik Sosman <git@arik.io>"
+  ],
+  "license": "ISC",
+  "homepage": "https://github.com/arik-so/coronavirus",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "axios": "^0.19.2",
+    "chart.js": "^2.9.3",
+    "csvtojson": "^2.0.10",
+    "vue": "^2.6.11"
+  }
+}

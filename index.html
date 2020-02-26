@@ -6,8 +6,12 @@
     <script src="bower_components/axios/dist/axios.min.js"></script>
     <script src="bower_components/csvtojson/browser/csvtojson.min.js"></script>
     <script src="bower_components/vue/dist/vue.min.js"></script>
+    <script src="bower_components/chart.js/dist/Chart.bundle.min.js"></script>
 </head>
 <body>
+<div style="float: right;">
+    <canvas id="graph_canvas" width="640" height="480"></canvas>
+</div>
 <div id="app">
     <input id="select_all_checkbox" type="checkbox" v-model="selectAll" :indeterminate.prop="partialSelection"/>
     <label for="select_all_checkbox">Select All</label>
@@ -19,6 +23,7 @@
     </span>
     <span>Checked countries ({{selectionLength}}): {{checkedCountries}}</span>
     <p>{{timeSeries}}</p>
+    <span style="clear: both;"></span>
 </div>
 <script type="application/javascript">
 
@@ -53,6 +58,33 @@
         console.dir(countries);
         console.dir(states);
 
+
+        // initialize data set context
+        const ctx = document.getElementById('graph_canvas').getContext('2d');
+        const chartConfig = {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Case Count',
+                    data: [],
+                    backgroundColor: 'rgb(0, 0, 0)',
+                    borderColor: 'rgba(255, 50, 50, 1)',
+                    fill: false
+                }]
+            },
+            options: {
+                scales: {
+                    yAxes: [{
+                        ticks: {
+                            beginAtZero: true
+                        }
+                    }]
+                }
+            }
+        };
+        const graph = new Chart(ctx, chartConfig);
+
         const app = new Vue({
             el: '#app',
             data: {
@@ -61,7 +93,7 @@
                 cases: data,
                 checkedCountries: [],
                 selectAll: false,
-                partialSelection: false
+                partialSelection: false,
             },
             watch: {
                 selectAll: function (newValue) {
@@ -93,20 +125,20 @@
                 timeSeries: function () {
                     const yValues = [];
                     const dates = {};
-                    console.log(this.cases);
+                    const dateLabels = new Set();
                     for (const currentLocation of this.cases) {
                         const currentCountry = currentLocation['Country/Region'];
                         const currentState = currentLocation['Province/State'];
                         if (!this.checkedCountries.includes(currentCountry)) {
                             continue;
                         }
-                        console.log('included country!', currentCountry);
                         let dateIndex = 0;
                         for (const [key, value] of Object.entries(currentLocation)) {
                             if (['Province/State', 'Country/Region', 'Lat', 'Long'].includes(key)) {
                                 continue;
                             }
                             const currentDate = key;
+                            dateLabels.add(currentDate);
                             const currentCount = parseInt(value);
                             dates[currentDate] = dates[currentDate] || 0;
                             yValues[dateIndex] = yValues[dateIndex] || 0;
@@ -115,6 +147,11 @@
                             dateIndex++;
                         }
                     }
+
+                    chartConfig.data.labels = Array.from(dateLabels);
+                    chartConfig.data.datasets[0].data = yValues;
+                    graph.update();
+
                     return yValues;
                 }
             }
