@@ -9,10 +9,13 @@
 </head>
 <body>
 <div id="app">
-    {{message}}
+    <input id="select_all_checkbox" type="checkbox" v-model="selectAll" :indeterminate.prop="partialSelection"/>
+    <label for="select_all_checkbox">Select All</label>
+    <br/>
     <span v-for="country in countries">
-        <input type="checkbox" v-bind:id="country" v-bind:value="country" v-model="checkedCountries"/><label
-            v-bind:for="country">{{country}}</label><br/>
+        <input type="checkbox" v-bind:id="country" v-bind:value="country" v-model="checkedCountries"/>
+        <label v-bind:for="country">{{country}}</label>
+        <br/>
     </span>
     <span>Checked countries ({{selectionLength}}): {{checkedCountries}}</span>
     <p>{{timeSeries}}</p>
@@ -56,7 +59,32 @@
                 message: 'Hello Vue!',
                 countries,
                 cases: data,
-                checkedCountries: []
+                checkedCountries: [],
+                selectAll: false,
+                partialSelection: false
+            },
+            watch: {
+                selectAll: function (newValue) {
+                    if (newValue) {
+                        this.checkedCountries = Array.from(this.countries);
+                        this.partialSelection = false;
+                    } else {
+                        this.checkedCountries = [];
+                    }
+                },
+                checkedCountries: function (newValue) {
+                    const selectedCountryCount = newValue.length;
+                    const totalCountryCount = this.countries.size;
+                    if (selectedCountryCount === 0) {
+                        this.selectAll = false;
+                        this.partialSelection = false;
+                    } else if (selectedCountryCount === totalCountryCount) {
+                        this.selectAll = true;
+                        this.partialSelection = false;
+                    } else {
+                        this.partialSelection = true;
+                    }
+                }
             },
             computed: {
                 selectionLength: function () {
@@ -75,7 +103,7 @@
                         console.log('included country!', currentCountry);
                         let dateIndex = 0;
                         for (const [key, value] of Object.entries(currentLocation)) {
-                            if(['Province/State', 'Country/Region', 'Lat', 'Long'].includes(key)){
+                            if (['Province/State', 'Country/Region', 'Lat', 'Long'].includes(key)) {
                                 continue;
                             }
                             const currentDate = key;
