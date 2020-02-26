@@ -130,6 +130,21 @@ def plot_cases(days, cases):
         exponential_params, _ = curve_fit(exponential, exponential_x, exponential_data)
         return exponential_params
 
+
+    def plot_delta():
+        derivative = []
+        derivative_x = range(1, data_x[-1] + 1)
+        for x in derivative_x:
+            previous_value = cases[x-1]
+            current_value = cases[x]
+            delta = current_value - previous_value
+            derivative.append(delta)
+        derivative_dates = extended_dates[derivative_x[0]:derivative_x[-1]+1]
+        plt.plot(derivative_dates, derivative, c='blue')
+
+    plot_delta()
+
+
     exponential_params = calculate_exponential_regression()
     exponential_extrapolation_x = range(exponential_x[0], exponential_x[-1] + extrapolation_size + 1)
     exponential_extrapolation_y = exponential(exponential_extrapolation_x, *exponential_params)
@@ -155,7 +170,7 @@ def plot_cases(days, cases):
     composite_extrapolation_x = range(0, data_x[-1] + 1 + extrapolation_size)
     composite_extrapolation_y = composite(composite_extrapolation_x, *composite_params)
     composite_extrapolation_dates = extended_dates[composite_extrapolation_x[0]:composite_extrapolation_x[-1]+1]
-    plt.plot(composite_extrapolation_dates, composite_extrapolation_y, c='red')
+    # plt.plot(composite_extrapolation_dates, composite_extrapolation_y, c='red')
 
 
     end_date_delta += extrapolation_size
