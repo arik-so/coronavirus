@@ -21,8 +21,14 @@
 
         <input type="radio" id="joint_axis_radio" name="axes" v-model="axes" value="joint"/>
         <label for="joint_axis_radio">Joint Axis</label>
-        <input type="radio" id="separate_axes_radio" name="axes" v-model="axes" value="separate" :disabled="!canSeparateAxes"/>
+        <input type="radio" id="separate_axes_radio" name="axes" v-model="axes" value="separate"
+               :disabled="!canSeparateAxes"/>
         <label for="separate_axes_radio">Separate Axes</label>
+
+        <input type="radio" id="total_radio" name="derivative" v-model="derivative" v-bind:value="false"/>
+        <label for="total_radio">Total</label>
+        <input type="radio" id="delta_radio" name="derivative" v-model="derivative" v-bind:value="true"/>
+        <label for="delta_radio">Delta</label>
 
     </div>
     <input id="select_all_checkbox" type="checkbox" v-model="selectAll" :indeterminate.prop="partialSelection"/>
@@ -38,6 +44,16 @@
     <span style="clear: both;"></span>
 </div>
 <script type="application/javascript">
+
+    function calculateDerivative(values) {
+        const derivative = [0];
+        let previousValue = 0;
+        for (const currentValue of values) {
+            derivative.push(currentValue - previousValue);
+            previousValue = currentValue;
+        }
+        return derivative;
+    }
 
     (async () => {
         const confirmedResponse = await axios({
@@ -156,7 +172,8 @@
                 partialSelection: false,
                 showCases: true,
                 showDeaths: true,
-                axes: 'joint'
+                axes: 'joint',
+                derivative: false
             },
             watch: {
                 selectAll: function (newValue) {
@@ -193,8 +210,8 @@
                     }
                     graph.update();
                 },
-                canSeparateAxes: function(newValue) {
-                    if(!newValue){
+                canSeparateAxes: function (newValue) {
+                    if (!newValue) {
                         this.axes = 'joint';
                     }
                 }
@@ -208,8 +225,8 @@
                 },
                 timeSeries: function () {
                     const dates = {};
-                    const confirmedYValues = [];
-                    const deadYValues = [];
+                    let confirmedYValues = [];
+                    let deadYValues = [];
                     {
                         for (const currentLocation of this.cases) {
                             const currentCountry = currentLocation['Country/Region'];
@@ -248,6 +265,11 @@
                                 dateIndex++;
                             }
                         }
+                    }
+
+                    if (this.derivative) {
+                        confirmedYValues = calculateDerivative(confirmedYValues);
+                        deadYValues = calculateDerivative(deadYValues);
                     }
 
                     if (this.showCases) {
