@@ -18,13 +18,13 @@
         <label for="cases_checkbox">Cases</label>
         <input id="deaths_checkbox" type="checkbox" v-model="showDeaths"/>
         <label for="deaths_checkbox">Deaths</label>
-
+        <br/>
         <input type="radio" id="joint_axis_radio" name="axes" v-model="axes" value="joint"/>
         <label for="joint_axis_radio">Joint Axis</label>
         <input type="radio" id="separate_axes_radio" name="axes" v-model="axes" value="separate"
                :disabled="!canSeparateAxes"/>
         <label for="separate_axes_radio">Separate Axes</label>
-
+        <br/>
         <input type="radio" id="total_radio" name="derivative" v-model="derivative" v-bind:value="false"/>
         <label for="total_radio">Total</label>
         <input type="radio" id="delta_radio" name="derivative" v-model="derivative" v-bind:value="true"/>
