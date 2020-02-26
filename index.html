@@ -51,6 +51,14 @@
         const confirmedCases = await csv({output: 'json'}).fromString(confirmedResponse.data);
         const deadCases = await csv({output: 'json'}).fromString(deadResponse.data);
 
+        const dateLabels = new Set();
+        for (const key of Object.keys(confirmedCases[0])) {
+            if (['Province/State', 'Country/Region', 'Lat', 'Long'].includes(key)) {
+                continue;
+            }
+            dateLabels.add(key);
+        }
+
         // parse the data into what we need
         const countries = new Set();
         const states = new Set();
@@ -100,7 +108,7 @@
         const chartConfig = {
             type: 'line',
             data: {
-                labels: [],
+                labels: Array.from(dateLabels),
                 datasets: [
                     {
                         label: 'Case Count',
@@ -193,14 +201,11 @@
                 },
                 timeSeries: function () {
                     const dates = {};
-                    const dateLabels = new Set();
-
                     const confirmedYValues = [];
                     const deadYValues = [];
                     {
                         for (const currentLocation of this.cases) {
                             const currentCountry = currentLocation['Country/Region'];
-                            const currentState = currentLocation['Province/State'];
                             if (!this.checkedCountries.includes(currentCountry)) {
                                 continue;
                             }
@@ -210,7 +215,6 @@
                                     continue;
                                 }
                                 const currentDate = key;
-                                dateLabels.add(currentDate);
                                 const currentCount = parseInt(value);
                                 dates[currentDate] = dates[currentDate] || 0;
                                 confirmedYValues[dateIndex] = confirmedYValues[dateIndex] || 0;
@@ -238,8 +242,6 @@
                             }
                         }
                     }
-
-                    chartConfig.data.labels = Array.from(dateLabels);
 
                     if (this.showCases) {
                         chartConfig.data.datasets[0].data = confirmedYValues;
