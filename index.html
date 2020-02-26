@@ -11,8 +11,9 @@
 <div id="app">
     {{message}}
     <span v-for="country in countries">
-        <input type="checkbox" v-bind:id="country" /><label v-bind:for="country">{{country}}</label><br/>
+        <input type="checkbox" v-bind:id="country" v-bind:value="country" v-model="checkedCountries" /><label v-bind:for="country">{{country}}</label><br/>
     </span>
+    <span>Checked countries: {{checkedCountries}}</span>
 </div>
 <script type="application/javascript">
 
@@ -51,7 +52,9 @@
             el: '#app',
             data: {
                 message: 'Hello Vue!',
-                countries
+                countries,
+                cases: data,
+                checkedCountries: []
             }
         })
 
