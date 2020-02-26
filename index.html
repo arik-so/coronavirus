@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="bower_components/axios/dist/axios.min.js"></script>
+    <script src="bower_components/csvtojson/browser/csvtojson.min.js"></script>
+    <script src="bower_components/vue/dist/vue.min.js"></script>
+</head>
+<body>
+<div id="app">
+    {{message}}
+    <span v-for="country in countries">
+        <input type="checkbox" v-bind:id="country" /><label v-bind:for="country">{{country}}</label><br/>
+    </span>
+</div>
+<script type="application/javascript">
+
+    (async () => {
+        const response = await axios({
+            method: 'get',
+            url: 'docs/data/covid_confirmed.csv',
+        });
+        const csvString = response.data;
+        const data = await csv({output: 'json'}).fromString(csvString);
+
+        // parse the data into what we need
+        const countries = new Set();
+        const states = new Set();
+        const countriesByState = {}; // look up a state's country
+        const countryStates = {}; // enumerate up all states in a country
+        for (const location of data) {
+            const currentCountry = location['Country/Region'];
+            const currentState = location['Province/State'];
+            countries.add(currentCountry);
+            if (currentState.length < 1) {
+                continue;
+            }
+            states.add(currentState);
+            countriesByState[currentState] = currentCountry;
+            countryStates[currentCountry] = countryStates[currentCountry] || new Set();
+            countryStates[currentCountry].add(currentState);
+        }
+
+        // debugger
+
+        console.dir(countries);
+        console.dir(states);
+
+        const app = new Vue({
+            el: '#app',
+            data: {
+                message: 'Hello Vue!',
+                countries
+            }
+        })
+
+    })();
+
+
+</script>
+</body>
+</html>
