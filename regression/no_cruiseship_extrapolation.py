@@ -77,7 +77,7 @@ def plot_cases(days, cases):
     model_beginning_offset = 28
     data_x = range(0, len(cases))
     linear_x = range(0, model_beginning_offset)
-    exponential_x = range(model_beginning_offset, len(data_x))
+    exponential_x = range(0, len(data_x))
 
     def linear(x, a, b):
         return a * x + b
@@ -87,6 +87,9 @@ def plot_cases(days, cases):
         # return np.add(a, np.multiply(b, np.exp(np.multiply(x, c))))
         # return a * x * x + b
         return a * np.exp(b*(x+c))
+
+    def composite(x, a, b, c, d, e):
+        return a + b * x + c * np.exp(d*x + e)
 
     def calculate_linear_regression():
         # we need to project the first 28 cases days to a linear scale
@@ -111,12 +114,12 @@ def plot_cases(days, cases):
     linear_extrapolation_x = range(linear_x[0], data_x[-1]+1)
     linear_extrapolation_y = linear(linear_extrapolation_x, *linear_regression_params)
     linear_extrapolation_dates = extended_dates[linear_extrapolation_x[0]:linear_extrapolation_x[-1]+1]
-    plt.plot(linear_extrapolation_dates, linear_extrapolation_y, 'g-')
+    # plt.plot(linear_extrapolation_dates, linear_extrapolation_y, 'g-')
 
 
     # now, let's subtract the linear extrapolation from the case values
     non_linear_filtered_cases = np.maximum(0, np.round(np.subtract(cases, linear_extrapolation_y)))
-    plt.scatter(dates, non_linear_filtered_cases, c='red')
+    # plt.scatter(dates, non_linear_filtered_cases, c='red')
 
     # and now we can calculate an exponential regression based on the result
     def calculate_exponential_regression():
@@ -131,11 +134,28 @@ def plot_cases(days, cases):
     exponential_extrapolation_x = range(exponential_x[0], exponential_x[-1] + extrapolation_size + 1)
     exponential_extrapolation_y = exponential(exponential_extrapolation_x, *exponential_params)
     exponential_extrapolation_dates = extended_dates[exponential_extrapolation_x[0]:exponential_extrapolation_x[-1]+1]
-    plt.plot(exponential_extrapolation_dates, exponential_extrapolation_y, 'b-')
+    # plt.plot(exponential_extrapolation_dates, exponential_extrapolation_y, 'b-')
+
+
+    # and now we can calculate an exponential regression based on the result
+    def calculate_composite_regression():
+        composite_x = data_x
+        composite_data = cases
+
+        params, _ = curve_fit(composite, composite_x, composite_data)
+        return params
+
 
 
     recombined_extrapolation_y = np.add(exponential(extrapolation_x, *exponential_params), linear(extrapolation_x, *linear_regression_params))
-    plt.scatter(extended_dates, recombined_extrapolation_y, c='blue')
+    # plt.plot(extended_dates, recombined_extrapolation_y, c='blue')
+
+
+    composite_params = calculate_composite_regression()
+    composite_extrapolation_x = range(0, data_x[-1] + 1 + extrapolation_size)
+    composite_extrapolation_y = composite(composite_extrapolation_x, *composite_params)
+    composite_extrapolation_dates = extended_dates[composite_extrapolation_x[0]:composite_extrapolation_x[-1]+1]
+    plt.plot(composite_extrapolation_dates, composite_extrapolation_y, c='red')
 
 
     end_date_delta += extrapolation_size
@@ -147,6 +167,11 @@ def plot_cases(days, cases):
     # plt.yscale('log')
     plt.grid(True)
     plt.show()
+
+
+
+
+
 
     return
 
