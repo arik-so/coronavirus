@@ -13,6 +13,12 @@
     <canvas id="graph_canvas" width="640" height="480"></canvas>
 </div>
 <div id="app">
+    <div style="float: right;">
+        <input id="cases_checkbox" type="checkbox" v-model="showCases"/>
+        <label for="cases_checkbox">Cases</label>
+        <input id="deaths_checkbox" type="checkbox" v-model="showDeaths"/>
+        <label for="deaths_checkbox">Deaths</label>
+    </div>
     <input id="select_all_checkbox" type="checkbox" v-model="selectAll" :indeterminate.prop="partialSelection"/>
     <label for="select_all_checkbox">Select All</label>
     <br/>
@@ -28,19 +34,23 @@
 <script type="application/javascript">
 
     (async () => {
-        const response = await axios({
+        const confirmedResponse = await axios({
             method: 'get',
             url: 'docs/data/covid_confirmed.csv',
         });
-        const csvString = response.data;
-        const data = await csv({output: 'json'}).fromString(csvString);
+        const deadResponse = await axios({
+            method: 'get',
+            url: 'docs/data/covid_dead.csv',
+        });
+        const confirmedCases = await csv({output: 'json'}).fromString(confirmedResponse.data);
+        const deadCases = await csv({output: 'json'}).fromString(deadResponse.data);
 
         // parse the data into what we need
         const countries = new Set();
         const states = new Set();
         const countriesByState = {}; // look up a state's country
         const countryStates = {}; // enumerate up all states in a country
-        for (const location of data) {
+        for (const location of confirmedCases) {
             const currentCountry = location['Country/Region'];
             const currentState = location['Province/State'];
             countries.add(currentCountry);
@@ -65,14 +75,24 @@
             type: 'line',
             data: {
                 labels: [],
-                datasets: [{
-                    label: 'Case Count',
-                    data: [],
-                    backgroundColor: 'rgb(0, 0, 0)',
-                    borderColor: 'rgba(255, 50, 50, 1)',
-                    fill: false,
-                    cubicInterpolationMode: 'monotone'
-                }]
+                datasets: [
+                    {
+                        label: 'Case Count',
+                        data: [],
+                        backgroundColor: 'rgb(0, 0, 0)',
+                        borderColor: 'rgba(255, 50, 50, 1)',
+                        fill: false,
+                        cubicInterpolationMode: 'monotone'
+                    },
+                    {
+                        label: 'Deaths',
+                        data: [],
+                        backgroundColor: 'rgb(0, 0, 0)',
+                        borderColor: 'rgba(50, 150, 50, 1)',
+                        fill: false,
+                        cubicInterpolationMode: 'monotone'
+                    }
+                ],
             },
             options: {
                 scales: {
@@ -91,10 +111,13 @@
             data: {
                 message: 'Hello Vue!',
                 countries,
-                cases: data,
+                cases: confirmedCases,
+                deaths: deadCases,
                 checkedCountries: [],
                 selectAll: false,
                 partialSelection: false,
+                showCases: true,
+                showDeaths: true
             },
             watch: {
                 selectAll: function (newValue) {
@@ -124,36 +147,71 @@
                     return this.checkedCountries.length;
                 },
                 timeSeries: function () {
-                    const yValues = [];
                     const dates = {};
                     const dateLabels = new Set();
-                    for (const currentLocation of this.cases) {
-                        const currentCountry = currentLocation['Country/Region'];
-                        const currentState = currentLocation['Province/State'];
-                        if (!this.checkedCountries.includes(currentCountry)) {
-                            continue;
-                        }
-                        let dateIndex = 0;
-                        for (const [key, value] of Object.entries(currentLocation)) {
-                            if (['Province/State', 'Country/Region', 'Lat', 'Long'].includes(key)) {
+
+                    const confirmedYValues = [];
+                    const deadYValues = [];
+                    {
+                        for (const currentLocation of this.cases) {
+                            const currentCountry = currentLocation['Country/Region'];
+                            const currentState = currentLocation['Province/State'];
+                            if (!this.checkedCountries.includes(currentCountry)) {
                                 continue;
                             }
-                            const currentDate = key;
-                            dateLabels.add(currentDate);
-                            const currentCount = parseInt(value);
-                            dates[currentDate] = dates[currentDate] || 0;
-                            yValues[dateIndex] = yValues[dateIndex] || 0;
-                            dates[currentDate] += currentCount;
-                            yValues[dateIndex] += currentCount;
-                            dateIndex++;
+                            let dateIndex = 0;
+                            for (const [key, value] of Object.entries(currentLocation)) {
+                                if (['Province/State', 'Country/Region', 'Lat', 'Long'].includes(key)) {
+                                    continue;
+                                }
+                                const currentDate = key;
+                                dateLabels.add(currentDate);
+                                const currentCount = parseInt(value);
+                                dates[currentDate] = dates[currentDate] || 0;
+                                confirmedYValues[dateIndex] = confirmedYValues[dateIndex] || 0;
+                                dates[currentDate] += currentCount;
+                                confirmedYValues[dateIndex] += currentCount;
+                                dateIndex++;
+                            }
+                        }
+                    }
+                    {
+                        for (const currentLocation of this.deaths) {
+                            const currentCountry = currentLocation['Country/Region'];
+                            const currentState = currentLocation['Province/State'];
+                            if (!this.checkedCountries.includes(currentCountry)) {
+                                continue;
+                            }
+                            let dateIndex = 0;
+                            for (const [key, value] of Object.entries(currentLocation)) {
+                                if (['Province/State', 'Country/Region', 'Lat', 'Long'].includes(key)) {
+                                    continue;
+                                }
+                                const currentCount = parseInt(value);
+                                deadYValues[dateIndex] = deadYValues[dateIndex] || 0;
+                                deadYValues[dateIndex] += currentCount;
+                                dateIndex++;
+                            }
                         }
                     }
 
                     chartConfig.data.labels = Array.from(dateLabels);
-                    chartConfig.data.datasets[0].data = yValues;
+
+                    if (this.showCases) {
+                        chartConfig.data.datasets[0].data = confirmedYValues;
+                    } else {
+                        chartConfig.data.datasets[0].data = [];
+                    }
+
+                    if (this.showDeaths) {
+                        chartConfig.data.datasets[1].data = deadYValues;
+                    } else {
+                        chartConfig.data.datasets[1].data = [];
+                    }
+
                     graph.update();
 
-                    return yValues;
+                    return confirmedYValues;
                 }
             }
         })
