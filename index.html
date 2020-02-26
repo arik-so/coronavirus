@@ -18,6 +18,12 @@
         <label for="cases_checkbox">Cases</label>
         <input id="deaths_checkbox" type="checkbox" v-model="showDeaths"/>
         <label for="deaths_checkbox">Deaths</label>
+
+        <input type="radio" id="joint_axis_radio" name="axes" v-model="axes" value="joint"/>
+        <label for="joint_axis_radio">Joint Axis</label>
+        <input type="radio" id="separate_axes_radio" name="axes" v-model="axes" value="separate"/>
+        <label for="separate_axes_radio">Separate Axes</label>
+
     </div>
     <input id="select_all_checkbox" type="checkbox" v-model="selectAll" :indeterminate.prop="partialSelection"/>
     <label for="select_all_checkbox">Select All</label>
@@ -69,6 +75,33 @@
         console.dir(states);
 
 
+        const doubleAxes = [
+            {
+                id: 'cases-axis',
+                ticks: {
+                    beginAtZero: true
+                },
+                labelString: 'Cases',
+                color: 'orange'
+            },
+            {
+                id: 'deaths-axis',
+                ticks: {
+                    beginAtZero: true
+                },
+                position: 'right',
+                labelString: 'Deaths',
+                color: 'red'
+            }
+        ];
+        const singleAxis = [{
+            ticks: {
+                beginAtZero: true
+            },
+        }];
+
+
+
         // initialize data set context
         const ctx = document.getElementById('graph_canvas').getContext('2d');
         const chartConfig = {
@@ -82,7 +115,8 @@
                         backgroundColor: 'rgb(0, 0, 0)',
                         borderColor: 'rgba(240, 200, 50, 1)',
                         fill: false,
-                        cubicInterpolationMode: 'monotone'
+                        cubicInterpolationMode: 'monotone',
+                        yAxisID: 'cases-axis'
                     },
                     {
                         label: 'Deaths',
@@ -90,21 +124,21 @@
                         backgroundColor: 'rgb(0, 0, 0)',
                         borderColor: 'rgba(220, 50, 50, 1)',
                         fill: false,
-                        cubicInterpolationMode: 'monotone'
+                        cubicInterpolationMode: 'monotone',
+                        yAxisID: 'deaths-axis'
                     }
                 ],
             },
             options: {
                 scales: {
-                    yAxes: [{
-                        ticks: {
-                            beginAtZero: true
-                        }
-                    }]
+                    yAxes: doubleAxes
                 }
             }
         };
         const graph = new Chart(ctx, chartConfig);
+
+
+
 
         const app = new Vue({
             el: '#app',
@@ -117,7 +151,8 @@
                 selectAll: false,
                 partialSelection: false,
                 showCases: true,
-                showDeaths: true
+                showDeaths: true,
+                axes: 'joint'
             },
             watch: {
                 selectAll: function (newValue) {
@@ -140,6 +175,19 @@
                     } else {
                         this.partialSelection = true;
                     }
+                },
+                axes: function (newValue) {
+                    if (newValue === 'joint') {
+                        // remove second y axis
+                        chartConfig.options.scales.yAxes = singleAxis;
+                        delete chartConfig.data.datasets[0].yAxisID;
+                        delete chartConfig.data.datasets[1].yAxisID;
+                    }else{
+                        chartConfig.options.scales.yAxes = doubleAxes;
+                        chartConfig.data.datasets[0].yAxisID = doubleAxes[0].id;
+                        chartConfig.data.datasets[1].yAxisID = doubleAxes[1].id;
+                    }
+                    graph.update();
                 }
             },
             computed: {
