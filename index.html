@@ -42,6 +42,8 @@
             <div id="regression_details" v-if="regression === 'exponential'">
                 <span>Extrapolation Size: <input type="range" v-model="extrapolationSize" min="2" max="10"/>{{extrapolationSize}}</span>
                 <br/>
+                <span>Model Offset: <input type="range" v-model="modelOffset" v-bind:min="regressionOffsetMinimum" v-bind:max="regressionOffsetMaximum"/>{{modelOffset}}</span>
+                <br/>
                 <span>Equation: f(x) = {{regressionSeries.cases.equation[0]}}e<sup>{{regressionSeries.cases.equation[1]}}x</sup></span>
                 <br/>
                 <span>R<sup>2</sup>: {{regressionSeries.cases.r2}}</span>
@@ -220,6 +222,9 @@
                 includeCruiseShip: false,
                 includeCruiseShipDescendants: false,
                 regression: null,
+                regressionOffsetMinimum: 0,
+                regressionOffsetMaximum: dateLabels.size-3,
+                modelOffset: 0,
                 extrapolationSize: 5,
             },
             watch: {
@@ -358,7 +363,9 @@
                 },
                 regressionSeries: function () {
                     const confirmedYValues = this.timeSeries[0];
+                    const confirmedExtrapolationBasis = confirmedYValues.slice(this.modelOffset);
                     const deadYValues = this.timeSeries[1];
+                    const deadExtrapolationBasis = deadYValues.slice(this.modelOffset);
 
                     const regressionDetails = {};
 
@@ -378,12 +385,18 @@
 
                         console.dir(regressionRange);
 
-                        const regressionData = confirmedYValues.map((value, index) => [index, value]);
+                        const regressionData = confirmedExtrapolationBasis.map((value, index) => [index, value]);
                         const regressionParams = regression.exponential(regressionData);
-                        const extrapolationValues = regressionRange.map(regressionParams.predict);
+                        const extrapolationValues = regressionRange.map(y => regressionParams.predict(y-this.modelOffset));
                         console.dir(regressionData);
                         console.dir(regressionParams);
-                        const extrapolationY = extrapolationValues.map(([index, value]) => Math.round(value));
+                        const extrapolationY = extrapolationValues.map(([x, value], index) => {
+                            if(index < this.modelOffset){
+                                console.log('x:', x, 'index:', index, 'model offset', this.modelOffset);
+                                return null;
+                            }
+                            return Math.round(value);
+                        });
                         chartConfig.data.datasets[2].data = extrapolationY;
                         console.dir(extrapolationY);
                         regressionDetails.cases = regressionParams;
