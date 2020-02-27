@@ -40,9 +40,9 @@
         </div>
         <div id="details">
             <div id="regression_details" v-if="regression === 'exponential'">
-                <span>Equation: {{regressionSeries.cases.string}}</span>
+                <span>Equation: f(x) = {{regressionSeries.cases.equation[0]}}e<sup>{{regressionSeries.cases.equation[1]}}x</sup></span>
                 <br/>
-                <span>R^2: {{regressionSeries.cases.r2}}</span>
+                <span>R<sup>2</sup>: {{regressionSeries.cases.r2}}</span>
             </div>
         </div>
 
