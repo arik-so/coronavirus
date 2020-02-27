@@ -15,27 +15,36 @@
 </div>
 <div id="app">
     <div style="float: right;">
-        <input id="cases_checkbox" type="checkbox" v-model="showCases"/>
-        <label for="cases_checkbox">Cases</label>
-        <input id="deaths_checkbox" type="checkbox" v-model="showDeaths"/>
-        <label for="deaths_checkbox">Deaths</label>
-        <br/>
-        <input type="radio" id="joint_axis_radio" name="axes" v-model="axes" value="joint"/>
-        <label for="joint_axis_radio">Joint Axis</label>
-        <input type="radio" id="separate_axes_radio" name="axes" v-model="axes" value="separate"
-               :disabled="!canSeparateAxes"/>
-        <label for="separate_axes_radio">Separate Axes</label>
-        <br/>
-        <input type="radio" id="total_radio" name="derivative" v-model="derivative" v-bind:value="false"/>
-        <label for="total_radio">Total</label>
-        <input type="radio" id="delta_radio" name="derivative" v-model="derivative" v-bind:value="true"/>
-        <label for="delta_radio">Delta</label>
-        <br/>
-        <select id="regression" v-model="regression">
-            <option v-bind:value="null">Choose Regression Model</option>
-            <option value="exponential">Exponential</option>
-            <option value="logistic" disabled>Logistic</option>
-        </select>
+        <div id="config">
+            <input id="cases_checkbox" type="checkbox" v-model="showCases"/>
+            <label for="cases_checkbox">Cases</label>
+            <input id="deaths_checkbox" type="checkbox" v-model="showDeaths"/>
+            <label for="deaths_checkbox">Deaths</label>
+            <br/>
+            <input type="radio" id="joint_axis_radio" name="axes" v-model="axes" value="joint"/>
+            <label for="joint_axis_radio">Joint Axis</label>
+            <input type="radio" id="separate_axes_radio" name="axes" v-model="axes" value="separate"
+                   :disabled="!canSeparateAxes"/>
+            <label for="separate_axes_radio">Separate Axes</label>
+            <br/>
+            <input type="radio" id="total_radio" name="derivative" v-model="derivative" v-bind:value="false"/>
+            <label for="total_radio">Total</label>
+            <input type="radio" id="delta_radio" name="derivative" v-model="derivative" v-bind:value="true"/>
+            <label for="delta_radio">Delta</label>
+            <br/>
+            <select id="regression" v-model="regression">
+                <option v-bind:value="null">Choose Regression Model</option>
+                <option value="exponential">Exponential</option>
+                <option value="logistic" disabled>Logistic</option>
+            </select>
+        </div>
+        <div id="details">
+            <div id="regression_details" v-if="regression === 'exponential'">
+                <span>Equation: {{regressionSeries.cases.string}}</span>
+                <br/>
+                <span>R^2: {{regressionSeries.cases.r2}}</span>
+            </div>
+        </div>
 
     </div>
     <input id="cruise_ship" type="checkbox" v-model="includeCruiseShip"/>
@@ -335,6 +344,16 @@
                         chartConfig.data.datasets[1].data = [];
                     }
 
+                    graph.update();
+
+                    return [confirmedYValues, deadYValues];
+                },
+                regressionSeries: function () {
+                    const confirmedYValues = this.timeSeries[0];
+                    const deadYValues = this.timeSeries[1];
+
+                    const regressionDetails = {};
+
                     chartConfig.data.labels = Array.from(dateLabels);
                     chartConfig.data.datasets[2].data = [];
                     if (this.regression === 'exponential') {
@@ -359,11 +378,11 @@
                         const extrapolationY = extrapolationValues.map(([index, value]) => value);
                         chartConfig.data.datasets[2].data = extrapolationY;
                         console.dir(extrapolationY);
+                        regressionDetails.cases = regressionParams;
                     }
 
                     graph.update();
-
-                    return [confirmedYValues, deadYValues];
+                    return regressionDetails;
                 }
             }
         })
