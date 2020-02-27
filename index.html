@@ -380,7 +380,7 @@
                         const extrapolationValues = regressionRange.map(regressionParams.predict);
                         console.dir(regressionData);
                         console.dir(regressionParams);
-                        const extrapolationY = extrapolationValues.map(([index, value]) => value);
+                        const extrapolationY = extrapolationValues.map(([index, value]) => Math.round(value));
                         chartConfig.data.datasets[2].data = extrapolationY;
                         console.dir(extrapolationY);
                         regressionDetails.cases = regressionParams;
