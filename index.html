@@ -344,6 +344,11 @@
                         chartConfig.data.datasets[1].data = [];
                     }
 
+                    if (!this.regression) {
+                        chartConfig.data.labels = Array.from(dateLabels);
+                        chartConfig.data.datasets[2].data = [];
+                    }
+
                     graph.update();
 
                     return [confirmedYValues, deadYValues];
