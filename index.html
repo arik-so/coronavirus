@@ -40,6 +40,8 @@
         </div>
         <div id="details">
             <div id="regression_details" v-if="regression === 'exponential'">
+                <span>Extrapolation Size: <input type="range" v-model="extrapolationSize" min="2" max="10"/>{{extrapolationSize}}</span>
+                <br/>
                 <span>Equation: f(x) = {{regressionSeries.cases.equation[0]}}e<sup>{{regressionSeries.cases.equation[1]}}x</sup></span>
                 <br/>
                 <span>R<sup>2</sup>: {{regressionSeries.cases.r2}}</span>
@@ -217,7 +219,8 @@
                 derivative: false,
                 includeCruiseShip: false,
                 includeCruiseShipDescendants: false,
-                regression: null
+                regression: null,
+                extrapolationSize: 5,
             },
             watch: {
                 selectAll: function (newValue) {
@@ -364,7 +367,7 @@
                     if (this.regression === 'exponential') {
                         const regressionDateLabels = Array.from(dateLabels);
                         const regressionRange = [];
-                        const extrapolationSize = 5;
+                        const extrapolationSize = Math.round(this.extrapolationSize);
                         for (let x = 0; x < confirmedYValues.length + extrapolationSize; x++) {
                             regressionRange.push(x);
                         }
