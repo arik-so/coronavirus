@@ -168,7 +168,8 @@
                     callbacks: {
                         label: function(tooltipItem, data) {
                             const value = tooltipItem.value;
-                            return Number(value).toLocaleString();
+                            const label = data.datasets[tooltipItem.datasetIndex].label;
+                            return `${label}: ${Number(value).toLocaleString()}`;
                         }
                     }
                 }
@@ -319,7 +320,7 @@
 
                     graph.update();
 
-                    return confirmedYValues;
+                    return [confirmedYValues, deadYValues];
                 }
             }
         })
