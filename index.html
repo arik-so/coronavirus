@@ -276,7 +276,14 @@
                     {
                         for (const currentLocation of this.deaths) {
                             const currentCountry = currentLocation['Country/Region'];
+                            const currentState = currentLocation['Province/State'];
                             if (!this.checkedCountries.includes(currentCountry)) {
+                                continue;
+                            }
+                            if (!this.includeCruiseShip && currentState === 'Diamond Princess cruise ship') {
+                                continue;
+                            }
+                            if (!this.includeCruiseShipDescendants && currentState.includes('From Diamond Princess')) {
                                 continue;
                             }
                             let dateIndex = 0;
