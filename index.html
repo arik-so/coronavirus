@@ -30,6 +30,12 @@
         <label for="total_radio">Total</label>
         <input type="radio" id="delta_radio" name="derivative" v-model="derivative" v-bind:value="true"/>
         <label for="delta_radio">Delta</label>
+        <br/>
+        <select id="regression" v-model="regression">
+            <option v-bind:value="null">Choose Regression Model</option>
+            <option value="exponential">Exponential</option>
+            <option value="logistic" disabled>Logistic</option>
+        </select>
 
     </div>
     <input id="cruise_ship" type="checkbox" v-model="includeCruiseShip"/>
@@ -154,7 +160,15 @@
                         borderColor: 'rgba(220, 50, 50, 1)',
                         fill: false,
                         cubicInterpolationMode: 'monotone',
-                    }
+                    },
+                    {
+                        label: 'Case Regression',
+                        data: [],
+                        backgroundColor: 'rgb(0, 0, 0)',
+                        borderColor: 'rgba(50, 50, 150, 1)',
+                        fill: false,
+                        cubicInterpolationMode: 'monotone',
+                    },
                 ],
             },
             options: {
@@ -166,7 +180,7 @@
                     mode: 'index',
                     intersect: false,
                     callbacks: {
-                        label: function(tooltipItem, data) {
+                        label: function (tooltipItem, data) {
                             const value = tooltipItem.value;
                             const label = data.datasets[tooltipItem.datasetIndex].label;
                             return `${label}: ${Number(value).toLocaleString()}`;
@@ -194,6 +208,7 @@
                 derivative: false,
                 includeCruiseShip: false,
                 includeCruiseShipDescendants: false,
+                regression: null
             },
             watch: {
                 selectAll: function (newValue) {
@@ -223,9 +238,11 @@
                         chartConfig.options.scales.yAxes = singleAxis;
                         delete chartConfig.data.datasets[0].yAxisID;
                         delete chartConfig.data.datasets[1].yAxisID;
+                        delete chartConfig.data.datasets[2].yAxisID;
                     } else {
                         chartConfig.options.scales.yAxes = doubleAxes;
                         chartConfig.data.datasets[0].yAxisID = doubleAxes[0].id;
+                        chartConfig.data.datasets[2].yAxisID = doubleAxes[0].id;
                         chartConfig.data.datasets[1].yAxisID = doubleAxes[1].id;
                     }
                     graph.update();
@@ -316,6 +333,32 @@
                         chartConfig.data.datasets[1].data = deadYValues;
                     } else {
                         chartConfig.data.datasets[1].data = [];
+                    }
+
+                    chartConfig.data.labels = Array.from(dateLabels);
+                    chartConfig.data.datasets[2].data = [];
+                    if (this.regression === 'exponential') {
+                        const regressionDateLabels = Array.from(dateLabels);
+                        const regressionRange = [];
+                        const extrapolationSize = 5;
+                        for (let x = 0; x < confirmedYValues.length + extrapolationSize; x++) {
+                            regressionRange.push(x);
+                        }
+                        for (let x = 1; x <= extrapolationSize; x++) {
+                            regressionDateLabels.push(`+${x}`);
+                        }
+                        chartConfig.data.labels = regressionDateLabels;
+
+                        console.dir(regressionRange);
+
+                        const regressionData = confirmedYValues.map((value, index) => [index, value]);
+                        const regressionParams = regression.exponential(regressionData);
+                        const extrapolationValues = regressionRange.map(regressionParams.predict);
+                        console.dir(regressionData);
+                        console.dir(regressionParams);
+                        const extrapolationY = extrapolationValues.map(([index, value]) => value);
+                        chartConfig.data.datasets[2].data = extrapolationY;
+                        console.dir(extrapolationY);
                     }
 
                     graph.update();
