@@ -2,475 +2,97 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Coronavirus/COVID-19 Cases</title>
-    <script src="bower_components/axios/dist/axios.min.js"></script>
-    <script src="bower_components/csvtojson/browser/csvtojson.min.js"></script>
-    <script src="bower_components/vue/dist/vue.min.js"></script>
-    <script src="bower_components/vue-router/dist/vue-router.min.js"></script>
-    <script src="bower_components/chart.js/dist/Chart.bundle.min.js"></script>
-    <script src="bower_components/regression-js/dist/regression.min.js"></script>
+    <link rel="stylesheet" href="./styles.css">
+    <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.1/build/pure-min.css" integrity="sha384-oAOxQR6DkCoMliIh8yFnu25d7Eq/PHS21PClpwjOTeU2jRSq11vu66rf90/cZr47" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.1/build/grids-responsive-min.css">
+    <script src="libs/axios/dist/axios.min.js"></script>
+    <script src="libs/csvtojson/browser/csvtojson.min.js"></script>
+    <script src="libs/vue/dist/vue.min.js"></script>
+    <script src="libs/vue-router/dist/vue-router.min.js"></script>
+    <script src="libs/chart.js/dist/Chart.bundle.min.js"></script>
+    <script src="libs/regression-js/dist/regression.min.js"></script>
+
 </head>
 <body>
-<div style="float: right;">
-    <canvas id="graph_canvas" width="640" height="480"></canvas>
-</div>
-<div id="app">
-    <div style="float: right;">
-        <div id="config">
-            <input id="cases_checkbox" type="checkbox" v-model="showCases"/>
-            <label for="cases_checkbox">Cases</label>
-            <input id="deaths_checkbox" type="checkbox" v-model="showDeaths"/>
-            <label for="deaths_checkbox">Deaths</label>
-            <br/>
-            <input type="radio" id="joint_axis_radio" name="axes" v-model="axes" value="joint"/>
-            <label for="joint_axis_radio">Joint Axis</label>
-            <input type="radio" id="separate_axes_radio" name="axes" v-model="axes" value="separate"
-                   :disabled="!canSeparateAxes"/>
-            <label for="separate_axes_radio">Separate Axes</label>
-            <br/>
-            <input type="radio" id="total_radio" name="derivative" v-model="derivative" v-bind:value="false"/>
-            <label for="total_radio">Total</label>
-            <input type="radio" id="delta_radio" name="derivative" v-model="derivative" v-bind:value="true"/>
-            <label for="delta_radio">Delta</label>
-            <br/>
-            <select id="regression" v-model="regression">
-                <option value="none">Choose Regression Model</option>
-                <option value="exponential">Exponential</option>
-                <option value="logistic" disabled>Logistic</option>
-            </select>
-        </div>
-        <div id="details">
-            <div id="regression_details" v-if="regression === 'exponential'">
-                <span>Extrapolation Size: <input type="range" v-model="extrapolationSize" min="2" max="10"/>{{extrapolationSize}}</span>
-                <br/>
-                <span>Model Offset: <input type="range" v-model="modelOffset" v-bind:min="regressionOffsetMinimum"
-                                           v-bind:max="regressionOffsetMaximum"/>{{modelOffset}}</span>
-                <br/>
-                <span>Equation: f(x) = {{regressionSeries.cases.equation[0]}}e<sup>{{regressionSeries.cases.equation[1]}}x</sup></span>
-                <br/>
-                <span>R<sup>2</sup>: {{regressionSeries.cases.r2}}</span>
+
+<div class="main">
+    <div id="app" class="sidebar">
+        <div id="config" class="settings-block pure-menu config">
+            <ul class="pure-menu-list">
+                <li class="pure-menu-list-item">
+                    <input id="cases_checkbox" type="checkbox" v-model="showCases"/>
+                    <label for="cases_checkbox">Cases</label>
+                    <input id="deaths_checkbox" type="checkbox" v-model="showDeaths"/>
+                    <label for="deaths_checkbox">Deaths</label>
+                </li>
+                <li class="pure-menu-list-item">
+                    <input type="radio" id="joint_axis_radio" name="axes" v-model="axes" value="joint"/>
+                    <label for="joint_axis_radio">Joint Axis</label>
+                    <input type="radio" id="separate_axes_radio" name="axes" v-model="axes" value="separate"
+                        :disabled="!canSeparateAxes"/>
+                    <label for="separate_axes_radio">Separate Axes</label>
+                </li>
+                <li class="pure-menu-list-item">
+                    <input type="radio" id="total_radio" name="derivative" v-model="derivative" v-bind:value="false"/>
+                    <label for="total_radio">Total</label>
+                    <input type="radio" id="delta_radio" name="derivative" v-model="derivative" v-bind:value="true"/>
+                    <label for="delta_radio">Delta</label>
+                </li>
+            </ul>
+        </div><div id="details" class="settings-block">
+            <div id="regression_details" v-if="regression === 'exponential'" class="pure-menu">
+                <ul class="pure-menu-list">
+                    <li class="pure-menu-list-item">
+                        <select id="regression" v-model="regression">
+                            <option value="none">Choose Regression Model</option>
+                            <option value="exponential">Exponential</option>
+                            <option value="logistic" disabled>Logistic</option>
+                        </select>
+                    </li>
+                    <li class="pure-menu-list-item">
+                        <label>Extrapolation Size: {{extrapolationSize}}</label>
+                        <input type="range" v-model="extrapolationSize" min="2" max="10"/>
+                    </li>
+                    <li class="pure-menu-list-item">
+                        <label>Model Offset: {{modelOffset}}</label>
+                        <input type="range" v-model="modelOffset" v-bind:min="regressionOffsetMinimum"
+                                            v-bind:max="regressionOffsetMaximum"/>
+                    </li>
+                    <li class="pure-menu-list-item">Equation: f(x) = {{regressionSeries.cases.equation[0]}}e<sup>{{regressionSeries.cases.equation[1]}}x</sup></li>
+                    <li class="pure-menu-list-item">R<sup>2</sup>: {{regressionSeries.cases.r2}}</li>
+                </ul>
             </div>
+        </div> <div class="modifiers pure-menu pure-menu-scrollable custom-restricted settings-block">
+            <ul class="pure-menu-list">
+                <li class="pure-menu-list-item">
+                    <input id="cruise_ship" type="checkbox" v-model="includeCruiseShip"/>
+                    <label for="cruise_ship">Cruise Ship (Modifier for Others)</label>
+                </li>
+                <li class="pure-menu-list-item">
+                    <input id="cruise_ship_descendants" type="checkbox" v-model="includeCruiseShipDescendants"/>
+                    <label for="cruise_ship_descendants">Abroad from Cruise Ship (Modifier)</label>
+                </li>
+                <li class="pure-menu-list-item">
+                    <input id="select_all_checkbox" type="checkbox" v-model="selectAll" :indeterminate.prop="partialSelection"/>
+                    <label for="select_all_checkbox">Select All Countries</label>
+                </li>
+                <li class="pure-menu-list-item" v-for="country in countries">
+                    <input type="checkbox" v-bind:id="country" v-bind:value="country" v-model="checkedCountries"/>
+                    <label v-bind:for="country">{{country}}</label>
+                </li>
+            </ul>
         </div>
-
     </div>
-    <input id="cruise_ship" type="checkbox" v-model="includeCruiseShip"/>
-    <label for="cruise_ship" style="font-style: italic;">Cruise Ship (Modifier for Others)</label>
-    <br/>
-    <input id="cruise_ship_descendants" type="checkbox" v-model="includeCruiseShipDescendants"/>
-    <label for="cruise_ship_descendants" style="font-style: italic;">Abroad from Cruise Ship (Modifier)</label>
-    <br/>
-    <input id="select_all_checkbox" type="checkbox" v-model="selectAll" :indeterminate.prop="partialSelection"/>
-    <label for="select_all_checkbox" style="font-weight: bold;">Select All Countries</label>
-    <br/>
-    <span v-for="country in countries">
-        <input type="checkbox" v-bind:id="country" v-bind:value="country" v-model="checkedCountries"/>
-        <label v-bind:for="country">{{country}}</label>
-        <br/>
-    </span>
-    <span>Checked countries ({{selectionLength}}): {{checkedCountries}}</span>
-    <p>{{timeSeries}}</p>
-    <span style="clear: both;"></span>
+    <div class="chart-container">
+        <canvas id="graph_canvas" class="pure-u-5-6" width="640" height="480"></canvas>
+    </div>
+    <!-- <div>
+        <span>Data: <a href="https://github.com/CSSEGISandData/COVID-19/tree/master/csse_covid_19_data/csse_covid_19_time_series">https://github.com/CSSEGISandData/COVID-19/tree/master/csse_covid_19_data/csse_covid_19_time_series</a></span>
+        <span>Source: <a href="https://github.com/arik-so/coronavirus/tree/gh-pages">https://github.com/arik-so/coronavirus/tree/gh-pages</a></span>
+    </div> -->
 </div>
-<script type="application/javascript">
-
-    function calculateDerivative(values) {
-        const derivative = [];
-        let previousValue = 0;
-        for (const currentValue of values) {
-            derivative.push(currentValue - previousValue);
-            previousValue = currentValue;
-        }
-        return derivative;
-    }
-
-    (async () => {
-        const confirmedResponse = await axios({
-            method: 'get',
-            url: 'docs/data/covid_confirmed.csv',
-        });
-        const deadResponse = await axios({
-            method: 'get',
-            url: 'docs/data/covid_dead.csv',
-        });
-        const confirmedCases = await csv({output: 'json'}).fromString(confirmedResponse.data);
-        const deadCases = await csv({output: 'json'}).fromString(deadResponse.data);
-
-        const dateLabels = new Set();
-        for (const key of Object.keys(confirmedCases[0])) {
-            if (['Province/State', 'Country/Region', 'Lat', 'Long'].includes(key)) {
-                continue;
-            }
-            dateLabels.add(key);
-        }
-
-        // parse the data into what we need
-        const countries = new Set();
-        const states = new Set();
-        const countriesByState = {}; // look up a state's country
-        const countryStates = {}; // enumerate up all states in a country
-        for (const location of confirmedCases) {
-            const currentCountry = location['Country/Region'];
-            const currentState = location['Province/State'];
-            countries.add(currentCountry);
-            if (currentState.length < 1) {
-                continue;
-            }
-            states.add(currentState);
-            countriesByState[currentState] = currentCountry;
-            countryStates[currentCountry] = countryStates[currentCountry] || new Set();
-            countryStates[currentCountry].add(currentState);
-        }
-
-        const ticks = {
-            beginAtZero: true,
-            callback: function (value) {
-                return Number(value).toLocaleString();
-            }
-        };
-
-        const doubleAxes = [
-            {
-                id: 'cases-axis',
-                ticks,
-                scaleLabel: {
-                    display: true,
-                    labelString: 'Cases'
-                },
-                labelString: 'Cases',
-                color: 'orange'
-            },
-            {
-                id: 'deaths-axis',
-                ticks,
-                position: 'right',
-                scaleLabel: {
-                    display: true,
-                    labelString: 'Deaths'
-                },
-                color: 'red'
-            }
-        ];
-        const singleAxis = [{ticks}];
-
-
-        // initialize data set context
-        const ctx = document.getElementById('graph_canvas').getContext('2d');
-        const chartConfig = {
-            type: 'line',
-            data: {
-                labels: Array.from(dateLabels),
-                datasets: [
-                    {
-                        label: 'Case Count',
-                        data: [],
-                        backgroundColor: 'rgb(0, 0, 0)',
-                        borderColor: 'rgba(240, 200, 50, 1)',
-                        fill: false,
-                        cubicInterpolationMode: 'monotone',
-                    },
-                    {
-                        label: 'Deaths',
-                        data: [],
-                        backgroundColor: 'rgb(0, 0, 0)',
-                        borderColor: 'rgba(220, 50, 50, 1)',
-                        fill: false,
-                        cubicInterpolationMode: 'monotone',
-                    },
-                    {
-                        label: 'Case Regression',
-                        data: [],
-                        backgroundColor: 'rgb(0, 0, 0)',
-                        borderColor: 'rgba(50, 50, 150, 1)',
-                        fill: false,
-                        cubicInterpolationMode: 'monotone',
-                    },
-                ],
-            },
-            options: {
-                scales: {
-                    yAxes: singleAxis
-                },
-                tooltips: {
-                    // mode: 'x',
-                    mode: 'index',
-                    intersect: false,
-                    callbacks: {
-                        label: function (tooltipItem, data) {
-                            const value = tooltipItem.value;
-                            const label = data.datasets[tooltipItem.datasetIndex].label;
-                            return `${label}: ${Number(value).toLocaleString()}`;
-                        }
-                    }
-                }
-            }
-        };
-        const graph = new Chart(ctx, chartConfig);
-
-
-        const Home = {template: '<p>home page</p>'};
-
-        const params = {
-            checkedCountries: [],
-            showCases: true,
-            showDeaths: true,
-            axes: 'joint',
-            derivative: false,
-            includeCruiseShip: false,
-            includeCruiseShipDescendants: false,
-            regression: 'none',
-            modelOffset: 0,
-            extrapolationSize: 5,
-        };
-
-        const routes = [{
-            path: '/',
-            props: {
-                abc: 'def'
-            }
-        }];
-        const router = new VueRouter({routes});
-
-        let pathUpdateTimeout = null;
-
-        const app = new Vue({
-            el: '#app',
-            router,
-            data: {
-                countries,
-                cases: confirmedCases,
-                deaths: deadCases,
-                selectAll: false,
-                partialSelection: false,
-                regressionOffsetMinimum: 0,
-                regressionOffsetMaximum: dateLabels.size - 3,
-                ...params,
-            },
-            created: function () {
-                const query = this.$route.query;
-                const validKeys = Object.keys(params);
-                for (const key of Object.keys(query)) {
-                    if (!validKeys.includes(key)) {
-                        return;
-                    }
-                    // debugger
-                    const value = query[key];
-                    if (['showCases', 'showDeaths', 'derivative', 'includeCruiseShip', 'includeCruiseShipDescendants'].includes(key)) {
-                        // handle booleans
-                        this[key] = (value === 'true');
-                    } else if (key === 'checkedCountries') {
-                        let checkedCountries = [];
-                        if (Array.isArray(value)) {
-                            for (const currentCountry of value) {
-                                if (countries.has(currentCountry)) {
-                                    checkedCountries.push(currentCountry);
-                                }
-                            }
-                        } else if (countries.has(value)) {
-                            checkedCountries.push(value);
-                        }
-                        this[key] = checkedCountries;
-                    } else if (key === 'modelOffset') {
-                        let regression = parseInt(value);
-                        if (!Number.isSafeInteger(regression)) {
-                            continue;
-                        }
-                        regression = Math.max(regression, this.regressionOffsetMinimum);
-                        regression = Math.min(regression, this.regressionOffsetMaximum);
-                        this[key] = regression;
-                    } else if (key === 'extrapolationSize') {
-                        let extrapolation = parseInt(value);
-                        if (!Number.isSafeInteger(extrapolation)) {
-                            continue;
-                        }
-                        extrapolation = Math.max(extrapolation, 0);
-                        extrapolation = Math.min(extrapolation, 10);
-                        this[key] = extrapolation;
-                    } else {
-                        this[key] = value;
-                    }
-                }
-            },
-            methods: {
-                updateLocation: function () {
-                    // update router
-                    clearTimeout(pathUpdateTimeout);
-                    const refreshRoute = () => {
-                        const query = {};
-                        for (const key of Object.keys(params)) {
-                            query[key] = this[key];
-                        }
-                        router.push({query});
-                    };
-                    pathUpdateTimeout = setTimeout(refreshRoute, 300);
-                },
-                filterDatasetBySelectedCountries: function (data) {
-                    const filteredData = [];
-                    for (const currentLocation of data) {
-                        const currentCountry = currentLocation['Country/Region'];
-                        const currentState = currentLocation['Province/State'];
-                        if (!this.checkedCountries.includes(currentCountry)) {
-                            continue;
-                        }
-                        if (!this.includeCruiseShip && currentState === 'Diamond Princess cruise ship') {
-                            continue;
-                        }
-                        if (!this.includeCruiseShipDescendants && currentState.includes('From Diamond Princess')) {
-                            continue;
-                        }
-                        let dateIndex = 0;
-                        for (const [key, value] of Object.entries(currentLocation)) {
-                            if (['Province/State', 'Country/Region', 'Lat', 'Long'].includes(key)) {
-                                continue;
-                            }
-                            const currentCount = parseInt(value);
-                            filteredData[dateIndex] = filteredData[dateIndex] || 0;
-                            filteredData[dateIndex] += currentCount;
-                            dateIndex++;
-                        }
-                    }
-                    return filteredData;
-                }
-            },
-            watch: {
-                selectAll: function (newValue) {
-                    if (newValue) {
-                        this.checkedCountries = Array.from(this.countries);
-                        this.partialSelection = false;
-                    } else {
-                        this.checkedCountries = [];
-                    }
-                },
-                checkedCountries: function (newValue) {
-                    const selectedCountryCount = newValue.length;
-                    const totalCountryCount = this.countries.size;
-                    if (selectedCountryCount === 0) {
-                        this.selectAll = false;
-                        this.partialSelection = false;
-                    } else if (selectedCountryCount === totalCountryCount) {
-                        this.selectAll = true;
-                        this.partialSelection = false;
-                    } else {
-                        this.partialSelection = true;
-                    }
-                },
-                axes: function (newValue) {
-                    if (newValue === 'joint') {
-                        // remove second y axis
-                        chartConfig.options.scales.yAxes = singleAxis;
-                        delete chartConfig.data.datasets[0].yAxisID;
-                        delete chartConfig.data.datasets[1].yAxisID;
-                        delete chartConfig.data.datasets[2].yAxisID;
-                    } else {
-                        chartConfig.options.scales.yAxes = doubleAxes;
-                        chartConfig.data.datasets[0].yAxisID = doubleAxes[0].id;
-                        chartConfig.data.datasets[2].yAxisID = doubleAxes[0].id;
-                        chartConfig.data.datasets[1].yAxisID = doubleAxes[1].id;
-                    }
-                    this.updateLocation();
-                    graph.update();
-                },
-                canSeparateAxes: function (newValue) {
-                    if (!newValue) {
-                        this.axes = 'joint';
-                    }
-                }
-            },
-            computed: {
-                selectionLength: function () {
-                    return this.checkedCountries.length;
-                },
-                canSeparateAxes: function () {
-                    return this.showCases && this.showDeaths;
-                },
-                timeSeries: function () {
-                    let confirmedYValues = this.filterDatasetBySelectedCountries(this.cases);
-                    let deadYValues = this.filterDatasetBySelectedCountries(this.deaths);
-
-                    if (this.derivative) {
-                        confirmedYValues = calculateDerivative(confirmedYValues);
-                        deadYValues = calculateDerivative(deadYValues);
-                    }
-
-                    if (this.showCases) {
-                        chartConfig.data.datasets[0].data = confirmedYValues;
-                    } else {
-                        chartConfig.data.datasets[0].data = [];
-                    }
-
-                    if (this.showDeaths) {
-                        chartConfig.data.datasets[1].data = deadYValues;
-                    } else {
-                        chartConfig.data.datasets[1].data = [];
-                    }
-
-                    if (this.regression !== 'exponential') {
-                        chartConfig.data.labels = Array.from(dateLabels);
-                        chartConfig.data.datasets[2].data = [];
-                    }
-
-                    graph.update();
-
-                    this.updateLocation();
-
-                    return [confirmedYValues, deadYValues];
-                },
-                regressionSeries: function () {
-                    const confirmedYValues = this.timeSeries[0];
-                    const confirmedExtrapolationBasis = confirmedYValues.slice(this.modelOffset);
-                    const deadYValues = this.timeSeries[1];
-                    const deadExtrapolationBasis = deadYValues.slice(this.modelOffset);
-
-                    const regressionDetails = {};
-
-                    chartConfig.data.labels = Array.from(dateLabels);
-                    chartConfig.data.datasets[2].data = [];
-                    if (this.regression === 'exponential') {
-                        const regressionDateLabels = Array.from(dateLabels);
-                        const regressionRange = [];
-                        const extrapolationSize = Math.round(this.extrapolationSize);
-                        for (let x = 0; x < confirmedYValues.length + extrapolationSize; x++) {
-                            regressionRange.push(x);
-                        }
-                        for (let x = 1; x <= extrapolationSize; x++) {
-                            regressionDateLabels.push(`+${x}`);
-                        }
-                        chartConfig.data.labels = regressionDateLabels;
-
-                        console.dir(regressionRange);
-
-                        const regressionData = confirmedExtrapolationBasis.map((value, index) => [index, value]);
-                        const regressionParams = regression.exponential(regressionData);
-                        const extrapolationValues = regressionRange.map(y => regressionParams.predict(y - this.modelOffset));
-                        console.dir(regressionData);
-                        console.dir(regressionParams);
-                        const extrapolationY = extrapolationValues.map(([x, value], index) => {
-                            if (index < this.modelOffset) {
-                                console.log('x:', x, 'index:', index, 'model offset', this.modelOffset);
-                                return null;
-                            }
-                            return Math.round(value);
-                        });
-                        chartConfig.data.datasets[2].data = extrapolationY;
-                        console.dir(extrapolationY);
-                        regressionDetails.cases = regressionParams;
-                    }
-
-                    this.updateLocation();
-
-                    graph.update();
-                    return regressionDetails;
-                }
-            }
-        })
-
-    })();
-
-
-</script>
-
-<span>Data: <a href="https://github.com/CSSEGISandData/COVID-19/tree/master/csse_covid_19_data/csse_covid_19_time_series">https://github.com/CSSEGISandData/COVID-19/tree/master/csse_covid_19_data/csse_covid_19_time_series</a></span>
-<br/>
-<span>Source: <a href="https://github.com/arik-so/coronavirus/tree/gh-pages">https://github.com/arik-so/coronavirus/tree/gh-pages</a></span>
-
+<script src="./app.js"></script>
 </body>
 </html>

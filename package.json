@@ -21,5 +21,13 @@
   "homepage": "https://github.com/arik-so/coronavirus#readme",
   "devDependencies": {
     "bower": "^1.8.8"
+  },
+  "dependencies": {
+    "axios": "^0.19.2",
+    "chart": "^0.1.2",
+    "chart.js": "^2.9.3",
+    "chartjs": "^0.3.24",
+    "csvtojson": "^2.0.10",
+    "regression": "^2.0.1"
   }
 }

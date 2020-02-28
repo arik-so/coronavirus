@@ -1,0 +1,50 @@
+.chart-container {
+  position: relative;
+  width: 75vw;
+  left: 22vw;
+  margin: 10px;
+}
+
+.sidebar {
+  position: absolute;
+  width: 20vw;
+  height: 80vh;
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+.custom-restricted {
+  height: 50vh;
+}
+
+.settings-block {
+  width: 20vw;
+  border: 1px solid gray;
+  border-radius: 4px;
+  padding: 10px;
+  margin-top: 20px;
+  box-sizing: border-box;
+}
+
+.pure-menu-list-item {
+  padding-top: 5px;
+}
+
+@media screen and (max-width: 30em) {
+  .sidebar {
+    width: 100%;
+    position: static;
+    height: initial;
+    display: flex;
+    flex-direction: column;
+  }
+  .settings-block {
+    width: 100%;
+    display: inline-block;
+  }
+  .chart-container {
+    width: 100vw;
+    left: 0;
+    position: static;
+  }
+}
