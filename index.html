@@ -80,7 +80,7 @@
                 </li>
                 <li class="pure-menu-list-item" v-for="country in countries">
                     <input type="checkbox" v-bind:id="country" v-bind:value="country" v-model="checkedCountries"/>
-                    <label v-bind:for="country">{{country}}</label>
+                    <label v-bind:for="country">{{formatCountry(country)}}</label>
                 </li>
             </ul>
         </div>

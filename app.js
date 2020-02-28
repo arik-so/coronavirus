@@ -215,6 +215,12 @@ function calculateDerivative(values) {
             }
         },
         methods: {
+            formatCountry: function (country) {
+                if (country === 'Others') {
+                    return 'Cruise Ship';
+                }
+                return country;
+            },
             updateLocation: function () {
                 // update router
                 clearTimeout(pathUpdateTimeout);
