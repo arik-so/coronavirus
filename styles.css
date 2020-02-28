@@ -145,17 +145,54 @@ div.chart_container{
 }
 
 @media screen and (max-width: 30em) {
+    div#header{
+        margin-bottom: 5px;
+    }
+
+    div#geography_picker{
+        float: none;
+        width: calc(100vw - 10px);
+        display: flex;
+        order: 3;
+        margin-bottom: 5px;
+    }
+
+    div#aggregation_configuration{
+        float: none;
+        width: calc(100vw - 10px);
+        display: flex;
+        order: 2;
+        margin-bottom: 5px;
+    }
+
+    div.chart_container{
+        width: calc(100vw - 20px);
+        left: 0;
+        position: static;
+        margin: 0;
+        display: flex;
+        order: 1;
+        padding: 5px;
+        border-radius: 5px;
+        margin-bottom: 5px;
+    }
+
     .sidebar {
-        width: 100%;
         position: static;
         height: initial;
         display: flex;
         flex-direction: column;
+        padding: 5px;
+        padding-top: 0;
+        padding-bottom: 0;
     }
 
     .settings-block {
-        width: 100%;
+        border-radius: 5px;
+        padding: 5px;
         display: inline-block;
+        width: 100%;
+        margin: 0;
     }
 
     .chart-container {
