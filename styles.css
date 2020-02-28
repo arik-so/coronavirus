@@ -195,6 +195,19 @@ div.chart_container{
         margin: 0;
     }
 
+    div#aggregation_configuration > div.settings-block:only-child{
+        width: 100%;
+    }
+
+    div#aggregation_configuration > div.settings-block:not(:only-child){
+        width: 50%;
+    }
+
+    div#aggregation_configuration > div.settings-block:not(:only-child):first-child{
+        width: calc(50% - 5px);
+        margin-right: 5px;
+    }
+
     .chart-container {
         width: 100vw;
         left: 0;
