@@ -1,4 +1,3 @@
-
 function calculateDerivative(values) {
     const derivative = [];
     let previousValue = 0;
@@ -178,7 +177,6 @@ function calculateDerivative(values) {
                 if (!validKeys.includes(key)) {
                     return;
                 }
-                // debugger
                 const value = query[key];
                 if (['showCases', 'showDeaths', 'derivative', 'includeCruiseShip', 'includeCruiseShipDescendants'].includes(key)) {
                     // handle booleans
@@ -299,6 +297,14 @@ function calculateDerivative(values) {
                 if (!newValue) {
                     this.axes = 'joint';
                 }
+            },
+            timeSeries: function () {
+                this.updateLocation();
+                graph.update();
+            },
+            regressionSeries: function () {
+                this.updateLocation();
+                graph.update();
             }
         },
         computed: {
@@ -333,10 +339,6 @@ function calculateDerivative(values) {
                     chartConfig.data.labels = Array.from(dateLabels);
                     chartConfig.data.datasets[2].data = [];
                 }
-
-                graph.update();
-
-                this.updateLocation();
 
                 return [confirmedYValues, deadYValues];
             },
@@ -381,12 +383,9 @@ function calculateDerivative(values) {
                     regressionDetails.cases = regressionParams;
                 }
 
-                this.updateLocation();
-
-                graph.update();
                 return regressionDetails;
             }
         }
-    })
+    });
 
 })();
