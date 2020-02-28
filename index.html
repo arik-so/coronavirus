@@ -40,17 +40,17 @@
                     <input type="radio" id="delta_radio" name="derivative" v-model="derivative" v-bind:value="true"/>
                     <label for="delta_radio">Delta</label>
                 </li>
+                <li class="pure-menu-list-item">
+                    <select id="regression" v-model="regression">
+                        <option value="none">Choose Regression Model</option>
+                        <option value="exponential">Exponential</option>
+                        <option value="logistic" disabled>Logistic</option>
+                    </select>
+                </li>
             </ul>
-        </div><div id="details" class="settings-block">
-            <div id="regression_details" v-if="regression === 'exponential'" class="pure-menu">
+        </div><div id="details" class="settings-block" v-if="regression === 'exponential'">
+            <div id="regression_details" class="pure-menu">
                 <ul class="pure-menu-list">
-                    <li class="pure-menu-list-item">
-                        <select id="regression" v-model="regression">
-                            <option value="none">Choose Regression Model</option>
-                            <option value="exponential">Exponential</option>
-                            <option value="logistic" disabled>Logistic</option>
-                        </select>
-                    </li>
                     <li class="pure-menu-list-item">
                         <label>Extrapolation Size: {{extrapolationSize}}</label>
                         <input type="range" v-model="extrapolationSize" min="2" max="10"/>
