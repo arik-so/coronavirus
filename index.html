@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Coronavirus/COVID-19 Cases</title>
     <link rel="stylesheet" href="./styles.css">
-    <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.1/build/pure-min.css" integrity="sha384-oAOxQR6DkCoMliIh8yFnu25d7Eq/PHS21PClpwjOTeU2jRSq11vu66rf90/cZr47" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.1/build/pure-min.css"
+          integrity="sha384-oAOxQR6DkCoMliIh8yFnu25d7Eq/PHS21PClpwjOTeU2jRSq11vu66rf90/cZr47" crossorigin="anonymous">
     <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.1/build/grids-responsive-min.css">
     <script src="libs/axios/dist/axios.min.js"></script>
     <script src="libs/csvtojson/browser/csvtojson.min.js"></script>
@@ -17,82 +18,135 @@
 </head>
 <body>
 
+<!--
+<div style="background-color: blanchedalmond; height: 500px; width: 800px; margin: auto;">
+    <div style="background-color: #5cb85c; height: 400px; float: left; width: 200px;"></div>
+    <div style="background-color: #2793db; height: 400px;"></div>
+    <div style="clear: both;"></div>
+</div>
+-->
+
 <div class="main">
-    <div id="app" class="sidebar">
-        <div id="config" class="settings-block pure-menu config">
-            <ul class="pure-menu-list">
-                <li class="pure-menu-list-item">
-                    <input id="cases_checkbox" type="checkbox" v-model="showCases"/>
-                    <label for="cases_checkbox">Cases</label>
-                    <input id="deaths_checkbox" type="checkbox" v-model="showDeaths"/>
-                    <label for="deaths_checkbox">Deaths</label>
-                </li>
-                <li class="pure-menu-list-item">
-                    <input type="radio" id="joint_axis_radio" name="axes" v-model="axes" value="joint"/>
-                    <label for="joint_axis_radio">Joint Axis</label>
-                    <input type="radio" id="separate_axes_radio" name="axes" v-model="axes" value="separate"
-                        :disabled="!canSeparateAxes"/>
-                    <label for="separate_axes_radio">Separate Axes</label>
-                </li>
-                <li class="pure-menu-list-item">
-                    <input type="radio" id="total_radio" name="derivative" v-model="derivative" v-bind:value="false"/>
-                    <label for="total_radio">Total</label>
-                    <input type="radio" id="delta_radio" name="derivative" v-model="derivative" v-bind:value="true"/>
-                    <label for="delta_radio">Delta</label>
-                </li>
-                <li class="pure-menu-list-item">
-                    <select id="regression" v-model="regression">
-                        <option value="none">Choose Regression Model</option>
-                        <option value="exponential">Exponential</option>
-                        <option value="logistic" disabled>Logistic</option>
-                    </select>
-                </li>
-            </ul>
-        </div><div id="details" class="settings-block" v-if="regression === 'exponential'">
-            <div id="regression_details" class="pure-menu">
-                <ul class="pure-menu-list">
-                    <li class="pure-menu-list-item">
-                        <label>Extrapolation Size: {{extrapolationSize}}</label>
-                        <input type="range" v-model="extrapolationSize" min="2" max="10"/>
-                    </li>
-                    <li class="pure-menu-list-item">
-                        <label>Model Offset: {{modelOffset}}</label>
-                        <input type="range" v-model="modelOffset" v-bind:min="regressionOffsetMinimum"
-                                            v-bind:max="regressionOffsetMaximum"/>
-                    </li>
-                    <li class="pure-menu-list-item">Equation: f(x) = {{regressionSeries.cases.equation[0]}}e<sup>{{regressionSeries.cases.equation[1]}}x</sup></li>
-                    <li class="pure-menu-list-item">R<sup>2</sup>: {{regressionSeries.cases.r2}}</li>
-                </ul>
+
+    <div id="everything_except_footer">
+
+        <div id="header">
+            <div class="container" style="padding-left: 50px">
+                <h1>Coronavirus Charts</h1>
             </div>
-        </div> <div class="modifiers pure-menu pure-menu-scrollable custom-restricted settings-block">
-            <ul class="pure-menu-list">
-                <li class="pure-menu-list-item">
-                    <input id="cruise_ship" type="checkbox" v-model="includeCruiseShip"/>
-                    <label for="cruise_ship">Cruise Ship (Modifier for Others)</label>
-                </li>
-                <li class="pure-menu-list-item">
-                    <input id="cruise_ship_descendants" type="checkbox" v-model="includeCruiseShipDescendants"/>
-                    <label for="cruise_ship_descendants">Abroad from Cruise Ship (Modifier)</label>
-                </li>
-                <li class="pure-menu-list-item">
-                    <input id="select_all_checkbox" type="checkbox" v-model="selectAll" :indeterminate.prop="partialSelection"/>
-                    <label for="select_all_checkbox">Select All Countries</label>
-                </li>
-                <li class="pure-menu-list-item" v-for="country in countries">
-                    <input type="checkbox" v-bind:id="country" v-bind:value="country" v-model="checkedCountries"/>
-                    <label v-bind:for="country">{{formatCountry(country)}}</label>
-                </li>
-            </ul>
+        </div>
+
+        <div class="container" id="aggregation_section">
+
+            <div id="app" class="sidebar">
+
+                <div id="geography_picker"
+                     class="modifiers pure-menu pure-menu-scrollable custom-restricted settings-block">
+                    <ul class="pure-menu-list">
+                        <li class="pure-menu-list-item">
+                            <input id="cruise_ship" type="checkbox" v-model="includeCruiseShip"/>
+                            <label for="cruise_ship">Cruise Ship (Modifier for Others)</label>
+                        </li>
+                        <li class="pure-menu-list-item">
+                            <input id="cruise_ship_descendants" type="checkbox" v-model="includeCruiseShipDescendants"/>
+                            <label for="cruise_ship_descendants">Abroad from Cruise Ship (Modifier)</label>
+                        </li>
+                        <li class="pure-menu-list-item">
+                            <input id="select_all_checkbox" type="checkbox" v-model="selectAll"
+                                   :indeterminate.prop="partialSelection"/>
+                            <label for="select_all_checkbox">Select All Countries</label>
+                        </li>
+                        <li class="pure-menu-list-item" v-for="country in countries">
+                            <input type="checkbox" v-bind:id="country" v-bind:value="country"
+                                   v-model="checkedCountries"/>
+                            <label v-bind:for="country">{{formatCountry(country)}}</label>
+                        </li>
+                    </ul>
+                </div>
+
+                <div id="aggregation_configuration">
+                    <div id="config" class="settings-block pure-menu config">
+                        <ul class="pure-menu-list">
+                            <li class="pure-menu-list-item">
+                                <input id="cases_checkbox" type="checkbox" v-model="showCases"/>
+                                <label for="cases_checkbox">Cases</label>
+                                <input id="deaths_checkbox" type="checkbox" v-model="showDeaths"/>
+                                <label for="deaths_checkbox">Deaths</label>
+                            </li>
+                            <li class="pure-menu-list-item">
+                                <input type="radio" id="joint_axis_radio" name="axes" v-model="axes" value="joint"/>
+                                <label for="joint_axis_radio">Joint Axis</label>
+                                <input type="radio" id="separate_axes_radio" name="axes" v-model="axes" value="separate"
+                                       :disabled="!canSeparateAxes"/>
+                                <label for="separate_axes_radio">Separate Axes</label>
+                            </li>
+                            <li class="pure-menu-list-item">
+                                <input type="radio" id="total_radio" name="derivative" v-model="derivative"
+                                       v-bind:value="false"/>
+                                <label for="total_radio">Total</label>
+                                <input type="radio" id="delta_radio" name="derivative" v-model="derivative"
+                                       v-bind:value="true"/>
+                                <label for="delta_radio">Delta</label>
+                            </li>
+                            <li class="pure-menu-list-item">
+                                <select id="regression" v-model="regression">
+                                    <option value="none">Choose Regression Model</option>
+                                    <option value="exponential">Exponential</option>
+                                    <option value="logistic" disabled>Logistic</option>
+                                </select>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div id="details" class="settings-block" v-if="regression === 'exponential'">
+                        <div id="regression_details" class="pure-menu">
+                            <ul class="pure-menu-list">
+                                <li class="pure-menu-list-item">
+                                    <label>Extrapolation Size: {{extrapolationSize}}</label>
+                                    <input type="range" v-model="extrapolationSize" min="2" max="10"/>
+                                </li>
+                                <li class="pure-menu-list-item">
+                                    <label>Model Offset: {{modelOffset}}</label>
+                                    <input type="range" v-model="modelOffset" v-bind:min="regressionOffsetMinimum"
+                                           v-bind:max="regressionOffsetMaximum"/>
+                                </li>
+                                <li class="pure-menu-list-item">Equation: f(x) = {{regressionSeries.cases.equation[0]}}e<sup>{{regressionSeries.cases.equation[1]}}x</sup>
+                                </li>
+                                <li class="pure-menu-list-item">R<sup>2</sup>: {{regressionSeries.cases.r2}}</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chart_container">
+                    <canvas id="graph_canvas" style="width: 100%;" xclass="pure-u-5-6"></canvas>
+                </div>
+
+                <div style="clear: both;"></div>
+
+            </div>
+
+
+        </div>
+        <!-- <div>
+            <span>Data: <a href="https://github.com/CSSEGISandData/COVID-19/tree/master/csse_covid_19_data/csse_covid_19_time_series">https://github.com/CSSEGISandData/COVID-19/tree/master/csse_covid_19_data/csse_covid_19_time_series</a></span>
+            <span>Source: <a href="https://github.com/arik-so/coronavirus/tree/gh-pages">https://github.com/arik-so/coronavirus/tree/gh-pages</a></span>
+        </div> -->
+
+    </div>
+
+    <div id="footer">
+        <div class="container" style="padding: 50px">
+            Sticky Footer<br/>
+            Github link goes here: <br/>
+            Data source (Johns Hopkings) <br/>
+            Cheesy built with love goes here.
         </div>
     </div>
-    <div class="chart-container">
-        <canvas id="graph_canvas" class="pure-u-5-6" width="640" height="480"></canvas>
-    </div>
-    <!-- <div>
-        <span>Data: <a href="https://github.com/CSSEGISandData/COVID-19/tree/master/csse_covid_19_data/csse_covid_19_time_series">https://github.com/CSSEGISandData/COVID-19/tree/master/csse_covid_19_data/csse_covid_19_time_series</a></span>
-        <span>Source: <a href="https://github.com/arik-so/coronavirus/tree/gh-pages">https://github.com/arik-so/coronavirus/tree/gh-pages</a></span>
-    </div> -->
+
 </div>
+
+
 <script src="./app.js"></script>
 </body>
 </html>

@@ -79,7 +79,6 @@ function calculateDerivative(values) {
 
 
     // initialize data set context
-    const ctx = document.getElementById('graph_canvas').getContext('2d');
     const chartConfig = {
         type: 'line',
         data: {
@@ -126,11 +125,10 @@ function calculateDerivative(values) {
                         return `${label}: ${Number(value).toLocaleString()}`;
                     }
                 }
-            }
+            },
+            responsive: false
         }
     };
-    const graph = new Chart(ctx, chartConfig);
-
 
     const Home = {template: '<p>home page</p>'};
 
@@ -169,6 +167,7 @@ function calculateDerivative(values) {
             regressionOffsetMinimum: 0,
             regressionOffsetMaximum: dateLabels.size - 3,
             ...params,
+            graph: null
         },
         created: function () {
             const query = this.$route.query;
@@ -214,7 +213,14 @@ function calculateDerivative(values) {
                 }
             }
         },
+        mounted: function () {
+            this.createChart();
+        },
         methods: {
+            createChart: function () {
+                const ctx = document.getElementById('graph_canvas').getContext('2d');
+                this.graph = new Chart(ctx, chartConfig);
+            },
             formatCountry: function (country) {
                 if (country === 'Others') {
                     return 'Cruise Ship';
@@ -297,7 +303,7 @@ function calculateDerivative(values) {
                     chartConfig.data.datasets[1].yAxisID = doubleAxes[1].id;
                 }
                 this.updateLocation();
-                graph.update();
+                this.graph.update();
             },
             canSeparateAxes: function (newValue) {
                 if (!newValue) {
@@ -306,11 +312,11 @@ function calculateDerivative(values) {
             },
             timeSeries: function () {
                 this.updateLocation();
-                graph.update();
+                this.graph.update();
             },
             regressionSeries: function () {
                 this.updateLocation();
-                graph.update();
+                this.graph.update();
             }
         },
         computed: {
