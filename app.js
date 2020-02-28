@@ -126,7 +126,7 @@ function calculateDerivative(values) {
                     }
                 }
             },
-            responsive: false
+            responsive: true
         }
     };
 
