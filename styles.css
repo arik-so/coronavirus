@@ -24,7 +24,14 @@ body {
 
 
 div#header {
+    padding-top: 20px;
+    padding-bottom: 10px;
+    background-color: white;
+    margin-bottom: 10px;
+}
 
+h1 {
+    margin: 0;
 }
 
 div.main{
