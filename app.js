@@ -138,7 +138,6 @@ function calculateDerivative(values) {
         showDeaths: true,
         axes: 'joint',
         derivative: false,
-        includeCruiseShip: false,
         includeCruiseShipDescendants: false,
         regression: 'none',
         modelOffset: 0,
@@ -177,7 +176,7 @@ function calculateDerivative(values) {
                     return;
                 }
                 const value = query[key];
-                if (['showCases', 'showDeaths', 'derivative', 'includeCruiseShip', 'includeCruiseShipDescendants'].includes(key)) {
+                if (['showCases', 'showDeaths', 'derivative', 'includeCruiseShipDescendants'].includes(key)) {
                     // handle booleans
                     this[key] = (value === 'true');
                 } else if (key === 'checkedCountries') {
@@ -245,9 +244,6 @@ function calculateDerivative(values) {
                     const currentCountry = currentLocation['Country/Region'];
                     const currentState = currentLocation['Province/State'];
                     if (!this.checkedCountries.includes(currentCountry)) {
-                        continue;
-                    }
-                    if (!this.includeCruiseShip && currentState === 'Diamond Princess cruise ship') {
                         continue;
                     }
                     if (!this.includeCruiseShipDescendants && currentState.includes('From Diamond Princess')) {
