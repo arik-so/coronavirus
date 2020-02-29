@@ -28,10 +28,10 @@ const fitSigmoid = function (yValues) {
     const options = {
         damping: 1.5,
         initialValues: initialValues,
-        minValues: [1, 0.01, -10],
+        minValues: [initialA, 0.01, -10],
         maxValues: [initialA*2, 200, 0],
         gradientDifference: 10e-2,
-        maxIterations: 1000,
+        maxIterations: 100,
         errorTolerance: 10e-3
     };
 

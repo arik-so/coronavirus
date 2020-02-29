@@ -447,7 +447,11 @@ function calculateDerivative(values) {
                     } catch (e) {
                         // regression failed
                         return {
-                            regressionError: e
+                            regressionError: e,
+                            cases: {
+                                equation: [NaN, NaN],
+                                parameterValues: [NaN, NaN, NaN],
+                            }
                         }
                     }
 

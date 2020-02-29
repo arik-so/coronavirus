@@ -109,6 +109,8 @@
                                 </li>
                                 <li class="pure-menu-list-item" v-if="regression === 'exponential'">Equation: f(x) = {{regressionSeries.cases.equation[0]}}e<sup>{{regressionSeries.cases.equation[1]}}x</sup>
                                 </li>
+                                <li class="pure-menu-list-item" v-if="regression === 'logistic'">Equation: f(x) = {{Math.round(regressionSeries.cases.parameterValues[0])}} / (1 + {{Math.round(regressionSeries.cases.parameterValues[1])}}e<sup>{{Math.round(regressionSeries.cases.parameterValues[2]*100)/100}}x</sup>)
+                                </li>
                                 <li class="pure-menu-list-item" v-if="regression === 'exponential'">R<sup>2</sup>: {{regressionSeries.cases.r2}}</li>
                             </ul>
                         </div>
