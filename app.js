@@ -235,7 +235,7 @@ function calculateDerivative(values) {
             },
             formatCountry: function (country) {
                 if (country === 'Others') {
-                    return '🚢 Cruise Ship';
+                    return '💎👸🚢 Cruise Ship';
                 }
                 return country;
             },
