@@ -133,6 +133,12 @@ function calculateDerivative(values) {
 
     const Home = {template: '<p>home page</p>'};
 
+    const defaultCheckedCountries = new Set(countries);
+    defaultCheckedCountries.delete('Hong Kong');
+    defaultCheckedCountries.delete('Macau');
+    defaultCheckedCountries.delete('Mainland China');
+    defaultCheckedCountries.delete('Others');
+
     const params = {
         checkedCountries: [],
         showCases: true,
@@ -172,6 +178,12 @@ function calculateDerivative(values) {
         created: function () {
             const query = this.$route.query;
             const validKeys = Object.keys(params);
+
+            if(Object.entries(query) < 1){
+                // only set the country default if the query is empty
+                this.checkedCountries = Array.from(defaultCheckedCountries);
+            }
+
             for (const key of Object.keys(query)) {
                 if (!validKeys.includes(key)) {
                     return;
@@ -223,7 +235,7 @@ function calculateDerivative(values) {
             },
             formatCountry: function (country) {
                 if (country === 'Others') {
-                    return 'Cruise Ship';
+                    return '🚢 Cruise Ship';
                 }
                 return country;
             },
@@ -262,6 +274,9 @@ function calculateDerivative(values) {
                     }
                 }
                 return filteredData;
+            },
+            moveArrayEntry: function (array, from, to) {
+                return array.splice(to, 0, array.splice(from, 1)[0]);
             }
         },
         watch: {
@@ -314,14 +329,26 @@ function calculateDerivative(values) {
             regressionSeries: function () {
                 this.updateLocation();
                 this.graph.update();
+            },
+            includeCruiseShipDescendants: function() {
+                this.updateLocation();
             }
         },
         computed: {
-            selectionLength: function () {
-                return this.checkedCountries.length;
-            },
             canSeparateAxes: function () {
                 return this.showCases && this.showDeaths;
+            },
+            sortedCountries: function () {
+                const countries = Array.from(this.countries);
+                countries.sort();
+
+                // move the cruise ship first and china second
+                const cruiseShipIndex = countries.indexOf('Others');
+                this.moveArrayEntry(countries, cruiseShipIndex, 0);
+                const chinaIndex = countries.indexOf('Mainland China');
+                this.moveArrayEntry(countries, chinaIndex, 1);
+
+                return countries
             },
             timeSeries: function () {
                 let confirmedYValues = this.filterDatasetBySelectedCountries(this.cases);

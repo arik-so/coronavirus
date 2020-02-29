@@ -44,14 +44,14 @@
                     <ul class="pure-menu-list">
                         <li class="pure-menu-list-item">
                             <input id="cruise_ship_descendants" type="checkbox" v-model="includeCruiseShipDescendants"/>
-                            <label for="cruise_ship_descendants">Abroad from Cruise Ship (Modifier)</label>
+                            <label for="cruise_ship_descendants" style="font-style: italic;">Abroad from Cruise Ship (Modifier)</label>
                         </li>
                         <li class="pure-menu-list-item">
                             <input id="select_all_checkbox" type="checkbox" v-model="selectAll"
                                    :indeterminate.prop="partialSelection"/>
-                            <label for="select_all_checkbox">Select All Countries</label>
+                            <label for="select_all_checkbox" style="text-transform: uppercase">Select All</label>
                         </li>
-                        <li class="pure-menu-list-item" v-for="country in countries">
+                        <li class="pure-menu-list-item" v-for="country in sortedCountries">
                             <input type="checkbox" v-bind:id="country" v-bind:value="country"
                                    v-model="checkedCountries"/>
                             <label v-bind:for="country">{{formatCountry(country)}}</label>
