@@ -52,7 +52,7 @@ div.container {
 }
 
 div#everything_except_footer{
-    padding-bottom: 200px;
+    padding-bottom: 150px;
 }
 
 div#footer {
@@ -60,7 +60,7 @@ div#footer {
     bottom: 0;
     width: 100%;
     background-color: white;
-    height: 200px;
+    height: 150px;
 }
 
 .chart-container.disabled {
