@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.1/build/pure-min.css"
           integrity="sha384-oAOxQR6DkCoMliIh8yFnu25d7Eq/PHS21PClpwjOTeU2jRSq11vu66rf90/cZr47" crossorigin="anonymous">
     <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.1/build/grids-responsive-min.css">
+    <link href="https://fonts.googleapis.com/css?family=Spartan:300,400&display=swap" rel="stylesheet">
     <script src="libs/axios/dist/axios.min.js"></script>
     <script src="libs/csvtojson/browser/csvtojson.min.js"></script>
     <script src="libs/vue/dist/vue.min.js"></script>
@@ -27,20 +28,20 @@
 
 <div class="main">
 
-    <div id="everything_except_footer">
+    <div id="everything_except_footer" class="everything-except-footer">
 
-        <div id="header">
+        <div id="header" class="header">
             <div class="container">
                 <h1>COVID-19 Progression</h1>
             </div>
         </div>
 
-        <div class="container" id="aggregation_section">
+        <div id="aggregation_section" class="container">
 
             <div id="app" class="sidebar">
 
                 <div id="geography_picker"
-                     class="modifiers pure-menu pure-menu-scrollable custom-restricted settings-block">
+                     class="modifiers pure-menu pure-menu-scrollable custom-restricted settings-block geography-picker">
                     <ul class="pure-menu-list">
                         <li class="pure-menu-list-item">
                             <input id="cruise_ship_descendants" type="checkbox" v-model="includeCruiseShipDescendants"/>
@@ -59,7 +60,7 @@
                     </ul>
                 </div>
 
-                <div id="aggregation_configuration">
+                <div id="aggregation_configuration" class="aggregation-configuration">
                     <div id="config" class="settings-block pure-menu config">
                         <ul class="pure-menu-list">
                             <li class="pure-menu-list-item">
@@ -70,10 +71,10 @@
                             </li>
                             <li class="pure-menu-list-item">
                                 <input type="radio" id="joint_axis_radio" name="axes" v-model="axes" value="joint"/>
-                                <label for="joint_axis_radio">Joint Axis</label>
+                                <label for="joint_axis_radio">One Axis</label>
                                 <input type="radio" id="separate_axes_radio" name="axes" v-model="axes" value="separate"
                                        :disabled="!canSeparateAxes"/>
-                                <label for="separate_axes_radio">Separate Axes</label>
+                                <label for="separate_axes_radio">Two Axis</label>
                             </li>
                             <li class="pure-menu-list-item">
                                 <input type="radio" id="total_radio" name="derivative" v-model="derivative"
@@ -130,8 +131,8 @@
 
     </div>
 
-    <div id="footer">
-        <div class="container" style="padding-left: 50px; padding-top: 20px;">
+    <div id="footer" class="footer">
+        <div class="container footer-container">
             <p>Last updated: 2/28/2020</p>
             <p><a href="https://github.com/arik-so/coronavirus/tree/gh-pages" target="_blank">Github</a> | <a href="https://github.com/CSSEGISandData/COVID-19/tree/master/csse_covid_19_data/csse_covid_19_time_series" target="_blank">Data</a></p>
             <p>Built wearing 😷 by <a href="https://twitter.com/arikaleph" target="_blank">@arikaleph</a> and <a href="https://twitter.com/elliebee" target="_blank">@elliebee</a>.</p>
