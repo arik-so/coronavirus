@@ -94,7 +94,7 @@ function calculateDerivative(values) {
                     pointBorderWidth: 3,
                     pointHoverRadius: 5,
                     pointHoverBorderWidth: 1,
-                    pointRadius : 1
+                    pointRadius: 1
                 },
                 {
                     label: 'Deaths',
@@ -106,7 +106,7 @@ function calculateDerivative(values) {
                     pointBorderWidth: 3,
                     pointHoverRadius: 5,
                     pointHoverBorderWidth: 1,
-                    pointRadius : 1
+                    pointRadius: 1
                 },
                 {
                     label: 'Case Regression',
@@ -118,7 +118,7 @@ function calculateDerivative(values) {
                     pointBorderWidth: 3,
                     pointHoverRadius: 5,
                     pointHoverBorderWidth: 1,
-                    pointRadius : 1
+                    pointRadius: 1
                 },
             ],
         },
@@ -191,7 +191,7 @@ function calculateDerivative(values) {
             const query = this.$route.query;
             const validKeys = Object.keys(params);
 
-            if(Object.entries(query) < 1){
+            if (Object.entries(query) < 1) {
                 // only set the country default if the query is empty
                 this.checkedCountries = Array.from(defaultCheckedCountries);
             }
@@ -342,7 +342,7 @@ function calculateDerivative(values) {
                 this.updateLocation();
                 this.graph.update();
             },
-            includeCruiseShipDescendants: function() {
+            includeCruiseShipDescendants: function () {
                 this.updateLocation();
             }
         },
@@ -383,14 +383,16 @@ function calculateDerivative(values) {
                     chartConfig.data.datasets[1].data = [];
                 }
 
-                if (this.regression !== 'exponential') {
+                if (this.regression === 'none') {
                     chartConfig.data.labels = Array.from(dateLabels);
                     chartConfig.data.datasets[2].data = [];
                 }
 
                 return [confirmedYValues, deadYValues];
             },
+
             regressionSeries: function () {
+
                 const confirmedYValues = this.timeSeries[0];
                 const confirmedExtrapolationBasis = confirmedYValues.slice(this.modelOffset);
                 const deadYValues = this.timeSeries[1];
@@ -400,7 +402,8 @@ function calculateDerivative(values) {
 
                 chartConfig.data.labels = Array.from(dateLabels);
                 chartConfig.data.datasets[2].data = [];
-                if (this.regression === 'exponential') {
+
+                if (this.regression !== 'none') {
                     const regressionDateLabels = Array.from(dateLabels);
                     const regressionRange = [];
                     const extrapolationSize = Math.round(this.extrapolationSize);
@@ -412,23 +415,51 @@ function calculateDerivative(values) {
                     }
                     chartConfig.data.labels = regressionDateLabels;
 
+                    console.log('regressionRange:');
                     console.dir(regressionRange);
 
-                    const regressionData = confirmedExtrapolationBasis.map((value, index) => [index, value]);
-                    const regressionParams = regression.exponential(regressionData);
-                    const extrapolationValues = regressionRange.map(y => regressionParams.predict(y - this.modelOffset));
-                    console.dir(regressionData);
-                    console.dir(regressionParams);
-                    const extrapolationY = extrapolationValues.map(([x, value], index) => {
-                        if (index < this.modelOffset) {
-                            console.log('x:', x, 'index:', index, 'model offset', this.modelOffset);
-                            return null;
+                    let extrapolationY = [];
+                    let regressionParams = {};
+
+                    try {
+                        if (this.regression === 'exponential') {
+                            const regressionData = confirmedExtrapolationBasis.map((value, index) => [index, value]);
+                            regressionParams = regression.exponential(regressionData);
+                            const extrapolationValues = regressionRange.map(y => regressionParams.predict(y - this.modelOffset));
+                            extrapolationY = extrapolationValues.map(([x, value], index) => {
+                                if (index < this.modelOffset) {
+                                    return null;
+                                }
+                                return Math.round(value);
+                            });
+                        } else if (this.regression === 'logistic') {
+                            const logisticParams = LogisticFitter.fitSigmoid(confirmedExtrapolationBasis);
+                            const sigmoid = logisticParams[0];
+                            regressionParams = logisticParams[1];
+                            const extrapolationValues = regressionRange.map(y => sigmoid(y - this.modelOffset));
+                            extrapolationY = extrapolationValues.map((value, index) => {
+                                if (index < this.modelOffset) {
+                                    return null;
+                                }
+                                return Math.round(value);
+                            });
                         }
-                        return Math.round(value);
-                    });
+                    } catch (e) {
+                        // regression failed
+                        return {
+                            regressionError: e
+                        }
+                    }
+
+                    console.log('regressionParams:');
+                    console.dir(regressionParams);
+                    console.log('extrapolationY:');
+                    console.dir(extrapolationY);
                     chartConfig.data.datasets[2].data = extrapolationY;
+                    console.log('extrapolationY:');
                     console.dir(extrapolationY);
                     regressionDetails.cases = regressionParams;
+
                 }
 
                 return regressionDetails;

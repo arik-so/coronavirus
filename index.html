@@ -15,6 +15,7 @@
     <script src="libs/vue-router/dist/vue-router.min.js"></script>
     <script src="libs/chart.js/dist/Chart.bundle.min.js"></script>
     <script src="libs/regression-js/dist/regression.min.js"></script>
+    <script src="assets/js/lm_fitter.js"></script>
 </head>
 <body>
 
@@ -74,7 +75,7 @@
                                 <label for="joint_axis_radio">One Axis</label>
                                 <input type="radio" id="separate_axes_radio" name="axes" v-model="axes" value="separate"
                                        :disabled="!canSeparateAxes"/>
-                                <label for="separate_axes_radio">Two Axis</label>
+                                <label for="separate_axes_radio">Two Axes</label>
                             </li>
                             <li class="pure-menu-list-item">
                                 <input type="radio" id="total_radio" name="derivative" v-model="derivative"
@@ -88,13 +89,13 @@
                                 <select id="regression" v-model="regression">
                                     <option value="none">Choose Regression Model</option>
                                     <option value="exponential">Exponential</option>
-                                    <option value="logistic" disabled>Logistic</option>
+                                    <option value="logistic">Logistic (Experimental)</option>
                                 </select>
                             </li>
                         </ul>
                     </div>
 
-                    <div id="details" class="settings-block" v-if="regression === 'exponential'">
+                    <div id="details" class="settings-block" v-if="regression !== 'none'">
                         <div id="regression_details" class="pure-menu">
                             <ul class="pure-menu-list">
                                 <li class="pure-menu-list-item">
@@ -106,9 +107,9 @@
                                     <input type="range" v-model="modelOffset" v-bind:min="regressionOffsetMinimum"
                                            v-bind:max="regressionOffsetMaximum"/>
                                 </li>
-                                <li class="pure-menu-list-item">Equation: f(x) = {{regressionSeries.cases.equation[0]}}e<sup>{{regressionSeries.cases.equation[1]}}x</sup>
+                                <li class="pure-menu-list-item" v-if="regression === 'exponential'">Equation: f(x) = {{regressionSeries.cases.equation[0]}}e<sup>{{regressionSeries.cases.equation[1]}}x</sup>
                                 </li>
-                                <li class="pure-menu-list-item">R<sup>2</sup>: {{regressionSeries.cases.r2}}</li>
+                                <li class="pure-menu-list-item" v-if="regression === 'exponential'">R<sup>2</sup>: {{regressionSeries.cases.r2}}</li>
                             </ul>
                         </div>
                     </div>
