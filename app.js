@@ -9,6 +9,12 @@ function calculateDerivative(values) {
 }
 
 (async () => {
+
+    const CONFIRMED_DATASET_INDEX = 0;
+    const DEAD_DATASET_INDEX = 1;
+    const RECOVERED_DATASET_INDEX = 2;
+    const CONFIRMED_REGRESSION_DATASET_INDEX = 3;
+
     const confirmedResponse = await axios({
         method: 'get',
         url: 'docs/data/covid_confirmed.csv',
@@ -17,8 +23,13 @@ function calculateDerivative(values) {
         method: 'get',
         url: 'docs/data/covid_dead.csv',
     });
+    const recoveredResponse = await axios({
+        method: 'get',
+        url: 'docs/data/covid_recovered.csv',
+    });
     const confirmedCases = await csv({output: 'json'}).fromString(confirmedResponse.data);
     const deadCases = await csv({output: 'json'}).fromString(deadResponse.data);
+    const recoveredCases = await csv({output: 'json'}).fromString(recoveredResponse.data);
 
     const dateLabels = new Set();
     for (const key of Object.keys(confirmedCases[0])) {
@@ -85,7 +96,7 @@ function calculateDerivative(values) {
             labels: Array.from(dateLabels),
             datasets: [
                 {
-                    label: 'Case Count',
+                    label: 'Cases',
                     data: [],
                     backgroundColor: 'rgba(155, 66, 254, 1)',
                     borderColor: 'rgba(155, 66, 254, 1)',
@@ -101,6 +112,18 @@ function calculateDerivative(values) {
                     data: [],
                     backgroundColor: 'rgba(80, 120, 226, 1)',
                     borderColor: 'rgba(80, 120, 226, 1)',
+                    fill: false,
+                    cubicInterpolationMode: 'monotone',
+                    pointBorderWidth: 3,
+                    pointHoverRadius: 5,
+                    pointHoverBorderWidth: 1,
+                    pointRadius: 1
+                },
+                {
+                    label: 'Recoveries',
+                    data: [],
+                    backgroundColor: 'rgba(40, 200, 150, 1)',
+                    borderColor: 'rgba(40, 200, 150, 1)',
                     fill: false,
                     cubicInterpolationMode: 'monotone',
                     pointBorderWidth: 3,
@@ -155,6 +178,7 @@ function calculateDerivative(values) {
         checkedCountries: [],
         showCases: true,
         showDeaths: true,
+        showRecoveries: true,
         axes: 'joint',
         derivative: false,
         includeCruiseShipDescendants: false,
@@ -180,6 +204,7 @@ function calculateDerivative(values) {
             countries,
             cases: confirmedCases,
             deaths: deadCases,
+            recoveries: recoveredCases,
             selectAll: false,
             partialSelection: false,
             regressionOffsetMinimum: 0,
@@ -201,7 +226,7 @@ function calculateDerivative(values) {
                     return;
                 }
                 const value = query[key];
-                if (['showCases', 'showDeaths', 'derivative', 'includeCruiseShipDescendants'].includes(key)) {
+                if (['showCases', 'showDeaths', 'showRecoveries', 'derivative', 'includeCruiseShipDescendants'].includes(key)) {
                     // handle booleans
                     this[key] = (value === 'true');
                 } else if (key === 'checkedCountries') {
@@ -320,11 +345,13 @@ function calculateDerivative(values) {
                     delete chartConfig.data.datasets[0].yAxisID;
                     delete chartConfig.data.datasets[1].yAxisID;
                     delete chartConfig.data.datasets[2].yAxisID;
+                    delete chartConfig.data.datasets[3].yAxisID;
                 } else {
                     chartConfig.options.scales.yAxes = doubleAxes;
-                    chartConfig.data.datasets[0].yAxisID = doubleAxes[0].id;
-                    chartConfig.data.datasets[2].yAxisID = doubleAxes[0].id;
-                    chartConfig.data.datasets[1].yAxisID = doubleAxes[1].id;
+                    chartConfig.data.datasets[CONFIRMED_DATASET_INDEX].yAxisID = doubleAxes[0].id;
+                    chartConfig.data.datasets[RECOVERED_DATASET_INDEX].yAxisID = doubleAxes[0].id;
+                    chartConfig.data.datasets[CONFIRMED_REGRESSION_DATASET_INDEX].yAxisID = doubleAxes[0].id;
+                    chartConfig.data.datasets[DEAD_DATASET_INDEX].yAxisID = doubleAxes[1].id;
                 }
                 this.updateLocation();
                 this.graph.update();
@@ -344,11 +371,19 @@ function calculateDerivative(values) {
             },
             includeCruiseShipDescendants: function () {
                 this.updateLocation();
+            },
+            canShowRegression: function (newValue) {
+                if (newValue === false) {
+                    this.regression = 'none';
+                }
             }
         },
         computed: {
+            canShowRegression: function () {
+                return !!this.showCases;
+            },
             canSeparateAxes: function () {
-                return this.showCases && this.showDeaths;
+                return (this.showCases || this.showRecoveries) && this.showDeaths;
             },
             sortedCountries: function () {
                 const countries = Array.from(this.countries);
@@ -365,30 +400,38 @@ function calculateDerivative(values) {
             timeSeries: function () {
                 let confirmedYValues = this.filterDatasetBySelectedCountries(this.cases);
                 let deadYValues = this.filterDatasetBySelectedCountries(this.deaths);
+                let recoveredYValues = this.filterDatasetBySelectedCountries(this.recoveries);
 
                 if (this.derivative) {
                     confirmedYValues = calculateDerivative(confirmedYValues);
                     deadYValues = calculateDerivative(deadYValues);
+                    recoveredYValues = calculateDerivative(recoveredYValues);
                 }
 
                 if (this.showCases) {
-                    chartConfig.data.datasets[0].data = confirmedYValues;
+                    chartConfig.data.datasets[CONFIRMED_DATASET_INDEX].data = confirmedYValues;
                 } else {
-                    chartConfig.data.datasets[0].data = [];
+                    chartConfig.data.datasets[CONFIRMED_DATASET_INDEX].data = [];
                 }
 
                 if (this.showDeaths) {
-                    chartConfig.data.datasets[1].data = deadYValues;
+                    chartConfig.data.datasets[DEAD_DATASET_INDEX].data = deadYValues;
                 } else {
-                    chartConfig.data.datasets[1].data = [];
+                    chartConfig.data.datasets[DEAD_DATASET_INDEX].data = [];
+                }
+
+                if (this.showRecoveries) {
+                    chartConfig.data.datasets[RECOVERED_DATASET_INDEX].data = recoveredYValues;
+                } else {
+                    chartConfig.data.datasets[RECOVERED_DATASET_INDEX].data = [];
                 }
 
                 if (this.regression === 'none') {
                     chartConfig.data.labels = Array.from(dateLabels);
-                    chartConfig.data.datasets[2].data = [];
+                    chartConfig.data.datasets[CONFIRMED_REGRESSION_DATASET_INDEX].data = [];
                 }
 
-                return [confirmedYValues, deadYValues];
+                return [confirmedYValues, deadYValues, recoveredYValues];
             },
 
             regressionSeries: function () {
@@ -401,7 +444,7 @@ function calculateDerivative(values) {
                 const regressionDetails = {};
 
                 chartConfig.data.labels = Array.from(dateLabels);
-                chartConfig.data.datasets[2].data = [];
+                chartConfig.data.datasets[CONFIRMED_REGRESSION_DATASET_INDEX].data = [];
 
                 if (this.regression !== 'none') {
                     const regressionDateLabels = Array.from(dateLabels);
@@ -459,7 +502,7 @@ function calculateDerivative(values) {
                     console.dir(regressionParams);
                     console.log('extrapolationY:');
                     console.dir(extrapolationY);
-                    chartConfig.data.datasets[2].data = extrapolationY;
+                    chartConfig.data.datasets[CONFIRMED_REGRESSION_DATASET_INDEX].data = extrapolationY;
                     console.log('extrapolationY:');
                     console.dir(extrapolationY);
                     regressionDetails.cases = regressionParams;

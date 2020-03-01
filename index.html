@@ -67,6 +67,10 @@
                             <li class="pure-menu-list-item">
                                 <input id="cases_checkbox" type="checkbox" v-model="showCases"/>
                                 <label for="cases_checkbox">Cases</label>
+                                <br/>
+                                <input id="recoveries_checkbox" type="checkbox" v-model="showRecoveries"/>
+                                <label for="recoveries_checkbox">Recoveries</label>
+                                <br/>
                                 <input id="deaths_checkbox" type="checkbox" v-model="showDeaths"/>
                                 <label for="deaths_checkbox">Deaths</label>
                             </li>
@@ -86,7 +90,7 @@
                                 <label for="delta_radio">Delta</label>
                             </li>
                             <li class="pure-menu-list-item">
-                                <select id="regression" v-model="regression">
+                                <select id="regression" v-model="regression" :disabled="!canShowRegression">
                                     <option value="none">Choose Regression Model</option>
                                     <option value="exponential">Exponential</option>
                                     <option value="logistic">Logistic (Experimental)</option>
