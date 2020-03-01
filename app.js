@@ -11,8 +11,8 @@ function calculateDerivative(values) {
 (async () => {
 
     const CONFIRMED_DATASET_INDEX = 0;
-    const DEAD_DATASET_INDEX = 1;
-    const RECOVERED_DATASET_INDEX = 2;
+    const RECOVERED_DATASET_INDEX = 1;
+    const DEAD_DATASET_INDEX = 2;
     const CONFIRMED_REGRESSION_DATASET_INDEX = 3;
 
     const confirmedResponse = await axios({
@@ -108,10 +108,10 @@ function calculateDerivative(values) {
                     pointRadius: 1
                 },
                 {
-                    label: 'Deaths',
+                    label: 'Recoveries',
                     data: [],
-                    backgroundColor: 'rgba(80, 120, 226, 1)',
-                    borderColor: 'rgba(80, 120, 226, 1)',
+                    backgroundColor: 'rgba(40, 200, 150, 1)',
+                    borderColor: 'rgba(40, 200, 150, 1)',
                     fill: false,
                     cubicInterpolationMode: 'monotone',
                     pointBorderWidth: 3,
@@ -120,10 +120,10 @@ function calculateDerivative(values) {
                     pointRadius: 1
                 },
                 {
-                    label: 'Recoveries',
+                    label: 'Deaths',
                     data: [],
-                    backgroundColor: 'rgba(40, 200, 150, 1)',
-                    borderColor: 'rgba(40, 200, 150, 1)',
+                    backgroundColor: 'rgba(80, 120, 226, 1)',
+                    borderColor: 'rgba(80, 120, 226, 1)',
                     fill: false,
                     cubicInterpolationMode: 'monotone',
                     pointBorderWidth: 3,
