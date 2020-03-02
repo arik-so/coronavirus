@@ -36,7 +36,9 @@ function calculateDerivative(values) {
         if (['Province/State', 'Country/Region', 'Lat', 'Long'].includes(key)) {
             continue;
         }
-        dateLabels.add(key);
+        // const dateObject = Date.parse(key);
+        const dateString = moment(key).format('MMM Do');
+        dateLabels.add(dateString);
     }
 
     // parse the data into what we need

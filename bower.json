@@ -21,6 +21,7 @@
     "csvtojson": "^2.0.10",
     "vue": "^2.6.11",
     "regression-js": "^2.0.1",
-    "vue-router": "^3.1.6"
+    "vue-router": "^3.1.6",
+    "moment": "^2.24.0"
   }
 }
