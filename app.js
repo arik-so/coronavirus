@@ -175,6 +175,7 @@ function calculateDerivative(values) {
     defaultCheckedCountries.delete('Macau');
     defaultCheckedCountries.delete('Mainland China');
     defaultCheckedCountries.delete('Others');
+    defaultCheckedCountries.delete('US');
 
     const params = {
         checkedCountries: [],
