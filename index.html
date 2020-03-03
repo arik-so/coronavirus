@@ -47,7 +47,8 @@
                     <ul class="pure-menu-list">
                         <li class="pure-menu-list-item">
                             <input id="cruise_ship_descendants" type="checkbox" v-model="includeCruiseShipDescendants"/>
-                            <label for="cruise_ship_descendants" style="font-style: italic;">Abroad from Cruise Ship (Modifier)</label>
+                            <label for="cruise_ship_descendants" style="font-style: italic;">Abroad from Cruise Ship
+                                (Modifier)</label>
                         </li>
                         <li class="pure-menu-list-item">
                             <input id="select_all_checkbox" type="checkbox" v-model="selectAll"
@@ -82,6 +83,14 @@
                                        :disabled="!canSeparateAxes"/>
                                 <label for="separate_axes_radio">Two Axes</label>
                             </li>
+                            <li class="pure-menu-list-item" v-if="canShowLogScale">
+                                <input type="radio" id="linear_scale_radio" name="scale" v-model="scale"
+                                       value="linear"/>
+                                <label for="linear_scale_radio">Linear Scale</label>
+                                <input type="radio" id="log_scale_radio" name="scale" v-model="scale" value="log"
+                                       :disabled="!canShowLogScale"/>
+                                <label for="log_scale_radio">Log Scale</label>
+                            </li>
                             <li class="pure-menu-list-item">
                                 <input type="radio" id="total_radio" name="derivative" v-model="derivative"
                                        v-bind:value="false"/>
@@ -91,7 +100,8 @@
                                 <label for="delta_radio">Delta</label>
                             </li>
                             <li class="pure-menu-list-item">
-                                <select id="regression" v-model="regression" v-if="canShowRegression" :disabled="!canShowRegression">
+                                <select id="regression" v-model="regression" v-if="canShowRegression"
+                                        :disabled="!canShowRegression">
                                     <option value="none">Choose Regression Model</option>
                                     <option value="exponential">Exponential</option>
                                     <option value="logistic">Logistic (Experimental)</option>
@@ -112,11 +122,16 @@
                                     <input type="range" v-model="modelOffset" v-bind:min="regressionOffsetMinimum"
                                            v-bind:max="regressionOffsetMaximum"/>
                                 </li>
-                                <li class="pure-menu-list-item" v-if="regression === 'exponential'">Equation: f(x) = {{regressionSeries.cases.equation[0]}}e<sup>{{regressionSeries.cases.equation[1]}}x</sup>
+                                <li class="pure-menu-list-item" v-if="regression === 'exponential'">Equation: f(x) =
+                                    {{regressionSeries.cases.equation[0]}}e<sup>{{regressionSeries.cases.equation[1]}}x</sup>
                                 </li>
-                                <li class="pure-menu-list-item" v-if="regression === 'logistic'">Equation: f(x) = {{Math.round(regressionSeries.cases.parameterValues[0])}} / (1 + {{Math.round(regressionSeries.cases.parameterValues[1])}}e<sup>{{Math.round(regressionSeries.cases.parameterValues[2]*100)/100}}x</sup>)
+                                <li class="pure-menu-list-item" v-if="regression === 'logistic'">Equation: f(x) =
+                                    {{Math.round(regressionSeries.cases.parameterValues[0])}} / (1 +
+                                    {{Math.round(regressionSeries.cases.parameterValues[1])}}e<sup>{{Math.round(regressionSeries.cases.parameterValues[2]*100)/100}}x</sup>)
                                 </li>
-                                <li class="pure-menu-list-item" v-if="regression === 'exponential'">R<sup>2</sup>: {{regressionSeries.cases.r2}}</li>
+                                <li class="pure-menu-list-item" v-if="regression === 'exponential'">R<sup>2</sup>:
+                                    {{regressionSeries.cases.r2}}
+                                </li>
                             </ul>
                         </div>
                     </div>
@@ -142,8 +157,11 @@
     <div id="footer" class="footer">
         <div class="container footer-container">
             <p>Last updated: 3/02/2020</p>
-            <p><a href="https://github.com/arik-so/coronavirus/tree/gh-pages" target="_blank">Github</a> | <a href="https://github.com/CSSEGISandData/COVID-19/tree/master/csse_covid_19_data/csse_covid_19_time_series" target="_blank">Data</a></p>
-            <p>Built wearing 😷 by <a href="https://twitter.com/arikaleph" target="_blank">@arikaleph</a> and <a href="https://twitter.com/elliebee" target="_blank">@elliebee</a>.</p>
+            <p><a href="https://github.com/arik-so/coronavirus/tree/gh-pages" target="_blank">Github</a> | <a
+                    href="https://github.com/CSSEGISandData/COVID-19/tree/master/csse_covid_19_data/csse_covid_19_time_series"
+                    target="_blank">Data</a></p>
+            <p>Built wearing 😷 by <a href="https://twitter.com/arikaleph" target="_blank">@arikaleph</a> and <a
+                    href="https://twitter.com/elliebee" target="_blank">@elliebee</a>.</p>
         </div>
     </div>
 

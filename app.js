@@ -183,6 +183,7 @@ function calculateDerivative(values) {
         showDeaths: true,
         showRecoveries: true,
         axes: 'joint',
+        scale: 'linear',
         derivative: false,
         includeCruiseShipDescendants: false,
         regression: 'none',
@@ -317,6 +318,15 @@ function calculateDerivative(values) {
             },
             moveArrayEntry: function (array, from, to) {
                 return array.splice(to, 0, array.splice(from, 1)[0]);
+            },
+            validateGraphLayout: function () {
+                if (!this.canShowLogScale) {
+                    this.scale = 'linear';
+                }
+                const scaleType = (this.scale === 'log') ? 'logarithmic' : 'linear';
+                for (const axis of chartConfig.options.scales.yAxes) {
+                    axis.type = scaleType;
+                }
             }
         },
         watch: {
@@ -356,6 +366,7 @@ function calculateDerivative(values) {
                     chartConfig.data.datasets[CONFIRMED_REGRESSION_DATASET_INDEX].yAxisID = doubleAxes[0].id;
                     chartConfig.data.datasets[DEAD_DATASET_INDEX].yAxisID = doubleAxes[1].id;
                 }
+                this.validateGraphLayout();
                 this.updateLocation();
                 this.graph.update();
             },
@@ -379,6 +390,11 @@ function calculateDerivative(values) {
                 if (newValue === false) {
                     this.regression = 'none';
                 }
+            },
+            scale: function () {
+                this.validateGraphLayout();
+                this.graph.update();
+                this.updateLocation();
             }
         },
         computed: {
@@ -387,6 +403,10 @@ function calculateDerivative(values) {
             },
             canSeparateAxes: function () {
                 return (this.showCases || this.showRecoveries) && this.showDeaths;
+            },
+            canShowLogScale: function () {
+                return true;
+                // return (this.axes === 'joint');
             },
             sortedCountries: function () {
                 const countries = Array.from(this.countries);
