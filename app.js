@@ -399,7 +399,7 @@ function calculateDerivative(values) {
         },
         computed: {
             canShowRegression: function () {
-                return !!this.showCases;
+                return !!this.showCases && !this.derivative;
             },
             canSeparateAxes: function () {
                 return (this.showCases || this.showRecoveries) && this.showDeaths;
