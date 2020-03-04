@@ -31,12 +31,14 @@ function calculateDerivative(values) {
     const deadCases = await csv({output: 'json'}).fromString(deadResponse.data);
     const recoveredCases = await csv({output: 'json'}).fromString(recoveredResponse.data);
 
+    const dateKeys = [];
     const dateLabels = new Set();
     for (const key of Object.keys(confirmedCases[0])) {
         if (['Province/State', 'Country/Region', 'Lat', 'Long'].includes(key)) {
             continue;
         }
         // const dateObject = Date.parse(key);
+        dateKeys.push(key);
         const dateString = moment(key).format('MMM Do');
         dateLabels.add(dateString);
     }
@@ -168,7 +170,18 @@ function calculateDerivative(values) {
         }
     };
 
-    const Home = {template: '<p>home page</p>'};
+
+    const mapData = (await axios({
+        method: 'get',
+        url: 'assets/topo/world-countries.json',
+    })).data;
+
+    // const subdividedCountries = ['Antarctica', 'United States of America', 'China'];
+    const subdividedCountries = ['Antarctica'];
+    const mapCountryFeatures = ChartGeo.topojson.feature(mapData, mapData.objects.countries1).features.filter((f) => !subdividedCountries.includes(f.properties.name));
+    const mapCountryData = mapCountryFeatures.map((d) => ({feature: d, value: 0, fraction: 0}));
+    const mapCountryLabels = mapCountryFeatures.map((d) => d.properties.name);
+
 
     const defaultCheckedCountries = new Set(countries);
     defaultCheckedCountries.delete('Hong Kong');
@@ -214,7 +227,11 @@ function calculateDerivative(values) {
             regressionOffsetMinimum: 0,
             regressionOffsetMaximum: dateLabels.size - 3,
             ...params,
-            graph: null
+            graph: null,
+            map: null,
+            mapDate: dateLabels.size - 1,
+            mapDateMinimum: 0,
+            mapDateMaximum: dateLabels.size - 1
         },
         created: function () {
             const query = this.$route.query;
@@ -268,11 +285,65 @@ function calculateDerivative(values) {
         },
         mounted: function () {
             this.createChart();
+            this.createMap();
         },
         methods: {
             createChart: function () {
-                const ctx = document.getElementById('graph_canvas').getContext('2d');
-                this.graph = new Chart(ctx, chartConfig);
+                const context = document.getElementById('graph_canvas').getContext('2d');
+                this.graph = new Chart(context, chartConfig);
+            },
+            createMap: function () {
+                const context = document.getElementById("map").getContext("2d");
+                this.map = new Chart(context, {
+                    type: 'choropleth',
+                    data: {
+                        labels: [...mapCountryLabels],
+                        // labels: ['Germany', 'Austria'],
+                        datasets: [{
+                            label: 'Countries',
+                            outline: mapCountryFeatures,
+                            backgroundColor: (context) => {
+                                if (context.dataIndex == null) {
+                                    return null;
+                                }
+                                const value = context.dataset.data[context.dataIndex].fraction;
+                                debugger
+                                if (!value || value === 0) {
+                                    return new Color({r: 245, g: 247, b: 251}).rgbString();
+                                }
+                                const s = new Color({r: 155, g: 66, b: 254}).lightness(value * 100).rgbString();
+                                console.dir(s);
+                                return s;
+                            },
+                            data: [...mapCountryData]
+                        }]
+                    },
+                    options: {
+                        tooltips: {
+                            callbacks: {
+                                label: function (tooltipItem, data) {
+                                    const countryName = data.labels[tooltipItem.index];
+                                    const value = data.datasets[0].data[tooltipItem.index].value;
+                                    return `${countryName}: ${Number(value).toLocaleString()}`
+                                }
+                            }
+                        },
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        showOutline: false,
+                        showGraticule: true,
+                        legend: {
+                            display: false
+                        },
+                        scale: {
+                            projection: 'mercator'
+                        }
+                    }
+                });
+                this.layoutMapForDate(this.mapDate);
+            },
+            formatMapDate: function (date){
+                return Array.from(dateLabels)[date];
             },
             formatCountry: function (country) {
                 if (country === 'Others') {
@@ -316,8 +387,44 @@ function calculateDerivative(values) {
                 }
                 return filteredData;
             },
+            normalizeDataCountryNameToMapCountryName: function (dataSourceCountryName) {
+                const map = {
+                  'Mainland China': 'China',
+                  'US': 'United States of America',
+                };
+                return map[dataSourceCountryName] || dataSourceCountryName;
+            },
             moveArrayEntry: function (array, from, to) {
                 return array.splice(to, 0, array.splice(from, 1)[0]);
+            },
+            layoutMapForDate: function(dateIndex) {
+                const dateKey = dateKeys[dateIndex];
+                const totalByCountries = {};
+                let maxValue = 0;
+                for (const currentHistory of confirmedCases) {
+                    const currentCountry = currentHistory['Country/Region'];
+                    const normalizedCountryName = this.normalizeDataCountryNameToMapCountryName(currentCountry);
+                    const currentDelta = parseInt(currentHistory[dateKey]);
+                    totalByCountries[normalizedCountryName] = totalByCountries[normalizedCountryName] || 0;
+                    totalByCountries[normalizedCountryName] += currentDelta;
+                    maxValue = Math.max(maxValue, totalByCountries[normalizedCountryName]);
+                }
+                // const dataCountries = Object.keys(totalByCountries);
+                // const mapCountries = this.map.data.datasets[0].data.map(c => c.feature.properties.name);
+                debugger
+                for (const currentCountry of this.map.data.datasets[0].data) {
+                    const currentCountryName = currentCountry.feature.properties.name;
+                    if (!totalByCountries[currentCountryName]) {
+                        currentCountry.value = 0;
+                        continue;
+                    }
+                    const value = totalByCountries[currentCountryName];
+                    const fraction = Math.log(value) / Math.log(maxValue) * 0.8 + 0.2;
+                    // debugger
+                    currentCountry.value = value;
+                    currentCountry.fraction = fraction;
+                }
+                this.map.update();
             },
             validateGraphLayout: function () {
                 if (!this.canShowLogScale) {
@@ -374,6 +481,9 @@ function calculateDerivative(values) {
                 if (!newValue) {
                     this.axes = 'joint';
                 }
+            },
+            mapDate: function (newValue) {
+                this.layoutMapForDate(newValue);
             },
             timeSeries: function () {
                 this.updateLocation();
