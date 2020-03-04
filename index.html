@@ -156,9 +156,10 @@
         <div id="map_section" class="container">
             <div class="sidebar">
                 <canvas id="map"></canvas>
-                {{formatMapDate(mapDate)}}
                 <input style="width: calc(100% - 50px)" type="range" v-model="mapDate" v-bind:min="mapDateMinimum"
                        v-bind:max="mapDateMaximum"/>
+                <br/>
+                {{formatMapDate(mapDate)}}
             </div>
         </div>
 
