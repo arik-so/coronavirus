@@ -102,8 +102,8 @@ function calculateDerivative(values) {
                 {
                     label: 'Cases',
                     data: [],
-                    backgroundColor: 'rgba(155, 66, 254, 1)',
-                    borderColor: 'rgba(155, 66, 254, 1)',
+                    backgroundColor: 'rgba(80, 120, 226, 1)',
+                    borderColor: 'rgba(80, 120, 226, 1)',
                     fill: false,
                     cubicInterpolationMode: 'monotone',
                     pointBorderWidth: 3,
@@ -126,8 +126,8 @@ function calculateDerivative(values) {
                 {
                     label: 'Deaths',
                     data: [],
-                    backgroundColor: 'rgba(80, 120, 226, 1)',
-                    borderColor: 'rgba(80, 120, 226, 1)',
+                    backgroundColor: 'rgba(155, 66, 254, 1)',
+                    borderColor: 'rgba(155, 66, 254, 1)',
                     fill: false,
                     cubicInterpolationMode: 'monotone',
                     pointBorderWidth: 3,
@@ -314,12 +314,12 @@ function calculateDerivative(values) {
                                     return 'rgb(237, 241, 247)';
                                 }
 
-                                let baseColor = new Color({r: 155, g: 66, b: 254});
+                                let baseColor = new Color({r: 80, g: 120, b: 226});
                                 if (this.mapDataSource === 'recoveries') {
                                     baseColor = new Color({r: 40, g: 200, b: 150});
 
                                 } else if (this.mapDataSource === 'deaths') {
-                                    baseColor = new Color({r: 80, g: 120, b: 226});
+                                    baseColor = new Color({r: 155, g: 66, b: 254});
                                 }
 
                                 return baseColor.lightness(100 - value * 100).rgbString();
