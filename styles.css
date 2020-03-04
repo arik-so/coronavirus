@@ -204,6 +204,11 @@ label {
     margin-bottom: 5px;
     height: 50vh;
   }
+
+    div.map_container {
+        margin-bottom: 5px;!important;
+    }
+
   .sidebar {
     position: static;
     height: initial;
