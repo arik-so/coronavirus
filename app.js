@@ -310,7 +310,8 @@ function calculateDerivative(values) {
                                 }
                                 const value = context.dataset.data[context.dataIndex].fraction;
                                 if (!value || value === 0) {
-                                    return new Color({r: 245, g: 247, b: 251}).rgbString();
+                                    // return new Color({r: 245, g: 247, b: 251}).rgbString();
+                                    return 'rgb(237, 241, 247)';
                                 }
 
                                 let baseColor = new Color({r: 155, g: 66, b: 254});
@@ -340,7 +341,7 @@ function calculateDerivative(values) {
                         responsive: true,
                         maintainAspectRatio: true,
                         showOutline: false,
-                        showGraticule: true,
+                        showGraticule: false,
                         legend: {
                             display: false
                         },
