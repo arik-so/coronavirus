@@ -306,6 +306,7 @@ function calculateDerivative(values) {
                             outline: mapCountryFeatures,
                             backgroundColor: (context) => {
                                 if (context.dataIndex == null) {
+                                    // return 'rgb(237, 241, 247)';
                                     return null;
                                 }
                                 const value = context.dataset.data[context.dataIndex].fraction;
@@ -430,6 +431,7 @@ function calculateDerivative(values) {
                     const currentCountryName = currentCountry.feature.properties.name;
                     if (!totalByCountries[currentCountryName]) {
                         currentCountry.value = 0;
+                        currentCountry.fraction = 0;
                         continue;
                     }
                     const value = totalByCountries[currentCountryName];
