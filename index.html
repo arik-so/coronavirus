@@ -31,7 +31,7 @@
 
 <div class="main">
 
-    <div id="everything_except_footer" class="everything-except-footer">
+    <div id="app" class="everything-except-footer">
 
         <div id="header" class="header">
             <div class="container">
@@ -41,7 +41,7 @@
 
         <div id="aggregation_section" class="container">
 
-            <div id="app" class="sidebar">
+            <div class="sidebar">
 
                 <div id="geography_picker"
                      class="modifiers pure-menu pure-menu-scrollable custom-restricted settings-block geography-picker">
@@ -154,7 +154,12 @@
         </div> -->
 
         <div id="map_section" class="container">
-            <canvas id="map"></canvas>
+            <div class="sidebar">
+                <canvas id="map"></canvas>
+                {{formatMapDate(mapDate)}}
+                <input style="width: calc(100% - 50px)" type="range" v-model="mapDate" v-bind:min="mapDateMinimum"
+                       v-bind:max="mapDateMaximum"/>
+            </div>
         </div>
 
     </div>
@@ -171,66 +176,6 @@
     </div>
 
 </div>
-
-<script type="application/javascript">
-
-    (async () => {
-
-        const data = (await axios({
-            method: 'get',
-            url: 'https://unpkg.com/world-atlas/countries-50m.json',
-        })).data;
-
-        const us = (await axios({
-            method: 'get',
-            url: 'https://unpkg.com/us-atlas/states-10m.json',
-        })).data;
-        const countries = ChartGeo.topojson.feature(data, data.objects.countries).features;
-        const states = ChartGeo.topojson.feature(us, us.objects.states).features;
-
-        const countryData = countries.filter((f) => f.properties.name !== 'Antarctica' && f.properties.name !== 'United States of America').map((d) => ({feature: d, value: Math.random()}));
-        const statesData = states.map((d) => ({feature: d, value: Math.random()}));
-
-        const Austria = countries.find((d) => d.properties.name === 'Austria');
-        const Germany = countries.find((d) => d.properties.name === 'Germany');
-
-        const countryLabels = countries.map((d) => d.properties.name);
-        const stateLabels = states.map((d) => d.properties.name);
-        const chart = new Chart(document.getElementById("map").getContext("2d"), {
-            type: 'choropleth',
-            data: {
-                labels: [...countryLabels, ...stateLabels],
-                // labels: ['Germany', 'Austria'],
-                datasets: [{
-                    label: 'Countries',
-                    /*backgroundColor: (context) => {
-                        if (context.dataIndex == null) {
-                            return null;
-                        }
-                        const value = context.dataset.data[context.dataIndex];
-                        return new Color('steelblue').lightness(value.value * 100).rgbString();
-                    },*/
-                    data: [...countryData, ...statesData]
-                }]
-            },
-            options: {
-                maintainAspectRatio: false,
-                showOutline: false,
-                // outline: [...countryData],
-                showGraticule: true,
-                legend: {
-                    display: false
-                },
-                scale: {
-                    projection: 'mercator'
-                }
-            }
-        });
-
-    })();
-
-</script>
-
 
 <script src="./app.js"></script>
 </body>

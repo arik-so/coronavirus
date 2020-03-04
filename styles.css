@@ -98,6 +98,14 @@ div.chart_container {
   box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.05);
 }
 
+div#map_section {
+    background: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.05);
+    margin-bottom: 10px;
+}
+
 .footer-container {
   padding-left: 50px;
   padding-top: 20px;
