@@ -14,6 +14,7 @@
     <script src="libs/vue/dist/vue.min.js"></script>
     <script src="libs/vue-router/dist/vue-router.min.js"></script>
     <script src="libs/chart.js/dist/Chart.bundle.min.js"></script>
+    <script src="assets/js/Chart.Geo.min.js"></script>
     <script src="libs/regression-js/dist/regression.min.js"></script>
     <script src="bower_components/moment/min/moment.min.js"></script>
     <script src="assets/js/lm_fitter.js"></script>
@@ -152,6 +153,10 @@
             <span>Source: <a href="https://github.com/arik-so/coronavirus/tree/gh-pages">https://github.com/arik-so/coronavirus/tree/gh-pages</a></span>
         </div> -->
 
+        <div id="map_section" class="container">
+            <canvas id="map"></canvas>
+        </div>
+
     </div>
 
     <div id="footer" class="footer">
@@ -166,6 +171,65 @@
     </div>
 
 </div>
+
+<script type="application/javascript">
+
+    (async () => {
+
+        const data = (await axios({
+            method: 'get',
+            url: 'https://unpkg.com/world-atlas/countries-50m.json',
+        })).data;
+
+        const us = (await axios({
+            method: 'get',
+            url: 'https://unpkg.com/us-atlas/states-10m.json',
+        })).data;
+        const countries = ChartGeo.topojson.feature(data, data.objects.countries).features;
+        const states = ChartGeo.topojson.feature(us, us.objects.states).features;
+
+        const countryData = countries.filter((f) => f.properties.name !== 'Antarctica' && f.properties.name !== 'United States of America').map((d) => ({feature: d, value: Math.random()}));
+        const statesData = states.map((d) => ({feature: d, value: Math.random()}));
+
+        const Austria = countries.find((d) => d.properties.name === 'Austria');
+        const Germany = countries.find((d) => d.properties.name === 'Germany');
+
+        const countryLabels = countries.map((d) => d.properties.name);
+        const stateLabels = states.map((d) => d.properties.name);
+        const chart = new Chart(document.getElementById("map").getContext("2d"), {
+            type: 'choropleth',
+            data: {
+                labels: [...countryLabels, ...stateLabels],
+                // labels: ['Germany', 'Austria'],
+                datasets: [{
+                    label: 'Countries',
+                    /*backgroundColor: (context) => {
+                        if (context.dataIndex == null) {
+                            return null;
+                        }
+                        const value = context.dataset.data[context.dataIndex];
+                        return new Color('steelblue').lightness(value.value * 100).rgbString();
+                    },*/
+                    data: [...countryData, ...statesData]
+                }]
+            },
+            options: {
+                maintainAspectRatio: false,
+                showOutline: false,
+                // outline: [...countryData],
+                showGraticule: true,
+                legend: {
+                    display: false
+                },
+                scale: {
+                    projection: 'mercator'
+                }
+            }
+        });
+
+    })();
+
+</script>
 
 
 <script src="./app.js"></script>
