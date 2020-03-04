@@ -231,7 +231,8 @@ function calculateDerivative(values) {
             map: null,
             mapDate: dateLabels.size - 1,
             mapDateMinimum: 0,
-            mapDateMaximum: dateLabels.size - 1
+            mapDateMaximum: dateLabels.size - 1,
+            mapHistoricalCountryHigh: 0
         },
         created: function () {
             const query = this.$route.query;
@@ -397,14 +398,13 @@ function calculateDerivative(values) {
             layoutMapForDate: function(dateIndex) {
                 const dateKey = dateKeys[dateIndex];
                 const totalByCountries = {};
-                let maxValue = 0;
                 for (const currentHistory of confirmedCases) {
                     const currentCountry = currentHistory['Country/Region'];
                     const normalizedCountryName = this.normalizeDataCountryNameToMapCountryName(currentCountry);
                     const currentDelta = parseInt(currentHistory[dateKey]);
                     totalByCountries[normalizedCountryName] = totalByCountries[normalizedCountryName] || 0;
                     totalByCountries[normalizedCountryName] += currentDelta;
-                    maxValue = Math.max(maxValue, totalByCountries[normalizedCountryName]);
+                    this.mapHistoricalCountryHigh = Math.max(this.mapHistoricalCountryHigh, totalByCountries[normalizedCountryName]);
                 }
                 // const dataCountries = Object.keys(totalByCountries);
                 // const mapCountries = this.map.data.datasets[0].data.map(c => c.feature.properties.name);
@@ -415,7 +415,7 @@ function calculateDerivative(values) {
                         continue;
                     }
                     const value = totalByCountries[currentCountryName];
-                    const fraction = Math.log(value) / Math.log(maxValue) * 0.8 + 0.2;
+                    const fraction = Math.log(value) / Math.log(this.mapHistoricalCountryHigh) * 0.7 + 0.3;
                     currentCountry.value = value;
                     currentCountry.fraction = fraction;
                 }
