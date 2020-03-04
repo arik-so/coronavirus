@@ -307,13 +307,10 @@ function calculateDerivative(values) {
                                     return null;
                                 }
                                 const value = context.dataset.data[context.dataIndex].fraction;
-                                debugger
                                 if (!value || value === 0) {
                                     return new Color({r: 245, g: 247, b: 251}).rgbString();
                                 }
-                                const s = new Color({r: 155, g: 66, b: 254}).lightness(value * 100).rgbString();
-                                console.dir(s);
-                                return s;
+                                return new Color({r: 155, g: 66, b: 254}).lightness(100 - value * 100).rgbString();
                             },
                             data: [...mapCountryData]
                         }]
@@ -411,7 +408,6 @@ function calculateDerivative(values) {
                 }
                 // const dataCountries = Object.keys(totalByCountries);
                 // const mapCountries = this.map.data.datasets[0].data.map(c => c.feature.properties.name);
-                debugger
                 for (const currentCountry of this.map.data.datasets[0].data) {
                     const currentCountryName = currentCountry.feature.properties.name;
                     if (!totalByCountries[currentCountryName]) {
@@ -420,7 +416,6 @@ function calculateDerivative(values) {
                     }
                     const value = totalByCountries[currentCountryName];
                     const fraction = Math.log(value) / Math.log(maxValue) * 0.8 + 0.2;
-                    // debugger
                     currentCountry.value = value;
                     currentCountry.fraction = fraction;
                 }
