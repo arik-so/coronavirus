@@ -166,6 +166,12 @@
                             <option value="recoveries">Recoveries</option>
                             <option value="deaths">Deaths</option>
                         </select>
+                        <select id="map_data_reference" v-model="mapDataReference">
+                            <option value="absolute">Absolute</option>
+                            <option value="relative:population" disabled>Relative to Population</option>
+                            <option value="relative:cases" v-if="canShowMapRelativeToCases">Relative to Cases</option>
+                            <option value="relative:recoveries" v-if="canShowMapRelativeToRecoveries">Relative to Recoveries</option>
+                        </select>
                     </div>
                     <div style="clear: both;"></div>
                 </div>

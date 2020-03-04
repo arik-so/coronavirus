@@ -232,8 +232,8 @@ function calculateDerivative(values) {
             mapDate: dateLabels.size - 1,
             mapDateMinimum: 0,
             mapDateMaximum: dateLabels.size - 1,
-            mapHistoricalCountryHigh: 0,
-            mapDataSource: 'cases'
+            mapDataSource: 'cases',
+            mapDataReference: 'absolute'
         },
         created: function () {
             const query = this.$route.query;
@@ -332,10 +332,13 @@ function calculateDerivative(values) {
                     options: {
                         tooltips: {
                             callbacks: {
-                                label: function (tooltipItem, data) {
+                                label: (tooltipItem, data) => {
                                     const countryName = data.labels[tooltipItem.index];
                                     const value = data.datasets[0].data[tooltipItem.index].value;
-                                    return `${countryName}: ${Number(value).toLocaleString()}`
+                                    if (this.mapDataReference.startsWith('relative:')) {
+                                        return `${countryName}: ${value}`;
+                                    }
+                                    return `${countryName}: ${Number(value).toLocaleString()}`;
                                 }
                             }
                         },
@@ -409,33 +412,21 @@ function calculateDerivative(values) {
                 return array.splice(to, 0, array.splice(from, 1)[0]);
             },
             layoutMapForDate: function (dateIndex) {
-                const dateKey = dateKeys[dateIndex];
-                const totalByCountries = {};
-                let dataSource = confirmedCases;
-                if (this.mapDataSource === 'recoveries') {
-                    dataSource = recoveredCases;
-                } else if (this.mapDataSource === 'deaths') {
-                    dataSource = deadCases;
-                }
-                for (const currentHistory of dataSource) {
-                    const currentCountry = currentHistory['Country/Region'];
-                    const normalizedCountryName = this.normalizeDataCountryNameToMapCountryName(currentCountry);
-                    const currentDelta = parseInt(currentHistory[dateKey]);
-                    totalByCountries[normalizedCountryName] = totalByCountries[normalizedCountryName] || 0;
-                    totalByCountries[normalizedCountryName] += currentDelta;
-                    this.mapHistoricalCountryHigh = Math.max(this.mapHistoricalCountryHigh, totalByCountries[normalizedCountryName]);
-                }
-                // const dataCountries = Object.keys(totalByCountries);
-                // const mapCountries = this.map.data.datasets[0].data.map(c => c.feature.properties.name);
+                const countryTotals = this.mapCountryValues[dateIndex];
                 for (const currentCountry of this.map.data.datasets[0].data) {
                     const currentCountryName = currentCountry.feature.properties.name;
-                    if (!totalByCountries[currentCountryName]) {
+                    if (!countryTotals[currentCountryName]) {
                         currentCountry.value = 0;
                         currentCountry.fraction = 0;
                         continue;
                     }
-                    const value = totalByCountries[currentCountryName];
-                    const fraction = Math.log(value) / Math.log(this.mapHistoricalCountryHigh) * 0.6 + 0.15;
+                    let value = countryTotals[currentCountryName];
+                    let fraction = Math.log(value) / Math.log(this.mapHistoricalCountryHigh) * 0.6 + 0.15;
+                    if (this.mapDataReference.startsWith('relative:')) {
+                        value = Math.round(countryTotals[currentCountryName] * 10000) / 100 + '%';
+                        fraction = countryTotals[currentCountryName] / this.mapHistoricalCountryHigh * 0.6 + 0.15;
+                        // console.log(currentCountryName, countryTotals[currentCountryName], this.mapHistoricalCountryHigh, fraction);
+                    }
                     currentCountry.value = value;
                     currentCountry.fraction = fraction;
                 }
@@ -501,6 +492,15 @@ function calculateDerivative(values) {
                 this.layoutMapForDate(newValue);
             },
             mapDataSource: function () {
+                if (this.mapDataReference === 'relative:recoveries' && !this.canShowMapRelativeToRecoveries) {
+                    this.mapDataReference = 'relative:cases';
+                }
+                if (this.mapDataReference === 'relative:cases' && !this.canShowMapRelativeToCases) {
+                    this.mapDataReference = 'absolute';
+                }
+                this.layoutMapForDate(this.mapDate);
+            },
+            mapDataReference: function () {
                 this.layoutMapForDate(this.mapDate);
             },
             timeSeries: function () {
@@ -535,6 +535,79 @@ function calculateDerivative(values) {
             canShowLogScale: function () {
                 return true;
                 // return (this.axes === 'joint');
+            },
+            canShowMapRelativeToCases: function () {
+                return this.mapDataSource !== 'cases';
+            },
+            canShowMapRelativeToRecoveries: function () {
+                return this.mapDataSource === 'deaths';
+            },
+            mapRawData: function () {
+                let dataSource = confirmedCases;
+                if (this.mapDataSource === 'recoveries') {
+                    dataSource = recoveredCases;
+                } else if (this.mapDataSource === 'deaths') {
+                    dataSource = deadCases;
+                }
+                return dataSource;
+            },
+            mapCountryValues: function () {
+                console.log('recalculating');
+                const dataSource = this.mapRawData;
+
+                let denominators = null;
+                if (this.mapDataReference.startsWith('relative:')) {
+                    let comparisonDataSource = confirmedCases;
+                    if (this.mapDataReference === 'relative:recoveries') {
+                        comparisonDataSource = recoveredCases;
+                    }
+                    denominators = [];
+                    for (let i = this.mapDateMinimum; i <= this.mapDateMaximum; i++) {
+                        const dateKey = dateKeys[i];
+                        const totalByCountries = {};
+                        for (const currentHistory of comparisonDataSource) {
+                            const currentCountry = currentHistory['Country/Region'];
+                            const normalizedCountryName = this.normalizeDataCountryNameToMapCountryName(currentCountry);
+                            const currentDelta = parseInt(currentHistory[dateKey]);
+                            totalByCountries[normalizedCountryName] = totalByCountries[normalizedCountryName] || 0;
+                            totalByCountries[normalizedCountryName] += currentDelta;
+                        }
+                        denominators.push(totalByCountries);
+                    }
+                }
+
+                const countryTotals = [];
+                for (let i = this.mapDateMinimum; i <= this.mapDateMaximum; i++) {
+                    const dateKey = dateKeys[i];
+                    const totalByCountries = {};
+                    for (const currentHistory of dataSource) {
+                        const currentCountry = currentHistory['Country/Region'];
+                        const normalizedCountryName = this.normalizeDataCountryNameToMapCountryName(currentCountry);
+
+                        totalByCountries[normalizedCountryName] = totalByCountries[normalizedCountryName] || 0;
+
+                        let currentDelta = parseInt(currentHistory[dateKey]);
+                        if (denominators && denominators[i]) {
+                            const denominator = denominators[i][normalizedCountryName];
+                            if (denominator === 0) {
+                                continue;
+                            }
+                            currentDelta /= denominator;
+                        }
+                        totalByCountries[normalizedCountryName] += currentDelta;
+                    }
+                    countryTotals.push(totalByCountries);
+                }
+                return countryTotals;
+            },
+            mapHistoricalCountryHigh: function () {
+                let maximum = 0;
+                const countryTotal = this.mapCountryValues[this.mapDateMaximum];
+                // console.dir(countryTotal);
+                for (const [key, value] of Object.entries(countryTotal)) {
+                    maximum = Math.max(maximum, value);
+                }
+                return maximum;
             },
             sortedCountries: function () {
                 const countries = Array.from(this.countries);
