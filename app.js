@@ -435,7 +435,7 @@ function calculateDerivative(values) {
                         continue;
                     }
                     const value = totalByCountries[currentCountryName];
-                    const fraction = Math.log(value) / Math.log(this.mapHistoricalCountryHigh) * 0.7 + 0.3;
+                    const fraction = Math.log(value) / Math.log(this.mapHistoricalCountryHigh) * 0.6 + 0.15;
                     currentCountry.value = value;
                     currentCountry.fraction = fraction;
                 }
