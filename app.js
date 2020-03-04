@@ -312,7 +312,16 @@ function calculateDerivative(values) {
                                 if (!value || value === 0) {
                                     return new Color({r: 245, g: 247, b: 251}).rgbString();
                                 }
-                                return new Color({r: 155, g: 66, b: 254}).lightness(100 - value * 100).rgbString();
+
+                                let baseColor = new Color({r: 155, g: 66, b: 254});
+                                if (this.mapDataSource === 'recoveries') {
+                                    baseColor = new Color({r: 40, g: 200, b: 150});
+
+                                } else if (this.mapDataSource === 'deaths') {
+                                    baseColor = new Color({r: 80, g: 120, b: 226});
+                                }
+
+                                return baseColor.lightness(100 - value * 100).rgbString();
                                 // return `rgba(155, 66, 254, ${value})`; // new Color({r: 155, g: 66, b: 254}).lightness(100 - value * 100).rgbString();
                             },
                             data: [...mapCountryData]
