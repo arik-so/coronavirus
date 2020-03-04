@@ -157,10 +157,17 @@
             <div class="sidebar">
                 <div class="map_container">
                     <canvas id="map"></canvas>
-                    <input style="width: calc(100% - 50px)" type="range" v-model="mapDate" v-bind:min="mapDateMinimum"
+                    <input style="width: 100%;" type="range" v-model="mapDate" v-bind:min="mapDateMinimum"
                            v-bind:max="mapDateMaximum"/>
-                    <br/>
-                    {{formatMapDate(mapDate)}}
+                    <div style="float: left;">{{formatMapDate(mapDate)}}</div>
+                    <div style="float:right;">
+                        <select id="map_data_source" v-model="mapDataSource">
+                            <option value="cases">Cases</option>
+                            <option value="recoveries">Recoveries</option>
+                            <option value="deaths">Deaths</option>
+                        </select>
+                    </div>
+                    <div style="clear: both;"></div>
                 </div>
             </div>
         </div>

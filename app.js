@@ -232,7 +232,8 @@ function calculateDerivative(values) {
             mapDate: dateLabels.size - 1,
             mapDateMinimum: 0,
             mapDateMaximum: dateLabels.size - 1,
-            mapHistoricalCountryHigh: 0
+            mapHistoricalCountryHigh: 0,
+            mapDataSource: 'cases'
         },
         created: function () {
             const query = this.$route.query;
@@ -312,6 +313,7 @@ function calculateDerivative(values) {
                                     return new Color({r: 245, g: 247, b: 251}).rgbString();
                                 }
                                 return new Color({r: 155, g: 66, b: 254}).lightness(100 - value * 100).rgbString();
+                                // return `rgba(155, 66, 254, ${value})`; // new Color({r: 155, g: 66, b: 254}).lightness(100 - value * 100).rgbString();
                             },
                             data: [...mapCountryData]
                         }]
@@ -340,7 +342,7 @@ function calculateDerivative(values) {
                 });
                 this.layoutMapForDate(this.mapDate);
             },
-            formatMapDate: function (date){
+            formatMapDate: function (date) {
                 return Array.from(dateLabels)[date];
             },
             formatCountry: function (country) {
@@ -387,18 +389,24 @@ function calculateDerivative(values) {
             },
             normalizeDataCountryNameToMapCountryName: function (dataSourceCountryName) {
                 const map = {
-                  'Mainland China': 'China',
-                  'US': 'United States of America',
+                    'Mainland China': 'China',
+                    'US': 'United States of America',
                 };
                 return map[dataSourceCountryName] || dataSourceCountryName;
             },
             moveArrayEntry: function (array, from, to) {
                 return array.splice(to, 0, array.splice(from, 1)[0]);
             },
-            layoutMapForDate: function(dateIndex) {
+            layoutMapForDate: function (dateIndex) {
                 const dateKey = dateKeys[dateIndex];
                 const totalByCountries = {};
-                for (const currentHistory of confirmedCases) {
+                let dataSource = confirmedCases;
+                if (this.mapDataSource === 'recoveries') {
+                    dataSource = recoveredCases;
+                } else if (this.mapDataSource === 'deaths') {
+                    dataSource = deadCases;
+                }
+                for (const currentHistory of dataSource) {
                     const currentCountry = currentHistory['Country/Region'];
                     const normalizedCountryName = this.normalizeDataCountryNameToMapCountryName(currentCountry);
                     const currentDelta = parseInt(currentHistory[dateKey]);
@@ -479,6 +487,9 @@ function calculateDerivative(values) {
             },
             mapDate: function (newValue) {
                 this.layoutMapForDate(newValue);
+            },
+            mapDataSource: function () {
+                this.layoutMapForDate(this.mapDate);
             },
             timeSeries: function () {
                 this.updateLocation();
