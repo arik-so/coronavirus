@@ -336,7 +336,8 @@ function calculateDerivative(values) {
                                     const countryName = data.labels[tooltipItem.index];
                                     const value = data.datasets[0].data[tooltipItem.index].value;
                                     if (this.mapDataReference.startsWith('relative:')) {
-                                        return `${countryName}: ${value}`;
+                                        const printedValue = Number(Math.round(value * 10000) / 100).toLocaleString();
+                                        return `${countryName}: ${printedValue}%`;
                                     }
                                     return `${countryName}: ${Number(value).toLocaleString()}`;
                                 }
@@ -420,12 +421,10 @@ function calculateDerivative(values) {
                         currentCountry.fraction = 0;
                         continue;
                     }
-                    let value = countryTotals[currentCountryName];
+                    const value = countryTotals[currentCountryName];
                     let fraction = Math.log(value) / Math.log(this.mapHistoricalCountryHigh) * 0.6 + 0.15;
                     if (this.mapDataReference.startsWith('relative:')) {
-                        value = Math.round(countryTotals[currentCountryName] * 10000) / 100 + '%';
-                        fraction = countryTotals[currentCountryName] / this.mapHistoricalCountryHigh * 0.6 + 0.15;
-                        // console.log(currentCountryName, countryTotals[currentCountryName], this.mapHistoricalCountryHigh, fraction);
+                        fraction = value / this.mapHistoricalCountryHigh * 0.6 + 0.15;
                     }
                     currentCountry.value = value;
                     currentCountry.fraction = fraction;
