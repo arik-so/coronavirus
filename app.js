@@ -424,8 +424,11 @@ function calculateDerivative(values) {
                     const value = countryTotals[currentCountryName];
                     let fraction = Math.log(value) / Math.log(this.mapHistoricalCountryHigh) * 0.6 + 0.15;
                     if (this.mapDataReference.startsWith('relative:')) {
-                        // fraction = value / this.mapHistoricalCountryHigh * 0.6 + 0.15;
-                        fraction = Math.log(value*100) / Math.log(this.mapHistoricalCountryHigh*100) * 0.6 + 0.15;
+                        fraction = value / this.mapHistoricalCountryHigh * 0.6 + 0.15;
+                        if (this.mapDataReference !== 'relative:recoveries') {
+                            // we need to amplify the smaller numbers
+                            fraction = Math.log(value * 100) / Math.log(this.mapHistoricalCountryHigh * 100) * 0.6 + 0.15;
+                        }
                     }
                     currentCountry.value = value;
                     currentCountry.fraction = fraction;
