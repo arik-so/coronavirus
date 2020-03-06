@@ -193,6 +193,13 @@
 
 </div>
 
-<script src="./app.js"></script>
+<script type="application/javascript">
+    (() => {
+        const cacheResetter = Math.round(Date.now()/(10*60*1000));
+        const script = document.createElement('script');
+        script.setAttribute("src", `app.js?cache=${cacheResetter}`);
+        document.getElementsByTagName("body")[0].appendChild(script);
+    })();
+</script>
 </body>
 </html>
