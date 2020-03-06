@@ -15,17 +15,19 @@ function calculateDerivative(values) {
     const DEAD_DATASET_INDEX = 2;
     const CONFIRMED_REGRESSION_DATASET_INDEX = 3;
 
+    const cacheResetter = Math.round(Date.now()/(10*60*1000));
+
     const confirmedResponse = await axios({
         method: 'get',
-        url: 'docs/data/covid_confirmed.csv',
+        url: `docs/data/covid_confirmed.csv?cache=${cacheResetter}`,
     });
     const deadResponse = await axios({
         method: 'get',
-        url: 'docs/data/covid_dead.csv',
+        url: `docs/data/covid_dead.csv?cache=${cacheResetter}`,
     });
     const recoveredResponse = await axios({
         method: 'get',
-        url: 'docs/data/covid_recovered.csv',
+        url: `docs/data/covid_recovered.csv?cache=${cacheResetter}`,
     });
     const confirmedCases = await csv({output: 'json'}).fromString(confirmedResponse.data);
     const deadCases = await csv({output: 'json'}).fromString(deadResponse.data);
