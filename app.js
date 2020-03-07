@@ -380,6 +380,15 @@ function calculateDerivative(values) {
                 };
                 pathUpdateTimeout = setTimeout(refreshRoute, 300);
             },
+            parseRowEntryForDate: function (row, date) {
+                const value = row[date];
+                let entry = parseInt(value);
+                if (!Number.isSafeInteger(entry)) {
+                    entry = 0;
+                    console.log('Skipping count for entry:', row['Country/Region'], row['Province/State'], date, value);
+                }
+                return entry;
+            },
             filterDatasetBySelectedCountries: function (data) {
                 const filteredData = [];
                 for (const currentLocation of data) {
@@ -392,15 +401,13 @@ function calculateDerivative(values) {
                         continue;
                     }
                     let dateIndex = 0;
-                    for (const [key, value] of Object.entries(currentLocation)) {
+                    for (const key of Object.keys(currentLocation)) {
                         if (['Province/State', 'Country/Region', 'Lat', 'Long'].includes(key)) {
                             continue;
                         }
-                        let currentCount = parseInt(value);
-                        if (!Number.isSafeInteger(currentCount)) {
-                            currentCount = 0;
-                            console.log('Skipping count for entry:', currentLocation['Country/Region'], currentLocation['Province/State'], key, value);
-                        }
+
+                        const currentCount = this.parseRowEntryForDate(currentLocation, key);
+
                         filteredData[dateIndex] = filteredData[dateIndex] || 0;
                         filteredData[dateIndex] += currentCount;
                         dateIndex++;
@@ -578,12 +585,7 @@ function calculateDerivative(values) {
                         for (const currentHistory of comparisonDataSource) {
                             const currentCountry = currentHistory['Country/Region'];
                             const normalizedCountryName = this.normalizeDataCountryNameToMapCountryName(currentCountry);
-                            const rawDelta = currentHistory[dateKey];
-                            let currentDelta = parseInt(rawDelta);
-                            if (!Number.isSafeInteger(currentDelta)) {
-                                currentDelta = 0;
-                                console.log('Skipping map delta for entry:', currentHistory['Country/Region'], currentHistory['Province/State'], dateKey, rawDelta);
-                            }
+                            const currentDelta = this.parseRowEntryForDate(currentHistory, dateKey);
                             totalByCountries[normalizedCountryName] = totalByCountries[normalizedCountryName] || 0;
                             totalByCountries[normalizedCountryName] += currentDelta;
                         }
@@ -601,12 +603,7 @@ function calculateDerivative(values) {
 
                         totalByCountries[normalizedCountryName] = totalByCountries[normalizedCountryName] || 0;
 
-                        const rawDelta = currentHistory[dateKey];
-                        let currentDelta = parseInt(rawDelta);
-                        if (!Number.isSafeInteger(currentDelta)) {
-                            currentDelta = 0;
-                            console.log('Skipping map delta for entry:', currentHistory['Country/Region'], currentHistory['Province/State'], dateKey, rawDelta);
-                        }
+                        let currentDelta = this.parseRowEntryForDate(currentHistory, dateKey);
 
                         if (denominators && denominators[i]) {
                             const denominator = denominators[i][normalizedCountryName];
