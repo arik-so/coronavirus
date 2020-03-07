@@ -15,7 +15,7 @@ function calculateDerivative(values) {
     const DEAD_DATASET_INDEX = 2;
     const CONFIRMED_REGRESSION_DATASET_INDEX = 3;
 
-    const cacheResetter = Math.round(Date.now()/(10*60*1000));
+    const cacheResetter = Math.round(Date.now() / (10 * 60 * 1000));
 
     const confirmedResponse = await axios({
         method: 'get',
@@ -396,7 +396,11 @@ function calculateDerivative(values) {
                         if (['Province/State', 'Country/Region', 'Lat', 'Long'].includes(key)) {
                             continue;
                         }
-                        const currentCount = parseInt(value);
+                        let currentCount = parseInt(value);
+                        if (!Number.isSafeInteger(currentCount)) {
+                            currentCount = 0;
+                            console.log('Skipping count for entry:', currentLocation['Country/Region'], currentLocation['Province/State'], key, value);
+                        }
                         filteredData[dateIndex] = filteredData[dateIndex] || 0;
                         filteredData[dateIndex] += currentCount;
                         dateIndex++;
@@ -574,7 +578,12 @@ function calculateDerivative(values) {
                         for (const currentHistory of comparisonDataSource) {
                             const currentCountry = currentHistory['Country/Region'];
                             const normalizedCountryName = this.normalizeDataCountryNameToMapCountryName(currentCountry);
-                            const currentDelta = parseInt(currentHistory[dateKey]);
+                            const rawDelta = currentHistory[dateKey];
+                            let currentDelta = parseInt(rawDelta);
+                            if (!Number.isSafeInteger(currentDelta)) {
+                                currentDelta = 0;
+                                console.log('Skipping map delta for entry:', currentHistory['Country/Region'], currentHistory['Province/State'], dateKey, rawDelta);
+                            }
                             totalByCountries[normalizedCountryName] = totalByCountries[normalizedCountryName] || 0;
                             totalByCountries[normalizedCountryName] += currentDelta;
                         }
@@ -592,7 +601,13 @@ function calculateDerivative(values) {
 
                         totalByCountries[normalizedCountryName] = totalByCountries[normalizedCountryName] || 0;
 
-                        let currentDelta = parseInt(currentHistory[dateKey]);
+                        const rawDelta = currentHistory[dateKey];
+                        let currentDelta = parseInt(rawDelta);
+                        if (!Number.isSafeInteger(currentDelta)) {
+                            currentDelta = 0;
+                            console.log('Skipping map delta for entry:', currentHistory['Country/Region'], currentHistory['Province/State'], dateKey, rawDelta);
+                        }
+
                         if (denominators && denominators[i]) {
                             const denominator = denominators[i][normalizedCountryName];
                             if (denominator === 0) {
