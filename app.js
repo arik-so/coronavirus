@@ -193,6 +193,9 @@ function calculateDerivative(values) {
     defaultCheckedCountries.delete('US');
 
     const validValues = {
+        axes: ['join', 'separate'],
+        scale: ['linear', 'log'],
+        regression: ['none', 'exponential', 'logistic'],
         mapDataSource: ['cases', 'recoveries', 'deaths'],
         mapDataReference: ['absolute', 'relative:cases', 'relative:recoveries'],
     };
