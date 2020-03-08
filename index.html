@@ -156,9 +156,6 @@
         <div id="map_section" class="container">
             <div class="sidebar">
                 <div class="map_container">
-                    <canvas id="map"></canvas>
-                    <input style="width: 100%;" type="range" v-model="mapDate" v-bind:min="mapDateMinimum"
-                           v-bind:max="mapDateMaximum"/>
                     <div style="float: left;">{{formatMapDate(mapDate)}}</div>
                     <div style="float:right;">
                         <select id="map_data_source" v-model="mapDataSource">
@@ -174,6 +171,9 @@
                         </select>
                     </div>
                     <div style="clear: both;"></div>
+                    <input style="width: 100%;" type="range" v-model="mapDate" v-bind:min="mapDateMinimum"
+                           v-bind:max="mapDateMaximum"/>
+                    <canvas id="map"></canvas>
                 </div>
             </div>
         </div>

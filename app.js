@@ -192,6 +192,11 @@ function calculateDerivative(values) {
     defaultCheckedCountries.delete('Others');
     defaultCheckedCountries.delete('US');
 
+    const validValues = {
+        mapDataSource: ['cases', 'recoveries', 'deaths'],
+        mapDataReference: ['absolute', 'relative:cases', 'relative:recoveries'],
+    };
+
     const params = {
         checkedCountries: [],
         showCases: true,
@@ -204,6 +209,8 @@ function calculateDerivative(values) {
         regression: 'none',
         modelOffset: 0,
         extrapolationSize: 5,
+        mapDataSource: 'deaths',
+        mapDataReference: 'relative:recoveries'
     };
 
     const routes = [{
@@ -233,9 +240,7 @@ function calculateDerivative(values) {
             map: null,
             mapDate: dateLabels.size - 1,
             mapDateMinimum: 0,
-            mapDateMaximum: dateLabels.size - 1,
-            mapDataSource: 'cases',
-            mapDataReference: 'absolute'
+            mapDateMaximum: dateLabels.size - 1
         },
         created: function () {
             const query = this.$route.query;
@@ -283,6 +288,10 @@ function calculateDerivative(values) {
                     extrapolation = Math.min(extrapolation, 10);
                     this[key] = extrapolation;
                 } else {
+                    const currentValidValues = validValues[key];
+                    if (Array.isArray(currentValidValues) && !currentValidValues.includes(value)) {
+                        continue;
+                    }
                     this[key] = value;
                 }
             }
@@ -516,9 +525,11 @@ function calculateDerivative(values) {
                     this.mapDataReference = 'absolute';
                 }
                 this.layoutMapForDate(this.mapDate);
+                this.updateLocation();
             },
             mapDataReference: function () {
                 this.layoutMapForDate(this.mapDate);
+                this.updateLocation();
             },
             timeSeries: function () {
                 this.updateLocation();
