@@ -292,7 +292,9 @@ function calculateDerivative(values) {
                     this[key] = extrapolation;
                 } else {
                     const currentValidValues = validValues[key];
-                    if (Array.isArray(currentValidValues) && !currentValidValues.includes(value)) {
+                    if (!Array.isArray(currentValidValues)) {
+                        console.log('no valid values for query setting:', key);
+                    } else if (!currentValidValues.includes(value)) {
                         continue;
                     }
                     this[key] = value;
