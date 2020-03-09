@@ -338,6 +338,7 @@ function calculateDerivative(values) {
 					link_box.select();
 					try {
 						const successful = document.execCommand('copy');
+						link_box.blur();
 						onCopy();
 					} catch (err) {
 					}
