@@ -315,6 +315,7 @@ function calculateDerivative(values) {
 		methods: {
 			toggleShare: function () {
 				this.showShare = !this.showShare;
+				this.showCopyLink = true;
 				if (this.showShare) {
 					const link_box = document.getElementById('link_box');
 					this.$nextTick(() => {
