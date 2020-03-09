@@ -88,6 +88,11 @@ div#share_section div.sidebar {
 	padding-bottom: 10px;
 }
 
+div#share_section > div {
+	padding-left: 10px;
+	padding-right: 10px;
+}
+
 div.share_container {
 	background: #fff;
 	padding: 20px;
@@ -265,6 +270,11 @@ label {
 		display: inline-block;
 		width: 100%;
 		margin: 0;
+	}
+
+	div#share_section > div {
+		padding-left: 5px;
+		padding-right: 5px;
 	}
 
 	div.aggregation-configuration > div.settings-block:only-child {
