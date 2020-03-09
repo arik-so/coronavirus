@@ -207,6 +207,15 @@ label {
 		text-align: center;
 	}
 
+	div.share_container tr > td:nth-child(2) {
+		padding-left: 10px;
+		padding-right: 10px;
+	}
+
+	div.share_container tr > td:nth-child(2) > input {
+		width: calc(100% - 20px);
+	}
+
 	div.geography-picker {
 		float: none;
 		width: calc(100vw - 10px);
