@@ -308,7 +308,7 @@ function calculateDerivative(values) {
 			this.createChart();
 			this.createMap();
 			SocialShareKit.init({
-				title: 'Coronavirus tracker',
+				title: 'Coronavirus tracker by @arikaleph and @elliebee',
 				text: ''
 			});
 		},
