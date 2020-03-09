@@ -13,6 +13,7 @@
           integrity="sha384-oAOxQR6DkCoMliIh8yFnu25d7Eq/PHS21PClpwjOTeU2jRSq11vu66rf90/cZr47" crossorigin="anonymous">
     <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.1/build/grids-responsive-min.css">
     <link href="https://fonts.googleapis.com/css?family=Spartan:300,400&display=swap" rel="stylesheet">
+	<link rel="stylesheet" href="bower_components/social-share-kit/dist/css/social-share-kit.css" type="text/css">
     <script src="libs/axios/dist/axios.min.js"></script>
     <script src="libs/csvtojson/browser/csvtojson.min.js"></script>
     <script src="libs/vue/dist/vue.min.js"></script>
@@ -22,6 +23,7 @@
     <script src="libs/regression-js/dist/regression.min.js"></script>
     <script src="bower_components/moment/min/moment.min.js"></script>
     <script src="assets/js/lm_fitter.js"></script>
+    <script src="bower_components/social-share-kit/dist/js/social-share-kit.min.js"></script>
 </head>
 <body>
 
@@ -39,9 +41,38 @@
 
         <div id="header" class="header">
             <div class="container">
-                <h1>COVID-19 Progression</h1>
+				<div class="desktop_header">
+					<div style="float: left;">
+						<h1>COVID-19 Progression</h1>
+					</div>
+					<div style="float: right;">
+						<h1 style="font-size: inherit;">
+							<a href="javascript:" v-on:click="toggleShare()" class="ssk ssk-icon ssk-link ssk-lg" title="Share chart setup"></a>
+						</h1>
+					</div>
+					<div style="clear: both;"></div>
+				</div>
             </div>
         </div>
+
+		<div id="share_section" class="container" v-show="showShare" style="display: none;">
+			<div style="padding-left: 10px; padding-right: 10px;">
+				<div class="sidebar">
+					<div class="share_container">
+						<table cellspacing="2px">
+							<tr>
+								<td>
+									<a href="javascript:" v-on:click="copyLink()" v-show="showCopyLink">Copy&nbsp;link:</a>
+									<span style="display: none;" v-show="!showCopyLink">Copied!</span>
+								</td>
+								<td width="100%"><input id="link_box" v-model="shareableLink" /></td>
+								<td><a href="" class="ssk ssk-twitter ssk-xs ssk-round" ></a></td>
+							</tr>
+						</table>
+					</div>
+				</div>
+			</div>
+		</div>
 
         <div id="aggregation_section" class="container">
 
@@ -190,7 +221,7 @@
             <p><a href="https://github.com/arik-so/coronavirus/tree/gh-pages" target="_blank">Github</a> | <a
                     href="https://github.com/CSSEGISandData/COVID-19/tree/master/csse_covid_19_data/csse_covid_19_time_series"
                     target="_blank">Data</a></p>
-            <p>Built wearing 😷 by <a href="https://twitter.com/arikaleph" target="_blank">@arikaleph</a> and <a
+            <p>Built wearing 😷 by <a href="https://twitter.com/arikaleph" target="_blank" xclass="ssk ssk-text ssk-twitter ssk-xs">@arikaleph</a> and <a
                     href="https://twitter.com/elliebee" target="_blank">@elliebee</a>.</p>
         </div>
     </div>
