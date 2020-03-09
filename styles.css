@@ -35,6 +35,10 @@ div.header > div.container > div.desktop_header {
 	padding-right: 20px;
 }
 
+div.desktop_header > div.link_container {
+	padding-top: 7px;
+}
+
 h1 {
 	margin: 0;
 }
@@ -219,6 +223,10 @@ label {
 
 	div.share_container tr > td:nth-child(2) > input {
 		width: calc(100% - 20px);
+	}
+
+	div.header > div.container > div.desktop_header > div.link_container {
+		padding-top: 12px;
 	}
 
 	div.geography-picker {
