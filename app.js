@@ -244,7 +244,7 @@ function calculateDerivative(values) {
 			mapDate: dateLabels.size - 1,
 			mapDateMinimum: 0,
 			mapDateMaximum: dateLabels.size - 1,
-			shareableLink: window.location.href,
+			shareableLinkRaw: window.location.href,
 			showShare: false,
 			showCopyLink: true
 		},
@@ -318,6 +318,7 @@ function calculateDerivative(values) {
 				this.showCopyLink = true;
 				if (this.showShare) {
 					const link_box = document.getElementById('link_box');
+					link_box.value = this.shareableLinkRaw;
 					this.$nextTick(() => {
 						link_box.focus();
 						link_box.select();
@@ -326,18 +327,20 @@ function calculateDerivative(values) {
 			},
 			copyLink: function () {
 
+				const pasteUrl = this.shareableLinkRaw;
+
 				const onCopy = () => {
-					debugger
 					this.showCopyLink = false;
 					console.log('Async: Copying to clipboard was successful!');
 				};
 
 				function fallbackCopyTextToClipboard() {
 					const link_box = document.getElementById('link_box');
+					link_box.value = pasteUrl;
 					link_box.focus();
 					link_box.select();
 					try {
-						const successful = document.execCommand('copy');
+						document.execCommand('copy');
 						link_box.blur();
 						onCopy();
 					} catch (err) {
@@ -349,7 +352,7 @@ function calculateDerivative(values) {
 					return;
 				}
 
-				navigator.clipboard.writeText(this.shareableLink).then(() => {
+				navigator.clipboard.writeText(pasteUrl).then(() => {
 					onCopy();
 				});
 			},
@@ -439,11 +442,11 @@ function calculateDerivative(values) {
 					}
 					router.push({query}, (location) => {
 						// console.dir(location);
-						// this.shareableLink = window.location.href;
+						// this.shareableLinkRaw = window.location.href;
 						this.showCopyLink = true;
-						this.shareableLink = `${window.location.origin}${window.location.pathname}${window.location.search}#${location.fullPath}`;
+						this.shareableLinkRaw = `${window.location.origin}${window.location.pathname}${window.location.search}#${location.fullPath}`;
 					});
-					// this.shareableLink = `${window.location.origin}${window.location.pathname}${window.location.search}#?`
+					// this.shareableLinkRaw = `${window.location.origin}${window.location.pathname}${window.location.search}#?`
 				};
 				pathUpdateTimeout = setTimeout(refreshRoute, 300);
 			},
@@ -613,6 +616,9 @@ function calculateDerivative(values) {
 			}
 		},
 		computed: {
+			shareableLink: function() {
+				return this.shareableLinkRaw;
+			},
 			canShowRegression: function () {
 				return !!this.showCases && !this.derivative;
 			},
