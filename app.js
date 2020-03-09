@@ -432,6 +432,7 @@ function calculateDerivative(values) {
             normalizeDataCountryNameToMapCountryName: function (dataSourceCountryName) {
                 const map = {
                     'Mainland China': 'China',
+                    'Serbia': 'Republic of Serbia',
                     'UK': 'United Kingdom',
                     'US': 'United States of America'
                 };
