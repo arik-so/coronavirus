@@ -400,12 +400,15 @@ function calculateDerivative(values) {
 							callbacks: {
 								label: (tooltipItem, data) => {
 									const countryName = data.labels[tooltipItem.index];
-									const value = data.datasets[0].data[tooltipItem.index].value;
+									const {enumerator, denominator} = data.datasets[0].data[tooltipItem.index].value;
+									let value = Number(enumerator).toLocaleString();
 									if (this.mapDataReference.startsWith('relative:')) {
-										const printedValue = Number(Math.round(value * 10000) / 100).toLocaleString();
-										return `${countryName}: ${printedValue}%`;
+										value = Number(Math.round(enumerator / denominator * 10000) / 100).toLocaleString() + '%';
+										if (denominator === 0) {
+											value = '∞';
+										}
 									}
-									return `${countryName}: ${Number(value).toLocaleString()}`;
+									return `${countryName}: ${value}`;
 								}
 							}
 						},
@@ -501,20 +504,36 @@ function calculateDerivative(values) {
 				const countryTotals = this.mapCountryValues[dateIndex];
 				for (const currentCountry of this.map.data.datasets[0].data) {
 					const currentCountryName = currentCountry.feature.properties.name;
-					if (!countryTotals[currentCountryName]) {
-						currentCountry.value = 0;
+					const value = countryTotals[currentCountryName];
+					if (!value) {
+						currentCountry.value = {enumerator: 0, denominator: 1};
 						currentCountry.fraction = 0;
 						continue;
 					}
-					const value = countryTotals[currentCountryName];
-					let fraction = Math.log(value) / Math.log(this.mapHistoricalCountryHigh) * 0.6 + 0.15;
+
+					const {enumerator, denominator} = value;
+					if (enumerator === 0) {
+						currentCountry.value = {enumerator: 0, denominator: 1};
+						currentCountry.fraction = 0;
+						continue;
+					}
+
+					let fraction = Math.log(enumerator) / Math.log(this.mapHistoricalCountryHigh) * 0.6 + 0.15;
 					if (this.mapDataReference.startsWith('relative:')) {
+						let value = enumerator / denominator;
 						fraction = value / this.mapHistoricalCountryHigh * 0.6 + 0.15;
+
 						if (this.mapDataReference !== 'relative:recoveries') {
 							// we need to amplify the smaller numbers
 							fraction = Math.log(value * 100) / Math.log(this.mapHistoricalCountryHigh * 100) * 0.6 + 0.15;
 						}
+
+						if (denominator === 0) {
+							// we have an infinity!
+							fraction = 1;
+						}
 					}
+
 					currentCountry.value = value;
 					currentCountry.fraction = fraction;
 				}
@@ -616,7 +635,7 @@ function calculateDerivative(values) {
 			}
 		},
 		computed: {
-			shareableLink: function() {
+			shareableLink: function () {
 				return this.shareableLinkRaw;
 			},
 			canShowRegression: function () {
@@ -677,18 +696,18 @@ function calculateDerivative(values) {
 						const currentCountry = currentHistory['Country/Region'];
 						const normalizedCountryName = this.normalizeDataCountryNameToMapCountryName(currentCountry);
 
-						totalByCountries[normalizedCountryName] = totalByCountries[normalizedCountryName] || 0;
-
-						let currentDelta = this.parseRowEntryForDate(currentHistory, dateKey);
-
+						let denominator = 1;
 						if (denominators && denominators[i]) {
-							const denominator = denominators[i][normalizedCountryName];
-							if (denominator === 0) {
-								continue;
-							}
-							currentDelta /= denominator;
+							denominator = denominators[i][normalizedCountryName];
 						}
-						totalByCountries[normalizedCountryName] += currentDelta;
+
+						totalByCountries[normalizedCountryName] = totalByCountries[normalizedCountryName] || {
+							enumerator: 0,
+							denominator
+						};
+
+						const currentDelta = this.parseRowEntryForDate(currentHistory, dateKey);
+						totalByCountries[normalizedCountryName].enumerator += currentDelta;
 					}
 					countryTotals.push(totalByCountries);
 				}
@@ -698,7 +717,11 @@ function calculateDerivative(values) {
 				let maximum = 0;
 				const countryTotal = this.mapCountryValues[this.mapDateMaximum];
 				// console.dir(countryTotal);
-				for (const [key, value] of Object.entries(countryTotal)) {
+				for (const [key, {enumerator, denominator}] of Object.entries(countryTotal)) {
+					if (denominator === 0) {
+						continue;
+					}
+					const value = enumerator / denominator;
 					maximum = Math.max(maximum, value);
 				}
 				return maximum;
