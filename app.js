@@ -525,7 +525,7 @@ function calculateDerivative(values) {
 
 						if (this.mapDataReference !== 'relative:recoveries') {
 							// we need to amplify the smaller numbers
-							fraction = Math.log(value * 100) / Math.log(this.mapHistoricalCountryHigh * 100) * 0.6 + 0.15;
+							fraction = Math.min(Math.max(Math.log(value * 100) / Math.log(this.mapHistoricalCountryHigh * 100) * 0.6 + 0.15, 0.075), 0.6 + 0.2);
 						}
 
 						if (denominator === 0) {
