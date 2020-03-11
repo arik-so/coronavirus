@@ -17,26 +17,25 @@ function calculateDerivative(values) {
 
 	const cacheResetter = Math.round(Date.now() / (10 * 60 * 1000));
 
-	const confirmedResponse = await axios({
+	const confirmedCases = (await axios({
 		method: 'get',
-		url: `docs/data/covid_confirmed.csv?cache=${cacheResetter}`,
-	});
-	const deadResponse = await axios({
+		url: `docs/data/covid_confirmed.json?cache=${cacheResetter}`,
+	})).data;
+	const deadCases = (await axios({
 		method: 'get',
-		url: `docs/data/covid_dead.csv?cache=${cacheResetter}`,
-	});
-	const recoveredResponse = await axios({
+		url: `docs/data/covid_dead.json?cache=${cacheResetter}`,
+	})).data;
+	const recoveredCases = (await axios({
 		method: 'get',
-		url: `docs/data/covid_recovered.csv?cache=${cacheResetter}`,
-	});
-	const confirmedCases = await csv({output: 'json'}).fromString(confirmedResponse.data);
-	const deadCases = await csv({output: 'json'}).fromString(deadResponse.data);
-	const recoveredCases = await csv({output: 'json'}).fromString(recoveredResponse.data);
+		url: `docs/data/covid_recovered.json?cache=${cacheResetter}`,
+	})).data;
+
+	const nonDataKeys = ['Province/State', 'Country/Region', 'Lat', 'Long', 'country', 'state', 'county'];
 
 	const dateKeys = [];
 	const dateLabels = new Set();
 	for (const key of Object.keys(confirmedCases[0])) {
-		if (['Province/State', 'Country/Region', 'Lat', 'Long'].includes(key)) {
+		if (nonDataKeys.includes(key)) {
 			continue;
 		}
 		// const dateObject = Date.parse(key);
@@ -46,21 +45,37 @@ function calculateDerivative(values) {
 	}
 
 	// parse the data into what we need
-	const countries = new Set();
-	const states = new Set();
-	const countriesByState = {}; // look up a state's country
-	const countryStates = {}; // enumerate up all states in a country
+	const countryNames = new Set();
+	const countryCodes = new Set();
+	const canonicalCountries = new Set();
+
+	const countryNamesByCode = {};
+	const countryCodesByName = {};
+
+	// const states = new Set();
+	// const countriesByState = {}; // look up a state's country
+	// const countryStates = {}; // enumerate up all states in a country
+
 	for (const location of confirmedCases) {
-		const currentCountry = location['Country/Region'];
-		const currentState = location['Province/State'];
-		countries.add(currentCountry);
-		if (currentState.length < 1) {
-			continue;
-		}
-		states.add(currentState);
-		countriesByState[currentState] = currentCountry;
-		countryStates[currentCountry] = countryStates[currentCountry] || new Set();
-		countryStates[currentCountry].add(currentState);
+		// const currentCountry = location['Country/Region'];
+		const currentCountry = location['country']['long_name'];
+		const currentCode = location['country']['short_name'];
+		countryNames.add(currentCountry);
+		countryCodes.add(currentCode);
+		canonicalCountries.add(currentCode || currentCountry);
+
+		countryNamesByCode[currentCode] = currentCountry;
+		countryCodesByName[currentCountry] = currentCode;
+
+		// const currentState = location['Province/State'];
+		// const currentState = location['state']['long_name'];
+		// if (currentState.length < 1) {
+		// 	continue;
+		// }
+		// states.add(currentState);
+		// countriesByState[currentState] = currentCountry;
+		// countryStates[currentCountry] = countryStates[currentCountry] || new Set();
+		// countryStates[currentCountry].add(currentState);
 	}
 
 	const ticks = {
@@ -182,15 +197,17 @@ function calculateDerivative(values) {
 	const subdividedCountries = ['Antarctica'];
 	const mapCountryFeatures = ChartGeo.topojson.feature(mapData, mapData.objects.countries1).features.filter((f) => !subdividedCountries.includes(f.properties.name));
 	const mapCountryData = mapCountryFeatures.map((d) => ({feature: d, value: 0, fraction: 0}));
-	const mapCountryLabels = mapCountryFeatures.map((d) => d.properties.name);
+	const mapCountryLabels = mapCountryFeatures.map((d) => {
+		return {code: d.properties['Alpha-2'], name: d.properties.name}
+	});
 
 
-	const defaultCheckedCountries = new Set(countries);
-	defaultCheckedCountries.delete('Hong Kong');
-	defaultCheckedCountries.delete('Macau');
-	defaultCheckedCountries.delete('Mainland China');
-	defaultCheckedCountries.delete('Others');
-	defaultCheckedCountries.delete('US');
+	const defaultCheckedCountries = new Set(canonicalCountries);
+	defaultCheckedCountries.delete('HK'); // Hong Kong
+	defaultCheckedCountries.delete('MO'); // Macao
+	defaultCheckedCountries.delete('CN'); // China
+	defaultCheckedCountries.delete('Diamond Princess Cruise Ship'); // Diamond Princess Cruise Ship
+	defaultCheckedCountries.delete('US'); // USA
 
 	const validValues = {
 		axes: ['join', 'separate'],
@@ -230,7 +247,8 @@ function calculateDerivative(values) {
 		el: '#app',
 		router,
 		data: {
-			countries,
+			countryNames,
+			countryCodes,
 			cases: confirmedCases,
 			deaths: deadCases,
 			recoveries: recoveredCases,
@@ -268,12 +286,12 @@ function calculateDerivative(values) {
 				} else if (key === 'checkedCountries') {
 					let checkedCountries = [];
 					if (Array.isArray(value)) {
-						for (const currentCountry of value) {
-							if (countries.has(currentCountry)) {
-								checkedCountries.push(currentCountry);
+						for (const currentCountryCode of value) {
+							if (canonicalCountries.has(currentCountryCode)) {
+								checkedCountries.push(currentCountryCode);
 							}
 						}
-					} else if (countries.has(value)) {
+					} else if (canonicalCountries.has(value)) {
 						checkedCountries.push(value);
 					}
 					this[key] = checkedCountries;
@@ -313,6 +331,18 @@ function calculateDerivative(values) {
 			});
 		},
 		methods: {
+			getCountryCodeForEntry: function (entry) {
+				// return entry['Country/Region'];
+				return entry['country']['short_name'] || entry['country']['long_name'];
+			},
+			getCountryForEntry: function (entry) {
+				// return entry['Country/Region'];
+				return entry['country']['long_name'];
+			},
+			getStateForEntry: function (entry) {
+				return entry['Province/State'];
+				// return entry['Province/State'];
+			},
 			toggleShare: function () {
 				this.showShare = !this.showShare;
 				this.showCopyLink = true;
@@ -326,7 +356,6 @@ function calculateDerivative(values) {
 				}
 			},
 			copyLink: function () {
-
 				const pasteUrl = this.shareableLinkRaw;
 
 				const onCopy = () => {
@@ -399,7 +428,8 @@ function calculateDerivative(values) {
 						tooltips: {
 							callbacks: {
 								label: (tooltipItem, data) => {
-									const countryName = data.labels[tooltipItem.index];
+									const countryDetails = data.labels[tooltipItem.index];
+									const countryName = countryNamesByCode[countryDetails.code] || countryDetails.name;
 									const {enumerator, denominator} = data.datasets[0].data[tooltipItem.index].value;
 									let value = Number(enumerator).toLocaleString();
 									if (this.mapDataReference.startsWith('relative:')) {
@@ -429,8 +459,9 @@ function calculateDerivative(values) {
 			formatMapDate: function (date) {
 				return Array.from(dateLabels)[date];
 			},
-			formatCountry: function (country) {
-				if (country === 'Others') {
+			formatCountry: function (countryCode) {
+				const country = countryNamesByCode[countryCode] || countryCode;
+				if (country === 'Diamond Princess Cruise Ship') {
 					return '💎👸🚢 Cruise Ship';
 				}
 				return country;
@@ -458,15 +489,15 @@ function calculateDerivative(values) {
 				let entry = parseInt(value);
 				if (!Number.isSafeInteger(entry)) {
 					entry = 0;
-					console.log('Skipping count for entry:', row['Country/Region'], row['Province/State'], date, value);
+					console.log('Skipping count for entry:', this.getCountryForEntry(row), this.getStateForEntry(row), date, value);
 				}
 				return entry;
 			},
 			filterDatasetBySelectedCountries: function (data) {
 				const filteredData = [];
 				for (const currentLocation of data) {
-					const currentCountry = currentLocation['Country/Region'];
-					const currentState = currentLocation['Province/State'];
+					const currentCountry = this.getCountryCodeForEntry(currentLocation);
+					const currentState = this.getStateForEntry(currentLocation);
 					if (!this.checkedCountries.includes(currentCountry)) {
 						continue;
 					}
@@ -475,7 +506,7 @@ function calculateDerivative(values) {
 					}
 					let dateIndex = 0;
 					for (const key of Object.keys(currentLocation)) {
-						if (['Province/State', 'Country/Region', 'Lat', 'Long'].includes(key)) {
+						if (nonDataKeys.includes(key)) {
 							continue;
 						}
 
@@ -488,23 +519,14 @@ function calculateDerivative(values) {
 				}
 				return filteredData;
 			},
-			normalizeDataCountryNameToMapCountryName: function (dataSourceCountryName) {
-				const map = {
-					'Mainland China': 'China',
-					'Serbia': 'Republic of Serbia',
-					'UK': 'United Kingdom',
-					'US': 'United States of America'
-				};
-				return map[dataSourceCountryName] || dataSourceCountryName;
-			},
 			moveArrayEntry: function (array, from, to) {
 				return array.splice(to, 0, array.splice(from, 1)[0]);
 			},
 			layoutMapForDate: function (dateIndex) {
 				const countryTotals = this.mapCountryValues[dateIndex];
 				for (const currentCountry of this.map.data.datasets[0].data) {
-					const currentCountryName = currentCountry.feature.properties.name;
-					const value = countryTotals[currentCountryName];
+					const currentCountryCode = currentCountry.feature.properties['Alpha-2'];
+					const value = countryTotals[currentCountryCode];
 					if (!value) {
 						currentCountry.value = {enumerator: 0, denominator: 1};
 						currentCountry.fraction = 0;
@@ -552,7 +574,7 @@ function calculateDerivative(values) {
 		watch: {
 			selectAll: function (newValue) {
 				if (newValue) {
-					this.checkedCountries = Array.from(this.countries);
+					this.checkedCountries = Array.from(canonicalCountries);
 					this.partialSelection = false;
 				} else {
 					this.checkedCountries = [];
@@ -560,7 +582,7 @@ function calculateDerivative(values) {
 			},
 			checkedCountries: function (newValue) {
 				const selectedCountryCount = newValue.length;
-				const totalCountryCount = this.countries.size;
+				const totalCountryCount = this.countryNames.size;
 				if (selectedCountryCount === 0) {
 					this.selectAll = false;
 					this.partialSelection = false;
@@ -678,11 +700,10 @@ function calculateDerivative(values) {
 						const dateKey = dateKeys[i];
 						const totalByCountries = {};
 						for (const currentHistory of comparisonDataSource) {
-							const currentCountry = currentHistory['Country/Region'];
-							const normalizedCountryName = this.normalizeDataCountryNameToMapCountryName(currentCountry);
+							const countryCode = this.getCountryCodeForEntry(currentHistory);
 							const currentDelta = this.parseRowEntryForDate(currentHistory, dateKey);
-							totalByCountries[normalizedCountryName] = totalByCountries[normalizedCountryName] || 0;
-							totalByCountries[normalizedCountryName] += currentDelta;
+							totalByCountries[countryCode] = totalByCountries[countryCode] || 0;
+							totalByCountries[countryCode] += currentDelta;
 						}
 						denominators.push(totalByCountries);
 					}
@@ -693,21 +714,20 @@ function calculateDerivative(values) {
 					const dateKey = dateKeys[i];
 					const totalByCountries = {};
 					for (const currentHistory of dataSource) {
-						const currentCountry = currentHistory['Country/Region'];
-						const normalizedCountryName = this.normalizeDataCountryNameToMapCountryName(currentCountry);
+						const countryCode = this.getCountryCodeForEntry(currentHistory);
 
 						let denominator = 1;
 						if (denominators && denominators[i]) {
-							denominator = denominators[i][normalizedCountryName];
+							denominator = denominators[i][countryCode];
 						}
 
-						totalByCountries[normalizedCountryName] = totalByCountries[normalizedCountryName] || {
+						totalByCountries[countryCode] = totalByCountries[countryCode] || {
 							enumerator: 0,
 							denominator
 						};
 
 						const currentDelta = this.parseRowEntryForDate(currentHistory, dateKey);
-						totalByCountries[normalizedCountryName].enumerator += currentDelta;
+						totalByCountries[countryCode].enumerator += currentDelta;
 					}
 					countryTotals.push(totalByCountries);
 				}
@@ -727,16 +747,16 @@ function calculateDerivative(values) {
 				return maximum;
 			},
 			sortedCountries: function () {
-				const countries = Array.from(this.countries);
+				const countries = Array.from(this.countryNames);
 				countries.sort();
 
 				// move the cruise ship first and china second
-				const cruiseShipIndex = countries.indexOf('Others');
+				const cruiseShipIndex = countries.indexOf('Diamond Princess Cruise Ship');
 				this.moveArrayEntry(countries, cruiseShipIndex, 0);
-				const chinaIndex = countries.indexOf('Mainland China');
+				const chinaIndex = countries.indexOf('China');
 				this.moveArrayEntry(countries, chinaIndex, 1);
 
-				return countries
+				return countries.map(c => countryCodesByName[c] || c);
 			},
 			timeSeries: function () {
 				let confirmedYValues = this.filterDatasetBySelectedCountries(this.cases);
