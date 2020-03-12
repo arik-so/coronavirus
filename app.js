@@ -206,7 +206,8 @@ function calculateDerivative(values) {
 	defaultCheckedCountries.delete('HK'); // Hong Kong
 	defaultCheckedCountries.delete('MO'); // Macao
 	defaultCheckedCountries.delete('CN'); // China
-	defaultCheckedCountries.delete('Diamond Princess Cruise Ship'); // Diamond Princess Cruise Ship
+	defaultCheckedCountries.delete('Diamond Princess Cruise Ship');
+	defaultCheckedCountries.delete('Grand Princess Cruise Ship');
 	defaultCheckedCountries.delete('US'); // USA
 
 	const validValues = {
@@ -218,7 +219,6 @@ function calculateDerivative(values) {
 	};
 
 	const params = {
-		checkedCountries: [],
 		showCases: true,
 		showDeaths: true,
 		showRecoveries: true,
@@ -232,6 +232,7 @@ function calculateDerivative(values) {
 		mapDataSource: 'deaths',
 		mapDataReference: 'relative:recoveries'
 	};
+	const parametrizableKeys = ['countries', ...Object.keys(params)];
 
 	const routes = [{
 		path: '/',
@@ -247,6 +248,7 @@ function calculateDerivative(values) {
 		el: '#app',
 		router,
 		data: {
+			checkedCountries: [],
 			countryNames,
 			countryCodes,
 			cases: confirmedCases,
@@ -268,33 +270,29 @@ function calculateDerivative(values) {
 		},
 		created: function () {
 			const query = this.$route.query;
-			const validKeys = Object.keys(params);
 
-			if (Object.entries(query) < 1) {
-				// only set the country default if the query is empty
-				this.checkedCountries = Array.from(defaultCheckedCountries);
-			}
+			let querySpecifiedCountries = false;
 
 			for (const key of Object.keys(query)) {
-				if (!validKeys.includes(key)) {
+				if (!parametrizableKeys.includes(key)) {
 					return;
 				}
 				const value = query[key];
 				if (['showCases', 'showDeaths', 'showRecoveries', 'derivative', 'includeCruiseShipDescendants'].includes(key)) {
 					// handle booleans
 					this[key] = (value === 'true');
-				} else if (key === 'checkedCountries') {
+				} else if (key === 'countries') {
 					let checkedCountries = [];
-					if (Array.isArray(value)) {
-						for (const currentCountryCode of value) {
+					querySpecifiedCountries = true;
+					const countries = (value || '').split(',');
+					if (Array.isArray(countries)) {
+						for (const currentCountryCode of countries) {
 							if (canonicalCountries.has(currentCountryCode)) {
 								checkedCountries.push(currentCountryCode);
 							}
 						}
-					} else if (canonicalCountries.has(value)) {
-						checkedCountries.push(value);
 					}
-					this[key] = checkedCountries;
+					this.checkedCountries = checkedCountries;
 				} else if (key === 'modelOffset') {
 					let regression = parseInt(value);
 					if (!Number.isSafeInteger(regression)) {
@@ -320,6 +318,10 @@ function calculateDerivative(values) {
 					}
 					this[key] = value;
 				}
+			}
+
+			if (!querySpecifiedCountries) {
+				this.checkedCountries = Array.from(defaultCheckedCountries);
 			}
 		},
 		mounted: function () {
@@ -464,6 +466,9 @@ function calculateDerivative(values) {
 				if (country === 'Diamond Princess Cruise Ship') {
 					return '💎👸🚢 Cruise Ship';
 				}
+				if (country === 'Grand Princess Cruise Ship') {
+					return 'Grand 👸🚢 Cruise Ship';
+				}
 				return country;
 			},
 			updateLocation: function () {
@@ -471,7 +476,7 @@ function calculateDerivative(values) {
 				clearTimeout(pathUpdateTimeout);
 				const refreshRoute = () => {
 					const query = {};
-					for (const key of Object.keys(params)) {
+					for (const key of parametrizableKeys) {
 						query[key] = this[key];
 					}
 					router.push({query}, (location) => {
@@ -657,6 +662,12 @@ function calculateDerivative(values) {
 			}
 		},
 		computed: {
+			countries: function () {
+				// country names better not contain commas!
+				const checkedCountries = Array.from(this.checkedCountries);
+				checkedCountries.sort();
+				return checkedCountries.join(',');
+			},
 			shareableLink: function () {
 				return this.shareableLinkRaw;
 			},
@@ -751,10 +762,12 @@ function calculateDerivative(values) {
 				countries.sort();
 
 				// move the cruise ship first and china second
-				const cruiseShipIndex = countries.indexOf('Diamond Princess Cruise Ship');
-				this.moveArrayEntry(countries, cruiseShipIndex, 0);
+				const diamondCruiseShipIndex = countries.indexOf('Diamond Princess Cruise Ship');
+				this.moveArrayEntry(countries, diamondCruiseShipIndex, 0);
+				const grandCruiseShipIndex = countries.indexOf('Grand Princess Cruise Ship');
+				this.moveArrayEntry(countries, grandCruiseShipIndex, 1);
 				const chinaIndex = countries.indexOf('China');
-				this.moveArrayEntry(countries, chinaIndex, 1);
+				this.moveArrayEntry(countries, chinaIndex, 2);
 
 				return countries.map(c => countryCodesByName[c] || c);
 			},
