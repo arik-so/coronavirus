@@ -490,12 +490,12 @@ function calculateDerivative(values) {
 				pathUpdateTimeout = setTimeout(refreshRoute, 300);
 			},
 			parseRowEntryForDate: function (row, date) {
-				const value = row[date];
-				let entry = parseInt(value);
-				if (!Number.isSafeInteger(entry)) {
+				// const value = row[date];
+				const entry = row[date]
+				/*if (!Number.isSafeInteger(entry)) {
 					entry = 0;
 					console.log('Skipping count for entry:', this.getCountryForEntry(row), this.getStateForEntry(row), date, value);
-				}
+				}*/
 				return entry;
 			},
 			filterDatasetBySelectedCountries: function (data) {
