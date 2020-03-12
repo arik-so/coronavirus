@@ -230,7 +230,7 @@ function calculateDerivative(values) {
 		modelOffset: 0,
 		extrapolationSize: 5,
 		mapDataSource: 'deaths',
-		mapDataReference: 'relative:recoveries'
+		mapDataReference: 'relative:outcomes'
 	};
 	const parametrizableKeys = ['countries', ...Object.keys(params)];
 
@@ -550,8 +550,8 @@ function calculateDerivative(values) {
 						let value = enumerator / denominator;
 						fraction = value / this.mapHistoricalCountryHigh * 0.6 + 0.15;
 
-						if (this.mapDataReference !== 'relative:recoveries') {
-							// we need to amplify the smaller numbers
+						if (this.mapDataReference !== 'relative:recoveries' && this.mapDataReference !== 'relative:outcomes') {
+							// we need to amplify the smaller numbers (basically, comparing to large values like cases or population)
 							fraction = Math.min(Math.max(Math.log(value * 100) / Math.log(this.mapHistoricalCountryHigh * 100) * 0.6 + 0.15, 0.075), 0.6 + 0.2);
 						}
 
@@ -632,6 +632,9 @@ function calculateDerivative(values) {
 				if (this.mapDataReference === 'relative:cases' && !this.canShowMapRelativeToCases) {
 					this.mapDataReference = 'absolute';
 				}
+				if (this.mapDataReference === 'relative:outcomes' && !this.canShowMapRelativeToOutcomes) {
+					this.mapDataReference = 'absolute';
+				}
 				this.layoutMapForDate(this.mapDate);
 				this.updateLocation();
 			},
@@ -687,6 +690,9 @@ function calculateDerivative(values) {
 			canShowMapRelativeToRecoveries: function () {
 				return this.mapDataSource === 'deaths';
 			},
+			canShowMapRelativeToOutcomes: function () {
+				return this.mapDataSource !== 'cases';
+			},
 			mapRawData: function () {
 				let dataSource = confirmedCases;
 				if (this.mapDataSource === 'recoveries') {
@@ -705,7 +711,14 @@ function calculateDerivative(values) {
 					let comparisonDataSource = confirmedCases;
 					if (this.mapDataReference === 'relative:recoveries') {
 						comparisonDataSource = recoveredCases;
+					} else if (this.mapDataReference === 'relative:outcomes') {
+						if (this.mapDataSource === 'recoveries') {
+							comparisonDataSource = deadCases;
+						} else {
+							comparisonDataSource = recoveredCases;
+						}
 					}
+
 					denominators = [];
 					for (let i = this.mapDateMinimum; i <= this.mapDateMaximum; i++) {
 						const dateKey = dateKeys[i];
@@ -739,6 +752,11 @@ function calculateDerivative(values) {
 
 						const currentDelta = this.parseRowEntryForDate(currentHistory, dateKey);
 						totalByCountries[countryCode].enumerator += currentDelta;
+
+						if (this.mapDataReference === 'relative:outcomes') {
+							// instead of calculating dead/recovered, calculate dead/(dead+recovered)
+							totalByCountries[countryCode].denominator += currentDelta;
+						}
 					}
 					countryTotals.push(totalByCountries);
 				}
