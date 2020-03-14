@@ -194,25 +194,37 @@
         <div id="map_section" class="container">
             <div class="sidebar">
                 <div class="map_container">
-                    <div style="float: left;">{{formatMapDate(mapDate)}}</div>
-                    <div style="float:right;">
-                        <select id="map_data_source" v-model="mapDataSource">
-                            <option value="cases">Cases</option>
-                            <option value="recoveries">Recoveries</option>
-                            <option value="deaths">Deaths</option>
-                        </select>
-                        <select id="map_data_reference" v-model="mapDataReference">
-                            <option value="absolute">Absolute</option>
-                            <option value="relative:population" disabled>Relative to Population</option>
-                            <option value="relative:cases" v-if="canShowMapRelativeToCases">Relative to Cases</option>
-                            <option value="relative:outcomes" v-if="canShowMapRelativeToOutcomes">Relative to Known Outcomes</option>
-                            <option value="relative:recoveries" v-if="canShowMapRelativeToRecoveries">Relative to Recoveries</option>
-                        </select>
-                    </div>
-                    <div style="clear: both;"></div>
-                    <input style="width: 100%;" type="range" v-model="mapDate" v-bind:min="mapDateMinimum"
-                           v-bind:max="mapDateMaximum"/>
+
+                    <div style="float: right;">
+						<ul class="pure-menu-list">
+							<li class="pure-menu-list-item">
+								Metric:
+								<select id="map_data_source" v-model="mapDataSource">
+									<option value="cases">Cases</option>
+									<option value="recoveries">Recoveries</option>
+									<option value="deaths">Deaths</option>
+								</select>
+							</li>
+							<li class="pure-menu-list-item">
+								Reference:
+								<select id="map_data_reference" v-model="mapDataReference">
+									<option value="absolute">Absolute</option>
+									<option value="relative:population" disabled>Relative to Population</option>
+									<option value="relative:cases" v-if="canShowMapRelativeToCases">Relative to Cases</option>
+									<option value="relative:outcomes" v-if="canShowMapRelativeToOutcomes">Relative to Known Outcomes</option>
+									<option value="relative:recoveries" v-if="canShowMapRelativeToRecoveries">Relative to Recoveries</option>
+								</select>
+							</li>
+						</ul>
+					</div>
+					<div style="clear: both;"></div>
                     <canvas id="map"></canvas>
+					<div>
+						{{formatMapDate(mapDate)}} (adjust slider)
+						<br/>
+						<input style="width: 100%;" type="range" v-model="mapDate" v-bind:min="mapDateMinimum"
+							   v-bind:max="mapDateMaximum"/>
+					</div>
                 </div>
             </div>
         </div>
