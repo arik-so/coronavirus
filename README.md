@@ -2,4 +2,4 @@
 
 https://coronavirus.arik.io
 
-The website code is on the `gh_pages` branch.
+The website code is on the `gh-pages` branch.
