@@ -443,7 +443,7 @@ function calculateDerivative(values) {
 										value = Number(Math.round(enumerator / denominator * 10000) / 100).toLocaleString() + '%';
 										if (this.mapDataReference === 'relative:population') {
 											// it's a bit more
-											value = Number(Math.round(enumerator / denominator * 100000000) / 100000).toLocaleString() + '‰';
+											value = Number(Math.round(enumerator / denominator * 100000000) / 10000).toLocaleString() + '‱';
 										}
 										if (denominator === 0) {
 											value = '∞';
