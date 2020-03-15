@@ -30,6 +30,11 @@ function calculateDerivative(values) {
 		url: `docs/data/covid_recovered.json?cache=${cacheResetter}`,
 	})).data;
 
+	const countryPopulation = (await axios({
+		method: 'get',
+		url: `docs/data/population.json?cache=${cacheResetter}`,
+	})).data;
+
 	const nonDataKeys = ['Province/State', 'Country/Region', 'Lat', 'Long', 'country', 'state', 'county'];
 
 	const dateKeys = [];
@@ -215,7 +220,7 @@ function calculateDerivative(values) {
 		scale: ['linear', 'log'],
 		regression: ['none', 'exponential', 'logistic'],
 		mapDataSource: ['cases', 'recoveries', 'deaths'],
-		mapDataReference: ['absolute', 'relative:cases', 'relative:recoveries'],
+		mapDataReference: ['absolute', 'relative:cases', 'relative:recoveries', 'relative:population'],
 	};
 
 	const params = {
@@ -436,6 +441,10 @@ function calculateDerivative(values) {
 									let value = Number(enumerator).toLocaleString();
 									if (this.mapDataReference.startsWith('relative:')) {
 										value = Number(Math.round(enumerator / denominator * 10000) / 100).toLocaleString() + '%';
+										if (this.mapDataReference === 'relative:population') {
+											// it's a bit more
+											value = Number(Math.round(enumerator / denominator * 100000000) / 100000).toLocaleString() + '‰';
+										}
 										if (denominator === 0) {
 											value = '∞';
 										}
@@ -550,9 +559,23 @@ function calculateDerivative(values) {
 						let value = enumerator / denominator;
 						fraction = value / this.mapHistoricalCountryHigh * 0.6 + 0.15;
 
-						if (this.mapDataReference !== 'relative:recoveries' && this.mapDataReference !== 'relative:outcomes') {
+						if (this.mapDataReference === 'relative:cases') {
 							// we need to amplify the smaller numbers (basically, comparing to large values like cases or population)
 							fraction = Math.min(Math.max(Math.log(value * 100) / Math.log(this.mapHistoricalCountryHigh * 100) * 0.6 + 0.15, 0.075), 0.6 + 0.2);
+						} else if (this.mapDataReference === 'relative:population') {
+							// we need to amplify the smaller numbers (basically, comparing to large values like cases or population)
+							const logFactor = 300;
+							// fraction = Math.min(Math.max(Math.log(value * logFactor) / Math.log(this.mapHistoricalCountryHigh * logFactor) * 0.6 + 0.15, 0.075), 0.6 + 0.2);
+							// fraction = Math.log(value * 10) / Math.log(this.mapHistoricalCountryHigh * 10) * 0.6 + 0.15;
+							// fraction = Math.log(value / this.mapHistoricalCountryHigh * logFactor);
+							// fraction = Math.min(Math.max(fraction * 0.6 + 0.15, 0.075), 0.6 + 0.2);
+							// debugger
+							// console.log(currentCountry.feature.properties.name);
+							// console.log('value:', value);
+							// console.log('maximum:', this.mapHistoricalCountryHigh);
+							// console.log('fraction of maximum:', value/this.mapHistoricalCountryHigh);
+							fraction = Math.min(Math.max(Math.log(value / this.mapHistoricalCountryHigh * 50) * 0.6 + 0.15, 0.075), 0.8);
+
 						}
 
 						if (denominator === 0) {
@@ -707,7 +730,7 @@ function calculateDerivative(values) {
 				const dataSource = this.mapRawData;
 
 				let denominators = null;
-				if (this.mapDataReference.startsWith('relative:')) {
+				if (this.mapDataReference.startsWith('relative:') && this.mapDataReference !== 'relative:population') {
 					let comparisonDataSource = confirmedCases;
 					if (this.mapDataReference === 'relative:recoveries') {
 						comparisonDataSource = recoveredCases;
@@ -743,6 +766,8 @@ function calculateDerivative(values) {
 						let denominator = 1;
 						if (denominators && denominators[i]) {
 							denominator = denominators[i][countryCode];
+						} else if (this.mapDataReference === 'relative:population') {
+							denominator = countryPopulation[countryCode];
 						}
 
 						totalByCountries[countryCode] = totalByCountries[countryCode] || {
@@ -767,7 +792,7 @@ function calculateDerivative(values) {
 				const countryTotal = this.mapCountryValues[this.mapDateMaximum];
 				// console.dir(countryTotal);
 				for (const [key, {enumerator, denominator}] of Object.entries(countryTotal)) {
-					if (denominator === 0) {
+					if (denominator === 0 || !Number.isSafeInteger(denominator)) {
 						continue;
 					}
 					const value = enumerator / denominator;
