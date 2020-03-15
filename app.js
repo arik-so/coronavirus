@@ -32,7 +32,7 @@ function calculateDerivative(values) {
 
 	const countryPopulation = (await axios({
 		method: 'get',
-		url: `docs/data/population.json?cache=${cacheResetter}`,
+		url: `docs/data/population.json`,
 	})).data;
 
 	const nonDataKeys = ['Province/State', 'Country/Region', 'Lat', 'Long', 'country', 'state', 'county'];
