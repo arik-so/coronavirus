@@ -221,6 +221,7 @@ function calculateDerivative(values) {
 		regression: ['none', 'exponential', 'logistic'],
 		mapDataSource: ['cases', 'recoveries', 'deaths'],
 		mapDataReference: ['absolute', 'relative:cases', 'relative:recoveries', 'relative:population'],
+		activeMap: ['World'/*, 'USA', 'Europe', 'China'*/]
 	};
 
 	const params = {
@@ -235,7 +236,8 @@ function calculateDerivative(values) {
 		modelOffset: 0,
 		extrapolationSize: 5,
 		mapDataSource: 'deaths',
-		mapDataReference: 'relative:outcomes'
+		mapDataReference: 'relative:outcomes',
+		activeMap: 'World'
 	};
 	const parametrizableKeys = ['countries', ...Object.keys(params)];
 
@@ -673,6 +675,10 @@ function calculateDerivative(values) {
 				this.updateLocation();
 				this.graph.update();
 			},
+			activeMap: function(){
+				this.updateLocation();
+				// TODO
+			},
 			includeCruiseShipDescendants: function () {
 				this.updateLocation();
 			},
@@ -688,6 +694,9 @@ function calculateDerivative(values) {
 			}
 		},
 		computed: {
+			maps: function () {
+				return validValues.activeMap
+			},
 			countries: function () {
 				// country names better not contain commas!
 				const checkedCountries = Array.from(this.checkedCountries);

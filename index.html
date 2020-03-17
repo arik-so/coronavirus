@@ -192,9 +192,15 @@
         </div> -->
 
         <div id="map_section" class="container">
+			<div class="map_selector">
+				<div class="sidebar">
+					<div>
+						<span v-for="map in maps" v-bind:class="{active: map === activeMap}" v-on:click="activeMap = map">{{map}}</span>
+					</div>
+				</div>
+			</div>
             <div class="sidebar">
                 <div class="map_container">
-
                     <div style="/*float: right;*/">
 						<ul class="pure-menu-list">
 							<li class="pure-menu-list-item">

@@ -142,10 +142,67 @@ div.chart_container {
 	box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.05);
 }
 
+div.map_selector {
+	overflow: hidden;
+	padding-top: 10px;
+	padding-left: 10px;
+	padding-right: 10px;
+
+}
+
+div.map_selector > div.sidebar {
+	padding: 0;
+}
+
+div.map_selector > div > div {
+	border-top-left-radius: 10px;
+	border-top-right-radius: 10px;
+	box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.05);
+	display: inline-block;
+	overflow: hidden;
+	vertical-align: top;
+	border: 1px solid rgba(0, 0, 0, 0.05);
+	border-bottom: 0;
+	border-left: 0;
+}
+
+div.map_selector > div > div > span {
+	display: inline-block;
+	padding: 12px;
+	padding-bottom: 9px;
+	vertical-align: top;
+	font-weight: bold;
+	font-size: 12px;
+	/*border-top: 1px solid rgba(0, 0, 0, 0.05);*/
+}
+
+div.map_selector > div > div > span:not(:first-child) {
+	border-left: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+div.map_selector > span:last-child {
+
+}
+
+div.map_selector > div > div > span:not(.active) {
+	color: #757575;
+	cursor: pointer;
+}
+
+div.map_selector > div > div > span:not(.active):hover {
+	color: rgb(80, 120, 226);
+}
+
+div.map_selector > div > div > span.active {
+	background-color: #ffffff;
+}
+
+
 div.map_container {
 	background: #fff;
 	padding: 20px;
 	border-radius: 10px;
+	border-top-left-radius: 0;
 	box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.05);
 	margin-bottom: 10px;
 }
@@ -267,10 +324,27 @@ label {
 		height: 50vh;
 	}
 
-	div.map_container {
-		margin-bottom: 5px;
-	!important;
+	div.map_selector {
+		padding-left: 5px;
+		padding-right: 5px;
 	}
+
+	div.map_selector > div > div {
+		width: fit-content;
+	}
+
+	div.map_container {
+		margin-bottom: 5px;!important;
+		position: relative;
+		z-index: 1;
+	}
+
+	div.map_selector > div > div {
+		z-index: 2;
+		position: relative;
+	}
+
+
 
 	.sidebar {
 		position: static;
