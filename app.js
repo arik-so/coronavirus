@@ -76,6 +76,11 @@ function calculateDerivative(values) {
 	const usaStateNamesByCode = {};
 	const usaStateCodesByName = {};
 
+	const chinaProvinceNames = new Set();
+	const chinaProvinceCodes = new Set();
+	const chinaProvinceNamesByCode = {};
+	const chinaProvinceCodesByName = {};
+
 	// const states = new Set();
 	// const countriesByState = {}; // look up a state's country
 	// const countryStates = {}; // enumerate up all states in a country
@@ -99,8 +104,19 @@ function calculateDerivative(values) {
 
 			usaStateNamesByCode[currentStateCode] = currentState;
 			usaStateCodesByName[currentState] = currentStateCode;
+		} else if (currentCode === 'CN') {
+			const currentProvince = location['state']['long_name'];
+			const currentProvinceCode = location['state']['short_name'];
+			chinaProvinceNames.add(currentProvince);
+			chinaProvinceCodes.add(currentProvinceCode);
+
+			chinaProvinceNamesByCode[currentProvinceCode] = currentProvince;
+			chinaProvinceCodesByName[currentProvince] = currentProvinceCode;
 		}
 	}
+
+	const provinceCodes = Array.from(chinaProvinceCodes).sort();
+	console.log('Province Codes:', JSON.stringify(provinceCodes, null, 4));
 
 	const ticks = {
 		beginAtZero: true,
@@ -227,6 +243,11 @@ function calculateDerivative(values) {
 		url: 'assets/topo/us-features.json',
 	})).data;
 
+	const chinaProvinceTopographyData = (await axios({
+		method: 'get',
+		url: 'assets/topo/china-provinces.json',
+	})).data;
+
 	const defaultCheckedCountries = new Set(canonicalCountries);
 	defaultCheckedCountries.delete('HK'); // Hong Kong
 	defaultCheckedCountries.delete('MO'); // Macao
@@ -241,7 +262,7 @@ function calculateDerivative(values) {
 		regression: ['none', 'exponential', 'logistic'],
 		mapDataSource: ['cases', 'recoveries', 'deaths'],
 		mapDataReference: ['absolute', 'relative:cases', 'relative:recoveries', 'relative:population'],
-		mapScope: ['World', 'USA', 'Europe'/*, 'China'*/]
+		mapScope: ['World', 'USA', 'Europe', 'China']
 	};
 
 	const params = {
@@ -292,6 +313,9 @@ function calculateDerivative(values) {
 				countryNamesByCode,
 				usaStateNamesByCode,
 				usaStateCodesByName,
+				chinaProvinceTopographyData,
+				chinaProvinceNamesByCode,
+				chinaProvinceCodesByName,
 				confirmedCases,
 				recoveredCases,
 				deadCases,
@@ -597,11 +621,11 @@ function calculateDerivative(values) {
 			}
 		},
 		computed: {
-			showSelectionTotals: function(){
+			showSelectionTotals: function () {
 				console.log('check selection totals');
 				return this.checkedCountries.length > 0;
 			},
-			decoratedCountries: function(){
+			decoratedCountries: function () {
 				console.log('redecorating');
 				const countryDecorations = {};
 				const emoji = {
@@ -609,8 +633,8 @@ function calculateDerivative(values) {
 					recoveries: '👍',
 					deaths: '☠️'
 				};
-				for (const [group, data] of Object.entries(this.latestLocationTotals)){
-					for(const [countryCode, value] of Object.entries(data)){
+				for (const [group, data] of Object.entries(this.latestLocationTotals)) {
+					for (const [countryCode, value] of Object.entries(data)) {
 						countryDecorations[countryCode] = countryDecorations[countryCode] || '';
 						countryDecorations[countryCode] += `<span>${emoji[group]} ${Number(value).toLocaleString()}</span>`;
 					}

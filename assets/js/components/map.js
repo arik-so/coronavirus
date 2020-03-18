@@ -78,6 +78,11 @@ Vue.component('covid-map', {
 				return europeanFeatures;
 			} else if (this.scope === 'USA') {
 				return this.$parent.$data.raw.usaStateTopographyFeatures;
+			} else if (this.scope === 'China') {
+				const topographyData = this.$parent.$data.raw.chinaProvinceTopographyData;
+				const provinces = ChartGeo.topojson.feature(topographyData, topographyData.objects.CHN_adm1).features;
+				return provinces;
+				// debugger
 			}
 			return [];
 		},
@@ -129,6 +134,58 @@ Vue.component('covid-map', {
 				outline = [nation];
 				projection = 'albersUsa';
 				data = stateData;
+			} else if (this.scope === 'China') {
+
+				const chinaCodeMap = {
+					'Anhui': 'Anhui Sheng',
+					'Beijing': 'Beijing Shi',
+					'Chongqing': 'Chongqing Shi',
+					'Fujian': 'Fujian Sheng',
+					'Gansu': 'Gansu', // identical
+					'Guangdong': 'Guangdong Sheng',
+					'Guangxi': 'Guangxi Zhuangzuzizhiqu',
+					'Guizhou': 'Guizhou Sheng',
+					'Hainan': 'Hainan Sheng',
+					'Hebei': 'Hebei Sheng',
+					'Heilongjiang': 'Heilongjiang', // identical
+					'Henan': 'Henan Sheng',
+					'Hubei': 'Hubei Sheng',
+					'Hunan': 'Hunan Sheng',
+					'Jiangsu': 'Jiangsu Sheng',
+					'Jiangxi': 'Jiangxi Sheng',
+					'Jilin': 'Jilin Sheng',
+					'Liaoning': 'Liaoning Sheng',
+					'Nei Mongol': 'Inner Mongolia',
+					'Ningxia Hui': 'Ningxia Huizuzizhiqu',
+					'Qinghai': 'Qinghai', // identical
+					'Shaanxi': 'Shaanxi Sheng',
+					'Shandong': 'Shandong Sheng',
+					'Shanghai': 'Shanghai Shi',
+					'Shanxi': 'Shanxi Sheng',
+					'Sichuan': 'Sichuan', // identical
+					'Tianjin': 'Tianjin Shi',
+					'Xinjiang Uygur': 'Xinjiang',
+					'Xizang': 'Tibet',
+					'Yunnan': 'Yunnan Sheng',
+					'Zhejiang': 'Zhejiang Sheng',
+				};
+
+				const provinceData = mapCountryFeatures.map(p => ({
+					feature: p,
+					value: 0,
+					fraction: 0,
+					code: chinaCodeMap[p.properties['NAME_1']] || p.properties['NAME_1']
+				}));
+				labels = mapCountryFeatures.map(p => ({
+					code: chinaCodeMap[p.properties['NAME_1']] || p.properties['NAME_1'],
+					name: p.properties['VARNAME_1'],
+				}));
+
+				console.log('Province Labels:', JSON.stringify(labels, null, 4));
+
+				outline = mapCountryFeatures;
+				projection = 'mercator';
+				data = provinceData;
 			}
 
 			return {labels, outline, data, projection, maintainAspectRatio, aspectRatio};
@@ -193,6 +250,8 @@ Vue.component('covid-map', {
 						denominator = this.$parent.$data.raw.countryPopulation[locationCode]/* || 0*/;
 						if (this.scope === 'USA') {
 							denominator = this.$parent.$data.raw.countryPopulation['USA'][locationCode]/* || 0*/;
+						}else if (this.scope === 'China') {
+							denominator = this.$parent.$data.raw.countryPopulation['China'][locationCode]/* || 0*/;
 						}
 					}
 
@@ -242,7 +301,7 @@ Vue.component('covid-map', {
 
 		},
 		getCodeForEntry: function (entry) {
-			if (this.scope === 'USA') {
+			if (this.scope === 'USA' || this.scope === 'China') {
 				return entry['state']['short_name'];
 			}
 			return entry['country']['short_name'] || entry['country']['long_name'];
@@ -251,6 +310,8 @@ Vue.component('covid-map', {
 			if (this.scope === 'World') {
 				return false;
 			} else if (this.scope === 'USA' && entry['country']['short_name'] !== 'US') {
+				return true;
+			} else if (this.scope === 'China' && entry['country']['short_name'] !== 'CN') {
 				return true;
 			} else if (this.scope === 'Europe') {
 				const europe = this.europeanCountryCodes;
@@ -316,6 +377,8 @@ Vue.component('covid-map', {
 								let locationName = this.$parent.$data.raw.countryNamesByCode[locationDetails.code] || locationDetails.name;
 								if (this.scope === 'USA') {
 									locationName = this.$parent.$data.raw.usaStateNamesByCode[locationDetails.code];
+								}else if (this.scope === 'China') {
+									locationName = this.$parent.$data.raw.chinaProvinceNamesByCode[locationDetails.code];
 								}
 								const {enumerator, denominator} = data.datasets[0].data[tooltipItem.index].value;
 								let value = Number(enumerator).toLocaleString();
