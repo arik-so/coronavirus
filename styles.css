@@ -171,7 +171,7 @@ label.country_label {
 	/*vertical-align: top;*/
 }
 
-label.country_label.select_all > span.country_name{
+label.country_label.select_all > span.country_name {
 	font-size: 12px;
 	/*text-transform: uppercase;*/
 }
@@ -186,10 +186,11 @@ label.country_label > span.country_decoration {
 	padding-left: 7px;
 }
 
-label.country_label > span.country_decoration:before{
+label.country_label > span.country_decoration:before {
 	content: '(';
 }
-label.country_label > span.country_decoration:after{
+
+label.country_label > span.country_decoration:after {
 	content: ')';
 }
 
@@ -198,7 +199,7 @@ label.country_label > span.country_decoration > span:not(:last-child) {
 	padding-right: 5px;
 }
 
-div.chart_container > div{
+div.chart_container > div {
 	text-align: center;
 	padding-bottom: 10px;
 }
@@ -370,7 +371,7 @@ label {
 		margin-bottom: 5px;
 	}
 
-	div.chart_container {
+	div.x_chart_container {
 		width: calc(100vw - 20px);
 		left: 0;
 		margin: 0;
@@ -379,6 +380,21 @@ label {
 		padding: 5px;
 		border-radius: 5px;
 		margin-bottom: 5px;
+
+	}
+
+	div.chart_container {
+		margin: 0;
+		padding: 5px;
+		border-radius: 5px;
+		margin-bottom: 5px;
+	}
+
+	div.chart_container > div > span {
+		padding: 6px;
+	}
+
+	div.chart_container > div:nth-child(2) {
 		height: 50vh;
 	}
 
@@ -392,7 +408,8 @@ label {
 	}
 
 	div.map_container {
-		margin-bottom: 5px;!important;
+		margin-bottom: 5px;
+	!important;
 		position: relative;
 		z-index: 1;
 	}
@@ -401,7 +418,6 @@ label {
 		z-index: 2;
 		position: relative;
 	}
-
 
 
 	.sidebar {
