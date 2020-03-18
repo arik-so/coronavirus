@@ -243,9 +243,9 @@ function calculateDerivative(values) {
 		url: 'assets/topo/us-features.json',
 	})).data;
 
-	const chinaProvinceTopographyData = (await axios({
+	const chinaProvinceTopographyFeatures = (await axios({
 		method: 'get',
-		url: 'assets/topo/china-provinces.json',
+		url: 'assets/topo/china-features.json',
 	})).data;
 
 	const defaultCheckedCountries = new Set(canonicalCountries);
@@ -313,7 +313,7 @@ function calculateDerivative(values) {
 				countryNamesByCode,
 				usaStateNamesByCode,
 				usaStateCodesByName,
-				chinaProvinceTopographyData,
+				chinaProvinceTopographyFeatures,
 				chinaProvinceNamesByCode,
 				chinaProvinceCodesByName,
 				confirmedCases,

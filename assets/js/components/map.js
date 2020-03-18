@@ -79,10 +79,7 @@ Vue.component('covid-map', {
 			} else if (this.scope === 'USA') {
 				return this.$parent.$data.raw.usaStateTopographyFeatures;
 			} else if (this.scope === 'China') {
-				const topographyData = this.$parent.$data.raw.chinaProvinceTopographyData;
-				const provinces = ChartGeo.topojson.feature(topographyData, topographyData.objects.CHN_adm1).features;
-				return provinces;
-				// debugger
+				return this.$parent.$data.raw.chinaProvinceTopographyFeatures;
 			}
 			return [];
 		},
@@ -181,7 +178,7 @@ Vue.component('covid-map', {
 					name: p.properties['VARNAME_1'],
 				}));
 
-				console.log('Province Labels:', JSON.stringify(labels, null, 4));
+				// console.log('Province Labels:', JSON.stringify(labels, null, 4));
 
 				outline = mapCountryFeatures;
 				projection = 'mercator';
@@ -250,7 +247,7 @@ Vue.component('covid-map', {
 						denominator = this.$parent.$data.raw.countryPopulation[locationCode]/* || 0*/;
 						if (this.scope === 'USA') {
 							denominator = this.$parent.$data.raw.countryPopulation['USA'][locationCode]/* || 0*/;
-						}else if (this.scope === 'China') {
+						} else if (this.scope === 'China') {
 							denominator = this.$parent.$data.raw.countryPopulation['China'][locationCode]/* || 0*/;
 						}
 					}
@@ -377,7 +374,7 @@ Vue.component('covid-map', {
 								let locationName = this.$parent.$data.raw.countryNamesByCode[locationDetails.code] || locationDetails.name;
 								if (this.scope === 'USA') {
 									locationName = this.$parent.$data.raw.usaStateNamesByCode[locationDetails.code];
-								}else if (this.scope === 'China') {
+								} else if (this.scope === 'China') {
 									locationName = this.$parent.$data.raw.chinaProvinceNamesByCode[locationDetails.code];
 								}
 								const {enumerator, denominator} = data.datasets[0].data[tooltipItem.index].value;
