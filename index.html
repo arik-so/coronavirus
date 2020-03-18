@@ -91,20 +91,26 @@
 				<div id="geography_picker"
 					 class="modifiers pure-menu pure-menu-scrollable custom-restricted settings-block geography-picker">
 					<ul class="pure-menu-list">
-						<li class="pure-menu-list-item">
+						<!--<li class="pure-menu-list-item">
 							<input id="cruise_ship_descendants" type="checkbox" v-model="includeCruiseShipDescendants"/>
 							<label for="cruise_ship_descendants" style="font-style: italic;">Abroad from Cruise Ship
 								(Modifier)</label>
-						</li>
+						</li>-->
 						<li class="pure-menu-list-item">
 							<input id="select_all_checkbox" type="checkbox" v-model="selectAll"
 								   :indeterminate.prop="partialSelection"/>
-							<label for="select_all_checkbox" style="text-transform: uppercase">Select All</label>
+							<label for="select_all_checkbox" class="country_label select_all">
+								<span class="country_name">Select All</span>
+								<span class="country_decoration" v-html="decorateCountry('total')"></span>
+							</label>
 						</li>
 						<li class="pure-menu-list-item" v-for="country in sortedCountries">
 							<input type="checkbox" v-bind:id="country" v-bind:value="country"
 								   v-model="checkedCountries"/>
-							<label v-bind:for="country">{{formatCountry(country)}}</label>
+							<label v-bind:for="country" class="country_label">
+								<span class="country_name">{{formatCountry(country)}}</span>
+								<span class="country_decoration" v-html="decorateCountry(country)"></span>
+							</label>
 						</li>
 					</ul>
 				</div>
@@ -143,7 +149,7 @@
 								<label for="total_radio">Total</label>
 								<input type="radio" id="delta_radio" name="derivative" v-model="derivative"
 									   v-bind:value="true"/>
-								<label for="delta_radio">Delta</label>
+								<label for="delta_radio">Daily Increase</label>
 							</li>
 							<li class="pure-menu-list-item">
 								<select id="regression" v-model="regression" v-if="canShowRegression"
@@ -184,7 +190,21 @@
 				</div>
 
 				<div class="chart_container">
-					<canvas id="graph_canvas" style="width: 100%;" xclass="pure-u-5-6"></canvas>
+					<template v-if="checkedCountries.length > 0">
+						<div v-if="!derivative">
+							<span>🤒 Infected: {{aggregatedTotals.cases}}</span>
+							<span>👍 Recovered: {{aggregatedTotals.recoveries}}</span>
+							<span>☠️ Dead: {{aggregatedTotals.deaths}}</span>
+						</div>
+						<div v-if="derivative">
+							<span>🤒 New Infections: {{aggregatedTotals.cases}}</span>
+							<span>👍 New Recoveries: {{aggregatedTotals.recoveries}}</span>
+							<span>☠️ New Deaths: {{aggregatedTotals.deaths}}</span>
+						</div>
+					</template>
+					<div>
+						<canvas id="graph_canvas" style="width: 100%;" xclass="pure-u-5-6"></canvas>
+					</div>
 				</div>
 
 				<div style="clear: both;"></div>

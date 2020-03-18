@@ -91,7 +91,7 @@ function calculateDerivative(values) {
 		countryNamesByCode[currentCode] = currentCountry;
 		countryCodesByName[currentCountry] = currentCode;
 
-		if(currentCode === 'US'){
+		if (currentCode === 'US') {
 			const currentState = location['state']['long_name'];
 			const currentStateCode = location['state']['short_name'];
 			usaStateNames.add(currentState);
@@ -251,7 +251,7 @@ function calculateDerivative(values) {
 		axes: 'joint',
 		scale: 'linear',
 		derivative: false,
-		includeCruiseShipDescendants: false,
+		// includeCruiseShipDescendants: false,
 		regression: 'none',
 		modelOffset: 0,
 		extrapolationSize: 5,
@@ -298,6 +298,7 @@ function calculateDerivative(values) {
 				dateKeys,
 				countryPopulation
 			},
+			includeCruiseShipDescendants: true,
 			graph: null,
 			map: null,
 			mapDate: dateLabels.size - 1,
@@ -442,6 +443,12 @@ function calculateDerivative(values) {
 				}
 				return country;
 			},
+			decorateCountry: function (countryCode) {
+				const infections = Number(this.latestLocationTotals.cases[countryCode]).toLocaleString();
+				const recoveries = Number(this.latestLocationTotals.recoveries[countryCode]).toLocaleString();
+				const deaths = Number(this.latestLocationTotals.deaths[countryCode]).toLocaleString();
+				return `<span>🤒 ${infections}</span><span>👍 ${recoveries}</span><span>☠️ ${deaths}</span>`;
+			},
 			updateLocation: function () {
 				// update router
 				clearTimeout(pathUpdateTimeout);
@@ -577,7 +584,7 @@ function calculateDerivative(values) {
 				this.updateLocation();
 				this.graph.update();
 			},
-			mapScope: function(){
+			mapScope: function () {
 				this.updateLocation();
 				// TODO
 			},
@@ -596,6 +603,38 @@ function calculateDerivative(values) {
 			}
 		},
 		computed: {
+			todayKey: function () {
+				return dateKeys[dateKeys.length - 1];
+			},
+			latestLocationTotals: function () {
+				const rawData = {
+					cases: confirmedCases,
+					deaths: deadCases,
+					recoveries: recoveredCases
+				};
+
+				const locationTotals = {};
+				const dateKey = this.todayKey;
+
+				for (const [group, data] of Object.entries(rawData)) {
+					locationTotals[group] = {};
+					for (const currentLocation of data) {
+						// debugger
+						const currentCountry = this.getCountryCodeForEntry(currentLocation);
+						const currentState = this.getStateForEntry(currentLocation);
+						if (!this.includeCruiseShipDescendants && currentState.includes('From Diamond Princess')) {
+							continue;
+						}
+						const currentCount = this.parseRowEntryForDate(currentLocation, dateKey);
+						locationTotals[group][currentCountry] = locationTotals[group][currentCountry] || 0;
+						locationTotals[group]['total'] = locationTotals[group]['total'] || 0;
+						locationTotals[group][currentCountry] += currentCount;
+						locationTotals[group]['total'] += currentCount;
+					}
+				}
+
+				return locationTotals;
+			},
 			mapScopes: function () {
 				return validValues.mapScope
 			},
@@ -676,6 +715,18 @@ function calculateDerivative(values) {
 				}
 
 				return [confirmedYValues, deadYValues, recoveredYValues];
+			},
+			aggregatedTotals: function () {
+				const series = this.timeSeries;
+				const confirmedSeries = series[0];
+				const deadSeries = series[1];
+				const recoveredSeries = series[2];
+
+				return {
+					cases: Number(confirmedSeries[confirmedSeries.length - 1]).toLocaleString(),
+					deaths: Number(deadSeries[deadSeries.length - 1]).toLocaleString(),
+					recoveries: Number(recoveredSeries[recoveredSeries.length - 1]).toLocaleString(),
+				};
 			},
 
 			regressionSeries: function () {

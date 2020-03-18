@@ -166,7 +166,44 @@ div.map_selector > div > div {
 	border-left: 0;
 }
 
-div.map_selector > div > div > span {
+label.country_label {
+	/*display: inline-block;*/
+	/*vertical-align: top;*/
+}
+
+label.country_label.select_all > span.country_name{
+	font-size: 12px;
+	/*text-transform: uppercase;*/
+}
+
+label.country_label > span.country_name {
+	font-size: 11px;
+}
+
+label.country_label > span.country_decoration {
+	font-size: 9px;
+	display: inline-block;
+	padding-left: 7px;
+}
+
+label.country_label > span.country_decoration:before{
+	content: '(';
+}
+label.country_label > span.country_decoration:after{
+	content: ')';
+}
+
+
+label.country_label > span.country_decoration > span:not(:last-child) {
+	padding-right: 5px;
+}
+
+div.chart_container > div{
+	text-align: center;
+	padding-bottom: 10px;
+}
+
+div.map_selector > div > div > span, div.chart_container > div > span {
 	display: inline-block;
 	padding: 12px;
 	padding-bottom: 9px;
@@ -174,6 +211,14 @@ div.map_selector > div > div > span {
 	font-weight: bold;
 	font-size: 12px;
 	/*border-top: 1px solid rgba(0, 0, 0, 0.05);*/
+}
+
+div.chart_container > div > span:first-child {
+	padding-left: 0;
+}
+
+div.chart_container > div > span:last-child {
+	padding-right: 0;
 }
 
 div.map_selector > div > div > span:not(:first-child) {
