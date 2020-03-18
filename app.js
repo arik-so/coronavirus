@@ -346,7 +346,7 @@ function calculateDerivative(values) {
 						continue;
 					}
 					extrapolation = Math.max(extrapolation, 0);
-					extrapolation = Math.min(extrapolation, 10);
+					extrapolation = Math.min(extrapolation, 15);
 					this[key] = extrapolation;
 				} else {
 					const currentValidValues = validValues[key];
