@@ -211,7 +211,7 @@ Vue.component('covid-map', {
 				}
 				locationTotals.push(totalByCountries);
 			}
-			console.dir(locationTotals);
+			// console.dir(locationTotals);
 			return locationTotals;
 		},
 		mapHistoricalCountryHigh: function () {

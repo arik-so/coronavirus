@@ -101,7 +101,7 @@
 								   :indeterminate.prop="partialSelection"/>
 							<label for="select_all_checkbox" class="country_label select_all">
 								<span class="country_name">Select All</span>
-								<span class="country_decoration" v-html="decorateCountry('total')"></span>
+								<span class="country_decoration" v-html="decoratedCountries['total']"></span>
 							</label>
 						</li>
 						<li class="pure-menu-list-item" v-for="country in sortedCountries">
@@ -109,7 +109,7 @@
 								   v-model="checkedCountries"/>
 							<label v-bind:for="country" class="country_label">
 								<span class="country_name">{{formatCountry(country)}}</span>
-								<span class="country_decoration" v-html="decorateCountry(country)"></span>
+								<span class="country_decoration" v-html="decoratedCountries[country]"></span>
 							</label>
 						</li>
 					</ul>
@@ -190,7 +190,7 @@
 				</div>
 
 				<div class="chart_container">
-					<template v-if="checkedCountries.length > 0">
+					<template v-if="showSelectionTotals">
 						<div v-if="!derivative">
 							<span>🤒 Infected: {{aggregatedTotals.cases}}</span>
 							<span>👍 Recovered: {{aggregatedTotals.recoveries}}</span>

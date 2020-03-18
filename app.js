@@ -443,12 +443,6 @@ function calculateDerivative(values) {
 				}
 				return country;
 			},
-			decorateCountry: function (countryCode) {
-				const infections = Number(this.latestLocationTotals.cases[countryCode]).toLocaleString();
-				const recoveries = Number(this.latestLocationTotals.recoveries[countryCode]).toLocaleString();
-				const deaths = Number(this.latestLocationTotals.deaths[countryCode]).toLocaleString();
-				return `<span>🤒 ${infections}</span><span>👍 ${recoveries}</span><span>☠️ ${deaths}</span>`;
-			},
 			updateLocation: function () {
 				// update router
 				clearTimeout(pathUpdateTimeout);
@@ -469,7 +463,7 @@ function calculateDerivative(values) {
 			},
 			parseRowEntryForDate: function (row, date) {
 				// const value = row[date];
-				const entry = row[date]
+				const entry = row[date];
 				/*if (!Number.isSafeInteger(entry)) {
 					entry = 0;
 					console.log('Skipping count for entry:', this.getCountryForEntry(row), this.getStateForEntry(row), date, value);
@@ -603,14 +597,36 @@ function calculateDerivative(values) {
 			}
 		},
 		computed: {
+			showSelectionTotals: function(){
+				console.log('check selection totals');
+				return this.checkedCountries.length > 0;
+			},
+			decoratedCountries: function(){
+				console.log('redecorating');
+				const countryDecorations = {};
+				const emoji = {
+					cases: '🤒',
+					recoveries: '👍',
+					deaths: '☠️'
+				};
+				for (const [group, data] of Object.entries(this.latestLocationTotals)){
+					for(const [countryCode, value] of Object.entries(data)){
+						countryDecorations[countryCode] = countryDecorations[countryCode] || '';
+						countryDecorations[countryCode] += `<span>${emoji[group]} ${Number(value).toLocaleString()}</span>`;
+					}
+				}
+
+				return countryDecorations;
+			},
 			todayKey: function () {
 				return dateKeys[dateKeys.length - 1];
 			},
 			latestLocationTotals: function () {
+				console.log('calculating location totals');
 				const rawData = {
 					cases: confirmedCases,
-					deaths: deadCases,
-					recoveries: recoveredCases
+					recoveries: recoveredCases,
+					deaths: deadCases
 				};
 
 				const locationTotals = {};
@@ -717,6 +733,8 @@ function calculateDerivative(values) {
 				return [confirmedYValues, deadYValues, recoveredYValues];
 			},
 			aggregatedTotals: function () {
+				console.log('aggregating totals');
+
 				const series = this.timeSeries;
 				const confirmedSeries = series[0];
 				const deadSeries = series[1];
@@ -730,7 +748,6 @@ function calculateDerivative(values) {
 			},
 
 			regressionSeries: function () {
-
 				const confirmedYValues = this.timeSeries[0];
 				const confirmedExtrapolationBasis = confirmedYValues.slice(this.modelOffset);
 				const deadYValues = this.timeSeries[1];
@@ -753,8 +770,8 @@ function calculateDerivative(values) {
 					}
 					chartConfig.data.labels = regressionDateLabels;
 
-					console.log('regressionRange:');
-					console.dir(regressionRange);
+					// console.log('regressionRange:');
+					// console.dir(regressionRange);
 
 					let extrapolationY = [];
 					let regressionParams = {};
@@ -793,13 +810,13 @@ function calculateDerivative(values) {
 						}
 					}
 
-					console.log('regressionParams:');
-					console.dir(regressionParams);
-					console.log('extrapolationY:');
-					console.dir(extrapolationY);
+					// console.log('regressionParams:');
+					// console.dir(regressionParams);
+					// console.log('extrapolationY:');
+					// console.dir(extrapolationY);
 					chartConfig.data.datasets[CONFIRMED_REGRESSION_DATASET_INDEX].data = extrapolationY;
-					console.log('extrapolationY:');
-					console.dir(extrapolationY);
+					// console.log('extrapolationY:');
+					// console.dir(extrapolationY);
 					regressionDetails.cases = regressionParams;
 
 				}
