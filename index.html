@@ -1,34 +1,39 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale = 1.0">
-    <title>👑🦠 Coronavirus Tracker: Charts, graphs, and maps of COVID-19 infections, recoveries, and deaths.</title>
-	<meta property="og:title" content="👑🦠 Coronavirus Tracker: Charts, graphs, and maps of COVID-19 infections, recoveries, and deaths.">
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale = 1.0">
+	<title>👑🦠 Coronavirus Tracker: Charts, graphs, and maps of COVID-19 infections, recoveries, and deaths.</title>
+	<meta property="og:title"
+		  content="👑🦠 Coronavirus Tracker: Charts, graphs, and maps of COVID-19 infections, recoveries, and deaths.">
 
-    <meta name="description" content="Coronavirus/COVID-19 metrics tracking tool with charts supporting multi-country aggregation, regression analysis, and a map with absolute and relative figures on a sliding scale for historical adjustment.">
-	<meta property="og:description" content="Coronavirus/COVID-19 metrics tracking tool with charts supporting multi-country aggregation, regression analysis, and a map with absolute and relative figures on a sliding scale for historical adjustment.">
+	<meta name="description"
+		  content="Coronavirus/COVID-19 metrics tracking tool with charts supporting multi-country aggregation, regression analysis, and a map with absolute and relative figures on a sliding scale for historical adjustment.">
+	<meta property="og:description"
+		  content="Coronavirus/COVID-19 metrics tracking tool with charts supporting multi-country aggregation, regression analysis, and a map with absolute and relative figures on a sliding scale for historical adjustment.">
 
-    <meta name="keywords" content="Coronavirus, COVID-19, tracker, monitor, charts, metrics, progression, graph, map, regression, cases, infections, recoveries, deaths, Arik, Arik Sosman, Elle, Elle Beal">
+	<meta name="keywords"
+		  content="Coronavirus, COVID-19, tracker, monitor, charts, metrics, progression, graph, map, regression, cases, infections, recoveries, deaths, Arik, Arik Sosman, Elle, Elle Beal">
 
 	<meta property="og:type" content="website">
 	<meta property="og:url" content="https://coronavirus.arik.io/">
 
-    <link rel="stylesheet" href="./styles.css">
-    <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.1/build/pure-min.css"
-          integrity="sha384-oAOxQR6DkCoMliIh8yFnu25d7Eq/PHS21PClpwjOTeU2jRSq11vu66rf90/cZr47" crossorigin="anonymous">
-    <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.1/build/grids-responsive-min.css">
-    <link href="https://fonts.googleapis.com/css?family=Spartan:300,400&display=swap" rel="stylesheet">
+	<link rel="stylesheet" href="./styles.css">
+	<link rel="stylesheet" href="https://unpkg.com/purecss@1.0.1/build/pure-min.css"
+		  integrity="sha384-oAOxQR6DkCoMliIh8yFnu25d7Eq/PHS21PClpwjOTeU2jRSq11vu66rf90/cZr47" crossorigin="anonymous">
+	<link rel="stylesheet" href="https://unpkg.com/purecss@1.0.1/build/grids-responsive-min.css">
+	<link href="https://fonts.googleapis.com/css?family=Spartan:300,400&display=swap" rel="stylesheet">
 	<link rel="stylesheet" href="bower_components/social-share-kit/dist/css/social-share-kit.css" type="text/css">
-    <script src="libs/axios/dist/axios.min.js"></script>
-    <script src="libs/vue/dist/vue.min.js"></script>
-    <script src="libs/vue-router/dist/vue-router.min.js"></script>
-    <script src="libs/chart.js/dist/Chart.bundle.min.js"></script>
-    <script src="assets/js/Chart.Geo.min.js"></script>
-    <script src="libs/regression-js/dist/regression.min.js"></script>
-    <script src="bower_components/moment/min/moment.min.js"></script>
-    <script src="assets/js/lm_fitter.js"></script>
-    <script src="bower_components/social-share-kit/dist/js/social-share-kit.min.js"></script>
+	<script src="libs/axios/dist/axios.min.js"></script>
+	<script src="libs/vue/dist/vue.min.js"></script>
+	<script src="libs/vue-router/dist/vue-router.min.js"></script>
+	<script src="libs/chart.js/dist/Chart.bundle.min.js"></script>
+	<script src="assets/js/Chart.Geo.min.js"></script>
+	<script src="libs/regression-js/dist/regression.min.js"></script>
+	<script src="bower_components/moment/min/moment.min.js"></script>
+	<script src="assets/js/lm_fitter.js"></script>
+	<script src="assets/js/components/map.js"></script>
+	<script src="bower_components/social-share-kit/dist/js/social-share-kit.min.js"></script>
 </head>
 <body>
 
@@ -42,21 +47,22 @@
 
 <div class="main">
 
-    <div id="app" class="everything-except-footer">
+	<div id="app" class="everything-except-footer">
 
-        <div id="header" class="header">
-            <div class="container">
+		<div id="header" class="header">
+			<div class="container">
 				<div class="desktop_header">
 					<div style="float: left;">
 						<h1>COVID-19 Progression</h1>
 					</div>
 					<div class="link_container" style="float: right;">
-							<a href="javascript:" v-on:click="toggleShare()" class="ssk ssk-icon ssk-link" title="Share chart setup"></a>
+						<a href="javascript:" v-on:click="toggleShare()" class="ssk ssk-icon ssk-link"
+						   title="Share chart setup"></a>
 					</div>
 					<div style="clear: both;"></div>
 				</div>
-            </div>
-        </div>
+			</div>
+		</div>
 
 		<div id="share_section" class="container" v-show="showShare" style="display: none;">
 			<div>
@@ -65,11 +71,12 @@
 						<table cellspacing="2px">
 							<tr>
 								<td>
-									<a href="javascript:" v-on:click="copyLink()" v-show="showCopyLink">Copy&nbsp;link</a>
+									<a href="javascript:" v-on:click="copyLink()"
+									   v-show="showCopyLink">Copy&nbsp;link</a>
 									<span style="display: none;" v-show="!showCopyLink">Copied!</span>
 								</td>
-								<td width="100%"><input id="link_box" v-model="shareableLink" /></td>
-								<td><a href="" class="ssk ssk-twitter ssk-xs ssk-round" ></a></td>
+								<td width="100%"><input id="link_box" v-model="shareableLink"/></td>
+								<td><a href="" class="ssk ssk-twitter ssk-xs ssk-round"></a></td>
 							</tr>
 						</table>
 					</div>
@@ -77,131 +84,132 @@
 			</div>
 		</div>
 
-        <div id="aggregation_section" class="container">
+		<div id="aggregation_section" class="container">
 
-            <div class="sidebar">
+			<div class="sidebar">
 
-                <div id="geography_picker"
-                     class="modifiers pure-menu pure-menu-scrollable custom-restricted settings-block geography-picker">
-                    <ul class="pure-menu-list">
-                        <li class="pure-menu-list-item">
-                            <input id="cruise_ship_descendants" type="checkbox" v-model="includeCruiseShipDescendants"/>
-                            <label for="cruise_ship_descendants" style="font-style: italic;">Abroad from Cruise Ship
-                                (Modifier)</label>
-                        </li>
-                        <li class="pure-menu-list-item">
-                            <input id="select_all_checkbox" type="checkbox" v-model="selectAll"
-                                   :indeterminate.prop="partialSelection"/>
-                            <label for="select_all_checkbox" style="text-transform: uppercase">Select All</label>
-                        </li>
-                        <li class="pure-menu-list-item" v-for="country in sortedCountries">
-                            <input type="checkbox" v-bind:id="country" v-bind:value="country"
-                                   v-model="checkedCountries"/>
-                            <label v-bind:for="country">{{formatCountry(country)}}</label>
-                        </li>
-                    </ul>
-                </div>
+				<div id="geography_picker"
+					 class="modifiers pure-menu pure-menu-scrollable custom-restricted settings-block geography-picker">
+					<ul class="pure-menu-list">
+						<li class="pure-menu-list-item">
+							<input id="cruise_ship_descendants" type="checkbox" v-model="includeCruiseShipDescendants"/>
+							<label for="cruise_ship_descendants" style="font-style: italic;">Abroad from Cruise Ship
+								(Modifier)</label>
+						</li>
+						<li class="pure-menu-list-item">
+							<input id="select_all_checkbox" type="checkbox" v-model="selectAll"
+								   :indeterminate.prop="partialSelection"/>
+							<label for="select_all_checkbox" style="text-transform: uppercase">Select All</label>
+						</li>
+						<li class="pure-menu-list-item" v-for="country in sortedCountries">
+							<input type="checkbox" v-bind:id="country" v-bind:value="country"
+								   v-model="checkedCountries"/>
+							<label v-bind:for="country">{{formatCountry(country)}}</label>
+						</li>
+					</ul>
+				</div>
 
-                <div id="aggregation_configuration" class="aggregation-configuration">
-                    <div id="config" class="settings-block pure-menu config">
-                        <ul class="pure-menu-list">
-                            <li class="pure-menu-list-item">
-                                <input id="cases_checkbox" type="checkbox" v-model="showCases"/>
-                                <label for="cases_checkbox">Cases</label>
-                                <br/>
-                                <input id="recoveries_checkbox" type="checkbox" v-model="showRecoveries"/>
-                                <label for="recoveries_checkbox">Recoveries</label>
-                                <br/>
-                                <input id="deaths_checkbox" type="checkbox" v-model="showDeaths"/>
-                                <label for="deaths_checkbox">Deaths</label>
-                            </li>
-                            <li class="pure-menu-list-item">
-                                <input type="radio" id="joint_axis_radio" name="axes" v-model="axes" value="joint"/>
-                                <label for="joint_axis_radio">One Axis</label>
-                                <input type="radio" id="separate_axes_radio" name="axes" v-model="axes" value="separate"
-                                       :disabled="!canSeparateAxes"/>
-                                <label for="separate_axes_radio">Two Axes</label>
-                            </li>
-                            <li class="pure-menu-list-item" v-if="canShowLogScale">
-                                <input type="radio" id="linear_scale_radio" name="scale" v-model="scale"
-                                       value="linear"/>
-                                <label for="linear_scale_radio">Linear Scale</label>
-                                <input type="radio" id="log_scale_radio" name="scale" v-model="scale" value="log"
-                                       :disabled="!canShowLogScale"/>
-                                <label for="log_scale_radio">Log Scale</label>
-                            </li>
-                            <li class="pure-menu-list-item">
-                                <input type="radio" id="total_radio" name="derivative" v-model="derivative"
-                                       v-bind:value="false"/>
-                                <label for="total_radio">Total</label>
-                                <input type="radio" id="delta_radio" name="derivative" v-model="derivative"
-                                       v-bind:value="true"/>
-                                <label for="delta_radio">Delta</label>
-                            </li>
-                            <li class="pure-menu-list-item">
-                                <select id="regression" v-model="regression" v-if="canShowRegression"
-                                        :disabled="!canShowRegression">
-                                    <option value="none">Choose Regression Model</option>
-                                    <option value="exponential">Exponential</option>
-                                    <option value="logistic">Logistic (Experimental)</option>
-                                </select>
-                            </li>
-                        </ul>
-                    </div>
+				<div id="aggregation_configuration" class="aggregation-configuration">
+					<div id="config" class="settings-block pure-menu config">
+						<ul class="pure-menu-list">
+							<li class="pure-menu-list-item">
+								<input id="cases_checkbox" type="checkbox" v-model="showCases"/>
+								<label for="cases_checkbox">Cases</label>
+								<br/>
+								<input id="recoveries_checkbox" type="checkbox" v-model="showRecoveries"/>
+								<label for="recoveries_checkbox">Recoveries</label>
+								<br/>
+								<input id="deaths_checkbox" type="checkbox" v-model="showDeaths"/>
+								<label for="deaths_checkbox">Deaths</label>
+							</li>
+							<li class="pure-menu-list-item">
+								<input type="radio" id="joint_axis_radio" name="axes" v-model="axes" value="joint"/>
+								<label for="joint_axis_radio">One Axis</label>
+								<input type="radio" id="separate_axes_radio" name="axes" v-model="axes" value="separate"
+									   :disabled="!canSeparateAxes"/>
+								<label for="separate_axes_radio">Two Axes</label>
+							</li>
+							<li class="pure-menu-list-item" v-if="canShowLogScale">
+								<input type="radio" id="linear_scale_radio" name="scale" v-model="scale"
+									   value="linear"/>
+								<label for="linear_scale_radio">Linear Scale</label>
+								<input type="radio" id="log_scale_radio" name="scale" v-model="scale" value="log"
+									   :disabled="!canShowLogScale"/>
+								<label for="log_scale_radio">Log Scale</label>
+							</li>
+							<li class="pure-menu-list-item">
+								<input type="radio" id="total_radio" name="derivative" v-model="derivative"
+									   v-bind:value="false"/>
+								<label for="total_radio">Total</label>
+								<input type="radio" id="delta_radio" name="derivative" v-model="derivative"
+									   v-bind:value="true"/>
+								<label for="delta_radio">Delta</label>
+							</li>
+							<li class="pure-menu-list-item">
+								<select id="regression" v-model="regression" v-if="canShowRegression"
+										:disabled="!canShowRegression">
+									<option value="none">Choose Regression Model</option>
+									<option value="exponential">Exponential</option>
+									<option value="logistic">Logistic (Experimental)</option>
+								</select>
+							</li>
+						</ul>
+					</div>
 
-                    <div id="details" class="settings-block" v-if="regression !== 'none'">
-                        <div id="regression_details" class="pure-menu">
-                            <ul class="pure-menu-list">
-                                <li class="pure-menu-list-item">
-                                    <label>Extrapolation Size: {{extrapolationSize}}</label>
-                                    <input type="range" v-model="extrapolationSize" min="2" max="10"/>
-                                </li>
-                                <li class="pure-menu-list-item">
-                                    <label>Model Offset: {{modelOffset}}</label>
-                                    <input type="range" v-model="modelOffset" v-bind:min="regressionOffsetMinimum"
-                                           v-bind:max="regressionOffsetMaximum"/>
-                                </li>
-                                <li class="pure-menu-list-item" v-if="regression === 'exponential'">Equation: f(x) =
-                                    {{regressionSeries.cases.equation[0]}}e<sup>{{regressionSeries.cases.equation[1]}}x</sup>
-                                </li>
-                                <li class="pure-menu-list-item" v-if="regression === 'logistic'">Equation: f(x) =
-                                    {{Math.round(regressionSeries.cases.parameterValues[0])}} / (1 +
-                                    {{Math.round(regressionSeries.cases.parameterValues[1])}}e<sup>{{Math.round(regressionSeries.cases.parameterValues[2]*100)/100}}x</sup>)
-                                </li>
-                                <li class="pure-menu-list-item" v-if="regression === 'exponential'">R<sup>2</sup>:
-                                    {{regressionSeries.cases.r2}}
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
+					<div id="details" class="settings-block" v-if="regression !== 'none'">
+						<div id="regression_details" class="pure-menu">
+							<ul class="pure-menu-list">
+								<li class="pure-menu-list-item">
+									<label>Extrapolation Size: {{extrapolationSize}}</label>
+									<input type="range" v-model="extrapolationSize" min="2" max="10"/>
+								</li>
+								<li class="pure-menu-list-item">
+									<label>Model Offset: {{modelOffset}}</label>
+									<input type="range" v-model="modelOffset" v-bind:min="regressionOffsetMinimum"
+										   v-bind:max="regressionOffsetMaximum"/>
+								</li>
+								<li class="pure-menu-list-item" v-if="regression === 'exponential'">Equation: f(x) =
+									{{regressionSeries.cases.equation[0]}}e<sup>{{regressionSeries.cases.equation[1]}}x</sup>
+								</li>
+								<li class="pure-menu-list-item" v-if="regression === 'logistic'">Equation: f(x) =
+									{{Math.round(regressionSeries.cases.parameterValues[0])}} / (1 +
+									{{Math.round(regressionSeries.cases.parameterValues[1])}}e<sup>{{Math.round(regressionSeries.cases.parameterValues[2]*100)/100}}x</sup>)
+								</li>
+								<li class="pure-menu-list-item" v-if="regression === 'exponential'">R<sup>2</sup>:
+									{{regressionSeries.cases.r2}}
+								</li>
+							</ul>
+						</div>
+					</div>
+				</div>
 
-                <div class="chart_container">
-                    <canvas id="graph_canvas" style="width: 100%;" xclass="pure-u-5-6"></canvas>
-                </div>
+				<div class="chart_container">
+					<canvas id="graph_canvas" style="width: 100%;" xclass="pure-u-5-6"></canvas>
+				</div>
 
-                <div style="clear: both;"></div>
+				<div style="clear: both;"></div>
 
-            </div>
+			</div>
 
 
-        </div>
-        <!-- <div>
-            <span>Data: <a href="https://github.com/CSSEGISandData/COVID-19/tree/master/csse_covid_19_data/csse_covid_19_time_series">https://github.com/CSSEGISandData/COVID-19/tree/master/csse_covid_19_data/csse_covid_19_time_series</a></span>
-            <span>Source: <a href="https://github.com/arik-so/coronavirus/tree/gh-pages">https://github.com/arik-so/coronavirus/tree/gh-pages</a></span>
-        </div> -->
+		</div>
+		<!-- <div>
+			<span>Data: <a href="https://github.com/CSSEGISandData/COVID-19/tree/master/csse_covid_19_data/csse_covid_19_time_series">https://github.com/CSSEGISandData/COVID-19/tree/master/csse_covid_19_data/csse_covid_19_time_series</a></span>
+			<span>Source: <a href="https://github.com/arik-so/coronavirus/tree/gh-pages">https://github.com/arik-so/coronavirus/tree/gh-pages</a></span>
+		</div> -->
 
-        <div id="map_section" class="container">
+		<div id="map_section" class="container">
 			<div class="map_selector">
 				<div class="sidebar">
 					<div>
-						<span v-for="map in maps" v-bind:class="{active: map === activeMap}" v-on:click="activeMap = map">{{map}}</span>
+						<span v-for="currentMap in mapScopes" v-bind:class="{active: currentMap === mapScope}"
+							  v-on:click="mapScope = currentMap">{{currentMap}}</span>
 					</div>
 				</div>
 			</div>
-            <div class="sidebar">
-                <div class="map_container">
-                    <div style="/*float: right;*/">
+			<div class="sidebar">
+				<div class="map_container">
+					<div style="/*float: right;*/">
 						<ul class="pure-menu-list">
 							<li class="pure-menu-list-item">
 								Metric:
@@ -216,47 +224,79 @@
 								<select id="map_data_reference" v-model="mapDataReference">
 									<option value="absolute">Absolute</option>
 									<option value="relative:population">Relative to Population</option>
-									<option value="relative:cases" v-if="canShowMapRelativeToCases">Relative to Cases</option>
-									<option value="relative:outcomes" v-if="canShowMapRelativeToOutcomes">Relative to Known Outcomes</option>
-									<option value="relative:recoveries" v-if="canShowMapRelativeToRecoveries">Relative to Recoveries</option>
+									<option value="relative:cases" v-if="canShowMapRelativeToCases">Relative to Cases
+									</option>
+									<option value="relative:outcomes" v-if="canShowMapRelativeToOutcomes">Relative to
+										Known Outcomes
+									</option>
+									<option value="relative:recoveries" v-if="canShowMapRelativeToRecoveries">Relative
+										to Recoveries
+									</option>
 								</select>
 							</li>
 						</ul>
 					</div>
 					<div style="clear: both;"></div>
-                    <canvas id="map"></canvas>
+
+					<covid-map v-bind:scope="mapScope"
+							   v-bind:map-date="mapDate"
+							   v-bind:map-data-source="mapDataSource"
+							   v-bind:map-data-reference="mapDataReference"></covid-map>
+
+					<!--<covid-map v-if="activeMap === 'World'"
+							   scope="World"
+							   key="world_map"
+							   v-bind:map-date="mapDate"
+							   v-bind:map-data-source="mapDataSource"
+							   v-bind:map-data-reference="mapDataReference"></covid-map>
+
+					<covid-map v-if="activeMap === 'USA'"
+							   scope="USA"
+							   key="us_state_map"
+							   v-bind:map-date="mapDate"
+							   v-bind:map-data-source="mapDataSource"
+							   v-bind:map-data-reference="mapDataReference"></covid-map>
+
+					<covid-map v-if="activeMap === 'Europe'"
+							   scope="Europe"
+							   key="europe_map"
+							   v-bind:map-date="mapDate"
+							   v-bind:map-data-source="mapDataSource"
+							   v-bind:map-data-reference="mapDataReference"></covid-map>-->
+
 					<div>
 						{{formatMapDate(mapDate)}} (adjust slider)
 						<br/>
 						<input style="width: 100%;" type="range" v-model="mapDate" v-bind:min="mapDateMinimum"
 							   v-bind:max="mapDateMaximum"/>
 					</div>
-                </div>
-            </div>
-        </div>
+				</div>
+			</div>
+		</div>
 
-    </div>
+	</div>
 
-    <div id="footer" class="footer">
-        <div class="container footer-container">
-            <p>Last updated: 3/16/2020 at 9pm PST</p>
-            <p><a href="https://github.com/arik-so/coronavirus/tree/gh-pages" target="_blank">Github</a> | <a
-                    href="https://github.com/CSSEGISandData/COVID-19/tree/master/csse_covid_19_data/csse_covid_19_time_series"
-                    target="_blank">Data</a></p>
-            <p>Built wearing 😷 by <a href="https://twitter.com/arikaleph" target="_blank" xclass="ssk ssk-text ssk-twitter ssk-xs">@arikaleph</a> and <a
-                    href="https://twitter.com/elliebee" target="_blank">@elliebee</a>.</p>
-        </div>
-    </div>
+	<div id="footer" class="footer">
+		<div class="container footer-container">
+			<p>Last updated: 3/16/2020 at 9pm PST</p>
+			<p><a href="https://github.com/arik-so/coronavirus/tree/gh-pages" target="_blank">Github</a> | <a
+				href="https://github.com/CSSEGISandData/COVID-19/tree/master/csse_covid_19_data/csse_covid_19_time_series"
+				target="_blank">Data</a></p>
+			<p>Built wearing 😷 by <a href="https://twitter.com/arikaleph" target="_blank"
+									  xclass="ssk ssk-text ssk-twitter ssk-xs">@arikaleph</a> and <a
+				href="https://twitter.com/elliebee" target="_blank">@elliebee</a>.</p>
+		</div>
+	</div>
 
 </div>
 
 <script type="application/javascript">
-    (() => {
-        const cacheResetter = Math.round(Date.now()/(10*60*1000));
-        const script = document.createElement('script');
-        script.setAttribute("src", `app.js?cache=${cacheResetter}`);
-        document.getElementsByTagName("body")[0].appendChild(script);
-    })();
+	(() => {
+		const cacheResetter = Math.round(Date.now() / (10 * 60 * 1000));
+		const script = document.createElement('script');
+		script.setAttribute("src", `app.js?cache=${cacheResetter}`);
+		document.getElementsByTagName("body")[0].appendChild(script);
+	})();
 </script>
 </body>
 </html>
