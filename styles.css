@@ -207,9 +207,17 @@ div.map_container {
 	margin-bottom: 10px;
 }
 
-div.map_container canvas {
-	margin-top: 10px;
-	margin-bottom: 10px;
+div.map_container div.canvas_container {
+	padding-top: 10px;
+	padding-bottom: 10px;
+	position: relative;
+	flex-grow: 1;
+	min-height: 0;
+}
+
+div.map_container div.canvas_container > canvas {
+	width: 100%;
+	max-height: 80vh;
 }
 
 .footer-container {

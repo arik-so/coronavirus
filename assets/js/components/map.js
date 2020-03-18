@@ -39,6 +39,11 @@ Vue.component('covid-map', {
 	},
 	computed: {
 		europeanCountryCodes: function () {
+			// return {
+			// 	iso: ['GB', 'DE', 'IT'],
+			// 	ids: []
+			// };
+
 			const europeanUnionCountries = ["AT", "BE", "BG", "CY", "CZ", "DE", "DK", "EE", "ES", "FI", "FR", "GB", "GR", "HR", "HU", "IE", "IT", "LT", "LU", "LV", "MT", "NL", "PL", "PT", "RO", "SE", "SI", "SK"];
 			const europeanCountries = ['CH', 'NO', 'IS', 'IL', 'TR', 'BY', 'UA', 'LB', 'SY',
 				'MC', 'SM', 'VA', 'BA', 'RS', 'ME', 'MK', 'AL', 'MD', 'AD', 'JO', 'GI', 'MA', 'DZ', 'TN', 'MT',
@@ -80,6 +85,8 @@ Vue.component('covid-map', {
 			const mapCountryFeatures = this.topographyFeatures;
 
 			let labels, outline, data, projection = null;
+			let maintainAspectRatio = false;
+			let aspectRatio = null;
 
 			if (['World', 'Europe'].includes(this.scope)) {
 
@@ -97,6 +104,14 @@ Vue.component('covid-map', {
 				data = mapCountryData;
 				projection = 'mercator';
 
+				if (this.scope === 'World') {
+					maintainAspectRatio = true;
+					aspectRatio = 1.6;
+				} else if (this.scope === 'Europe') {
+					maintainAspectRatio = false;
+					aspectRatio = 0.8;
+				}
+
 			} else if (this.scope === 'USA') {
 				const {nation, states} = mapCountryFeatures;
 
@@ -111,12 +126,12 @@ Vue.component('covid-map', {
 					name: s.properties.name
 				}));
 
-				outline = nation;
+				outline = [nation];
 				projection = 'albersUsa';
 				data = stateData;
 			}
 
-			return {labels, outline, data, projection};
+			return {labels, outline, data, projection, maintainAspectRatio, aspectRatio};
 		},
 		mapRawData: function () {
 			let dataSource = this.$parent.$data.raw.confirmedCases;
@@ -176,7 +191,7 @@ Vue.component('covid-map', {
 						denominator = denominators[i][locationCode];
 					} else if (this.mapDataReference === 'relative:population') {
 						denominator = this.$parent.$data.raw.countryPopulation[locationCode]/* || 0*/;
-						if(this.scope === 'USA'){
+						if (this.scope === 'USA') {
 							denominator = this.$parent.$data.raw.countryPopulation['USA'][locationCode]/* || 0*/;
 						}
 					}
@@ -257,7 +272,7 @@ Vue.component('covid-map', {
 			 */
 		},
 		createMap: function () {
-			const {labels, outline, data, projection} = this.topographyConfiguration;
+			const {labels, outline, data, projection, maintainAspectRatio, aspectRatio} = this.topographyConfiguration;
 
 			const context = this.$el.getContext("2d");
 			this.map = new Chart(context, {
@@ -319,7 +334,8 @@ Vue.component('covid-map', {
 						}
 					},
 					responsive: true,
-					maintainAspectRatio: true,
+					maintainAspectRatio,
+					aspectRatio,
 					showOutline: false,
 					showGraticule: false,
 					legend: {

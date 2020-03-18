@@ -238,10 +238,12 @@
 					</div>
 					<div style="clear: both;"></div>
 
+					<div class="canvas_container">
 					<covid-map v-bind:scope="mapScope"
 							   v-bind:map-date="mapDate"
 							   v-bind:map-data-source="mapDataSource"
 							   v-bind:map-data-reference="mapDataReference"></covid-map>
+					</div>
 
 					<!--<covid-map v-if="activeMap === 'World'"
 							   scope="World"
