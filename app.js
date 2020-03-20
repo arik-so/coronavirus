@@ -720,6 +720,16 @@ function calculateDerivative(values) {
 
 				return countries.map(c => countryCodesByName[c] || c);
 			},
+			athElapsedDays: function() {
+				let derivative = this.timeSeries[0];
+				if(!this.derivative){
+					derivative = calculateDerivative(derivative);
+				}
+				const maxValue = Math.max(...derivative);
+				const reverseChronologicalDerivative = derivative.reverse();
+				const elapsedDays = reverseChronologicalDerivative.indexOf(maxValue);
+				return elapsedDays;
+			},
 			timeSeries: function () {
 				let confirmedYValues = this.filterDatasetBySelectedCountries(this.cases);
 				let deadYValues = this.filterDatasetBySelectedCountries(this.deaths);

@@ -394,7 +394,7 @@ label {
 		padding: 6px;
 	}
 
-	div.chart_container > div:nth-child(2) {
+	div.chart_container > div:last-child {
 		height: 50vh;
 	}
 
