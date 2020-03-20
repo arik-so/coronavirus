@@ -166,6 +166,28 @@ div.map_selector > div > div {
 	border-left: 0;
 }
 
+li.subdivided > span.subdivision_toggle{
+	display: inline-block;
+	transition: 0.3s cubic-bezier(0.2, 0.3, 0, 1);
+}
+
+li.subdivided > span.subdivision_toggle:before {
+	content: '▶︎';
+}
+
+li.subdivided.expanded > span.subdivision_toggle {
+	transform: rotate(90deg);
+}
+
+li.subdivided > input {
+	margin-left: 5px;
+}
+
+li.pure-menu-list-item.territory{
+	padding-top: 10px;
+	padding-left: 35px;
+}
+
 label.country_label {
 	/*display: inline-block;*/
 	/*vertical-align: top;*/

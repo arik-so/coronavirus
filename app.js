@@ -115,6 +115,11 @@ function calculateDerivative(values) {
 		}
 	}
 
+	const countrySubdivisions = {
+		US: usaStateCodes,
+		CN: chinaProvinceCodes
+	};
+
 	const provinceCodes = Array.from(chinaProvinceCodes).sort();
 	console.log('Province Codes:', JSON.stringify(provinceCodes, null, 4));
 
@@ -303,7 +308,6 @@ function calculateDerivative(values) {
 			deaths: deadCases,
 			recoveries: recoveredCases,
 			selectAll: false,
-			partialSelection: false,
 			regressionOffsetMinimum: 0,
 			regressionOffsetMaximum: dateLabels.size - 3,
 			...params,
@@ -322,6 +326,19 @@ function calculateDerivative(values) {
 				dateKeys,
 				countryPopulation
 			},
+			partialSelection: {
+				total: false,
+				US: false,
+				CN: false
+			},
+			territorySelections: {
+				US: [],
+				CN: []
+			},
+			expandTerritories: {
+				US: false,
+				CN: false
+			},
 			includeCruiseShipDescendants: true,
 			graph: null,
 			map: null,
@@ -333,6 +350,10 @@ function calculateDerivative(values) {
 			showCopyLink: true
 		},
 		created: function () {
+			/*for (const countryCode of Object.keys(countrySubdivisions)) {
+				this.territorySelections[countryCode] = [];
+			}*/
+
 			const query = this.$route.query;
 
 			let querySpecifiedCountries = false;
@@ -347,11 +368,41 @@ function calculateDerivative(values) {
 					this[key] = (value === 'true');
 				} else if (key === 'countries') {
 					let checkedCountries = [];
+					let territorySelections = {};
+
 					querySpecifiedCountries = true;
-					const countries = (value || '').split(',');
-					if (Array.isArray(countries)) {
-						for (const currentCountryCode of countries) {
-							if (canonicalCountries.has(currentCountryCode)) {
+
+					const countryString = value || '';
+					const countryRegexMatch = countryString.match(/[^,()]+(\([^()]*\))?/gm);
+					// const countries = countryString.split(',');
+					if (Array.isArray(countryRegexMatch) && countryRegexMatch.length > 0) {
+						for (const currentCountryCode of countryRegexMatch) {
+							if (currentCountryCode.includes('(')) {
+
+								const parenthesisIndex = currentCountryCode.indexOf('(');
+								const rawCountryCode = currentCountryCode.substr(0, parenthesisIndex);
+								if (!canonicalCountries.has(rawCountryCode)) {
+									continue;
+								}
+								const availableTerritories = countrySubdivisions[rawCountryCode];
+								if (!availableTerritories) {
+									continue;
+								}
+
+								const territoryCodeString = currentCountryCode.substring(parenthesisIndex + 1, currentCountryCode.length - 1) || '';
+								const territoryCodes = territoryCodeString.split(',');
+
+								territorySelections = [];
+								for (const currentTerritoryCode of territoryCodes) {
+									if (availableTerritories.has(currentTerritoryCode)) {
+										territorySelections.push(currentTerritoryCode);
+									}
+								}
+								this.territorySelections[rawCountryCode] = territorySelections;
+								if(territorySelections.length > 0 && territorySelections.length < availableTerritories.size){
+									this.expandTerritories[rawCountryCode] = true;
+								}
+							} else if (canonicalCountries.has(currentCountryCode)) {
 								checkedCountries.push(currentCountryCode);
 							}
 						}
@@ -499,12 +550,21 @@ function calculateDerivative(values) {
 				for (const currentLocation of data) {
 					const currentCountry = this.getCountryCodeForEntry(currentLocation);
 					const currentState = this.getStateForEntry(currentLocation);
-					if (!this.checkedCountries.includes(currentCountry)) {
+					if (countrySubdivisions[currentCountry]) {
+						// this country has territory subdivisions
+						const selectedTerritories = this.territorySelections[currentCountry] || [];
+						if (!selectedTerritories.includes(currentLocation['state']['short_name'])) {
+							// this territory has not been selected
+							continue;
+						}
+					} else if (!this.checkedCountries.includes(currentCountry)) {
 						continue;
 					}
 					if (!this.includeCruiseShipDescendants && currentState.includes('From Diamond Princess')) {
 						continue;
 					}
+
+
 					let dateIndex = 0;
 					for (const key of Object.keys(currentLocation)) {
 						if (nonDataKeys.includes(key)) {
@@ -537,22 +597,67 @@ function calculateDerivative(values) {
 			selectAll: function (newValue) {
 				if (newValue) {
 					this.checkedCountries = Array.from(canonicalCountries);
-					this.partialSelection = false;
+					this.partialSelection.total = false;
 				} else {
 					this.checkedCountries = [];
 				}
 			},
-			checkedCountries: function (newValue) {
+			checkedCountries: function (newValue, oldValue) {
 				const selectedCountryCount = newValue.length;
 				const totalCountryCount = this.countryNames.size;
-				if (selectedCountryCount === 0) {
-					this.selectAll = false;
-					this.partialSelection = false;
-				} else if (selectedCountryCount === totalCountryCount) {
-					this.selectAll = true;
-					this.partialSelection = false;
+				if (selectedCountryCount === 0 || selectedCountryCount === totalCountryCount) {
+					this.selectAll = (selectedCountryCount === totalCountryCount);
+					this.partialSelection.total = false;
+					this.partialSelection.CN = false;
+					this.partialSelection.US = false;
 				} else {
-					this.partialSelection = true;
+					this.partialSelection.total = true;
+				}
+
+				for (const countryCode of Object.keys(countrySubdivisions)) {
+					// these country codes have subdivisions
+
+					if (newValue.includes(countryCode) && !oldValue.includes(countryCode)) {
+						// has this country been added?
+						this.territorySelections[countryCode] = Array.from(countrySubdivisions[countryCode]);
+					} else if (!newValue.includes(countryCode) && oldValue.includes(countryCode)) {
+						// has this country been removed?
+						this.territorySelections[countryCode] = [];
+					}
+				}
+			},
+			territorySelections: {
+				deep: true,
+				handler: function (newValue) {
+					// console.log('old territory selections:', JSON.stringify(oldValue, null, 4));
+					// console.log('new territory selections:', JSON.stringify(newValue, null, 4));
+					let totalTerritoryCount = 0;
+					for (const [countryCode, territoryCodes] of Object.entries(newValue)) {
+						const availableTerritoryCodes = countrySubdivisions[countryCode];
+						const selectionCount = territoryCodes.length;
+						const availableCount = availableTerritoryCodes.size;
+
+						totalTerritoryCount += selectionCount;
+
+						if (selectionCount === 0 || selectionCount === availableCount) {
+							this.partialSelection[countryCode] = false;
+						} else {
+							this.partialSelection[countryCode] = true;
+							this.partialSelection.total = true;
+						}
+
+						if (selectionCount === availableCount && !this.checkedCountries.includes(countryCode)) {
+							this.checkedCountries.push(countryCode);
+						} else if (selectionCount === 0 && this.checkedCountries.includes(countryCode)) {
+							console.log('removing country', countryCode);
+							const index = this.checkedCountries.indexOf(countryCode);
+							this.checkedCountries.splice(index, 1);
+						}
+					}
+
+					if (totalTerritoryCount === 0 && this.checkedCountries.length === 0) {
+						this.partialSelection.total = false;
+					}
 				}
 			},
 			axes: function (newValue) {
@@ -623,7 +728,15 @@ function calculateDerivative(values) {
 		computed: {
 			showSelectionTotals: function () {
 				console.log('check selection totals');
-				return this.checkedCountries.length > 0;
+				if (this.checkedCountries.length > 0) {
+					return true;
+				}
+				for (const [, territories] of Object.entries(this.territorySelections)) {
+					if (territories.length > 0) {
+						return true;
+					}
+				}
+				return false;
 			},
 			decoratedCountries: function () {
 				console.log('redecorating');
@@ -681,6 +794,27 @@ function calculateDerivative(values) {
 			countries: function () {
 				// country names better not contain commas!
 				const checkedCountries = Array.from(this.checkedCountries);
+				// console.log('checked countries');
+				// console.dir(checkedCountries);
+				for (const [countryCode, territoryCodes] of Object.entries(this.territorySelections)) {
+					const availableTerritoryCodes = countrySubdivisions[countryCode];
+					const selectionCount = territoryCodes.length;
+					const availableCount = availableTerritoryCodes.size;
+					if (selectionCount > 0 && selectionCount < availableCount) {
+						// there is a partial selection
+						const partialSelection = Array.from(territoryCodes);
+						partialSelection.sort();
+
+						// remove the raw entry
+						const index = checkedCountries.indexOf(countryCode);
+						if (index > -1) {
+							checkedCountries.splice(index, 1);
+						}
+
+						// add the partial entry
+						checkedCountries.push(`${countryCode}(${partialSelection.join(',')})`)
+					}
+				}
 				checkedCountries.sort();
 				return checkedCountries.join(',');
 			},
@@ -718,11 +852,31 @@ function calculateDerivative(values) {
 				const chinaIndex = countries.indexOf('China');
 				this.moveArrayEntry(countries, chinaIndex, 2);
 
-				return countries.map(c => countryCodesByName[c] || c);
+				return countries.map(c => ({
+					code: countryCodesByName[c] || c,
+					formated: this.formatCountry(countryCodesByName[c] || c),
+					hasSubdivisions: !!countrySubdivisions[countryCodesByName[c] || c]
+				}));
 			},
-			athElapsedDays: function() {
+			sortedTerritories: function () {
+				const territories = {};
+				for (const code of countryCodes) {
+					territories[code] = [];
+					if (code === 'US') {
+						const territoryNames = Array.from(usaStateNames);
+						territoryNames.sort();
+						territories[code] = territoryNames.map(t => ({code: usaStateCodesByName[t], formated: t}));
+					} else if (code === 'CN') {
+						const territoryNames = Array.from(chinaProvinceNames);
+						territoryNames.sort();
+						territories[code] = territoryNames.map(t => ({code: chinaProvinceCodesByName[t], formated: t}));
+					}
+				}
+				return territories;
+			},
+			athElapsedDays: function () {
 				let derivative = this.timeSeries[0];
-				if(!this.derivative){
+				if (!this.derivative) {
 					derivative = calculateDerivative(derivative);
 				}
 				const maxValue = Math.max(...derivative);
