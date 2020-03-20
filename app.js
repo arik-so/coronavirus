@@ -875,7 +875,7 @@ function calculateDerivative(values) {
 				return territories;
 			},
 			athElapsedDays: function () {
-				let derivative = this.timeSeries[0];
+				let derivative = Array.from(this.timeSeries[0]);
 				if (!this.derivative) {
 					derivative = calculateDerivative(derivative);
 				}
