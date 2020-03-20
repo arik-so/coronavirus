@@ -107,7 +107,7 @@ Vue.component('covid-map', {
 				projection = 'mercator';
 
 				if (this.scope === 'World') {
-					maintainAspectRatio = true;
+					maintainAspectRatio = false;
 					aspectRatio = 1.6;
 				} else if (this.scope === 'Europe') {
 					maintainAspectRatio = false;

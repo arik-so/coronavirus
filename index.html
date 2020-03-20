@@ -32,7 +32,6 @@
 	<script src="libs/regression-js/dist/regression.min.js"></script>
 	<script src="bower_components/moment/min/moment.min.js"></script>
 	<script src="assets/js/lm_fitter.js"></script>
-	<script src="assets/js/components/map.js"></script>
 	<script src="bower_components/social-share-kit/dist/js/social-share-kit.min.js"></script>
 </head>
 <body>
@@ -300,10 +299,10 @@
 
 	<div id="footer" class="footer">
 		<div class="container footer-container">
-			<p>Last updated: 3/18/2020 at 5pm PST</p>
+			<p>Last updated: 3/19/2020 at 5pm PST</p>
 			<p><a href="https://github.com/arik-so/coronavirus/tree/gh-pages" target="_blank">Github</a> | <a
 				href="https://github.com/CSSEGISandData/COVID-19/tree/master/csse_covid_19_data/csse_covid_19_time_series"
-				target="_blank">Data</a></p>
+				target="_blank">Data</a> (Latest known inaccuracy: <a href="https://github.com/CSSEGISandData/COVID-19/issues/1075" target="_blank">#1075</a>)</p>
 			<p>Built wearing 😷 by <a href="https://twitter.com/arikaleph" target="_blank"
 									  xclass="ssk ssk-text ssk-twitter ssk-xs">@arikaleph</a> and <a
 				href="https://twitter.com/elliebee" target="_blank">@elliebee</a>.</p>
@@ -315,9 +314,12 @@
 <script type="application/javascript">
 	(() => {
 		const cacheResetter = Math.round(Date.now() / (10 * 60 * 1000));
-		const script = document.createElement('script');
-		script.setAttribute("src", `app.js?cache=${cacheResetter}`);
-		document.getElementsByTagName("body")[0].appendChild(script);
+		const appScript = document.createElement('script');
+		const mapScript = document.createElement('script');
+		appScript.setAttribute("src", `app.js?cache=${cacheResetter}`);
+		mapScript.setAttribute("src", `assets/js/components/map.js?cache=${cacheResetter}`);
+		document.getElementsByTagName("body")[0].appendChild(appScript);
+		document.getElementsByTagName("body")[0].appendChild(mapScript);
 	})();
 </script>
 </body>
