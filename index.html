@@ -86,10 +86,19 @@
 		<div id="aggregation_section" class="container">
 
 			<div class="sidebar">
+				<div id="geography_picker" class="geography-picker" v-bind:class="{set_comparison: comparisonMode}">
 
-				<div id="geography_picker"
-					 class="modifiers pure-menu pure-menu-scrollable custom-restricted settings-block geography-picker">
-					<ul class="pure-menu-list">
+					<div class="set_selector" v-if="comparisonMode">
+						<div>
+							<div>
+								<span class="active">Set A</span><span>Set B</span>
+							</div>
+						</div>
+					</div>
+
+					<div class="modifiers pure-menu pure-menu-scrollable custom-restricted settings-block">
+
+						<ul class="pure-menu-list">
 						<!--<li class="pure-menu-list-item">
 							<input id="cruise_ship_descendants" type="checkbox" v-model="includeCruiseShipDescendants"/>
 							<label for="cruise_ship_descendants" style="font-style: italic;">Abroad from Cruise Ship
@@ -133,6 +142,9 @@
 							</li>
 						</template>
 					</ul>
+
+					</div>
+
 				</div>
 
 				<div id="aggregation_configuration" class="aggregation-configuration">
@@ -209,6 +221,16 @@
 					</div>
 				</div>
 
+				<div class="chart_selector">
+					<div>
+						<div>
+							<span v-bind:class="{active: !comparisonMode}"
+								  v-on:click="comparisonMode = false">Drill Down</span><span v-bind:class="{active: comparisonMode}"
+																							 v-on:click="comparisonMode = true">Compare</span>
+						</div>
+					</div>
+				</div>
+
 				<div class="chart_container">
 					<template v-if="showSelectionTotals">
 						<div v-if="!derivative">
@@ -224,8 +246,8 @@
 						<div>
 							<span>Days since most new infections: {{athElapsedDays}}</span>
 						</div>
-
 					</template>
+
 					<div>
 						<canvas id="graph_canvas" style="width: 100%;" xclass="pure-u-5-6"></canvas>
 					</div>

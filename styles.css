@@ -35,7 +35,7 @@ div.header {
 	padding-top: 20px;
 	padding-bottom: 10px;
 	background-color: white;
-	margin-bottom: 10px;
+	/*margin-bottom: 10px;*/
 	box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.05);
 }
 
@@ -128,9 +128,20 @@ div.geography-picker {
 	width: 300px;
 }
 
+div.geography-picker:not(.set_comparison) {
+	margin-top: 10px;
+}
+
+div.geography-picker.set_comparison > div.settings-block {
+	border-top-left-radius: 0;
+	position: relative;
+	z-index: 1;
+}
+
 div.aggregation-configuration {
 	float: right;
 	width: 200px;
+	margin-top: 45px;
 }
 
 div.chart_container {
@@ -139,12 +150,42 @@ div.chart_container {
 	background: #fff;
 	padding: 20px;
 	border-radius: 10px;
+	border-top-left-radius: 0;
 	box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.05);
+}
+
+div.chart_selector {
+	padding-left: 10px;
+}
+
+div.chart_selector, div.set_selector {
+	overflow: hidden;
+	padding-top: 10px;
+}
+
+div.set_selector {
+	width: fit-content;
+	padding-left: 10px;
+	margin-left: -10px;
+	position: relative;
+	z-index: 2;
+}
+
+div.set_selector > div > div, div.chart_selector > div > div {
+	border-top-left-radius: 10px;
+	border-top-right-radius: 10px;
+	box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.05);
+	display: inline-block;
+	overflow: hidden;
+	vertical-align: top;
+	border: 1px solid rgba(0, 0, 0, 0.05);
+	border-bottom: 0;
+	border-left: 0;
 }
 
 div.map_selector {
 	overflow: hidden;
-	padding-top: 10px;
+	padding-top: 5px;
 	padding-left: 10px;
 	padding-right: 10px;
 
@@ -166,7 +207,7 @@ div.map_selector > div > div {
 	border-left: 0;
 }
 
-li.subdivided > span.subdivision_toggle{
+li.subdivided > span.subdivision_toggle {
 	display: inline-block;
 	transition: 0.3s cubic-bezier(0.2, 0.3, 0, 1);
 }
@@ -183,7 +224,7 @@ li.subdivided > input {
 	margin-left: 5px;
 }
 
-li.pure-menu-list-item.territory{
+li.pure-menu-list-item.territory {
 	padding-top: 10px;
 	padding-left: 35px;
 }
@@ -226,7 +267,7 @@ div.chart_container > div {
 	padding-bottom: 10px;
 }
 
-div.map_selector > div > div > span, div.chart_container > div > span {
+div.map_selector > div > div > span, div.chart_container > div > span, div.chart_selector > div > div > span, div.set_selector > div > div > span {
 	display: inline-block;
 	padding: 12px;
 	padding-bottom: 9px;
@@ -244,7 +285,7 @@ div.chart_container > div > span:last-child {
 	padding-right: 0;
 }
 
-div.map_selector > div > div > span:not(:first-child) {
+div.set_selector > div > div > span:not(:first-child), div.chart_selector > div > div > span:not(:first-child), div.map_selector > div > div > span:not(:first-child) {
 	border-left: 1px solid rgba(0, 0, 0, 0.05);
 }
 
@@ -252,16 +293,16 @@ div.map_selector > span:last-child {
 
 }
 
-div.map_selector > div > div > span:not(.active) {
+div.set_selector > div > div > span:not(.active), div.chart_selector > div > div > span:not(.active), div.map_selector > div > div > span:not(.active) {
 	color: #757575;
 	cursor: pointer;
 }
 
-div.map_selector > div > div > span:not(.active):hover {
+div.set_selector > div > div > span:not(.active):hover, div.chart_selector > div > div > span:not(.active):hover, div.map_selector > div > div > span:not(.active):hover {
 	color: rgb(80, 120, 226);
 }
 
-div.map_selector > div > div > span.active {
+div.set_selector > div > div > span.active, div.chart_selector > div > div > span.active, div.map_selector > div > div > span.active {
 	background-color: #ffffff;
 }
 
@@ -410,6 +451,7 @@ label {
 		padding: 5px;
 		border-radius: 5px;
 		margin-bottom: 5px;
+		border-top-left-radius: 0;
 	}
 
 	div.chart_container > div > span {
