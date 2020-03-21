@@ -399,7 +399,7 @@ function calculateDerivative(values) {
 									}
 								}
 								this.territorySelections[rawCountryCode] = territorySelections;
-								if(territorySelections.length > 0 && territorySelections.length < availableTerritories.size){
+								if (territorySelections.length > 0 && territorySelections.length < availableTerritories.size) {
 									this.expandTerritories[rawCountryCode] = true;
 								}
 							} else if (canonicalCountries.has(currentCountryCode)) {
@@ -591,6 +591,21 @@ function calculateDerivative(values) {
 				for (const axis of chartConfig.options.scales.yAxes) {
 					axis.type = scaleType;
 				}
+			},
+			fixMapDataConfiguration: function () {
+				if (this.mapScope === 'USA' && this.mapDataSource === 'recoveries') {
+					this.mapDataSource = 'cases';
+				}
+
+				if (this.mapDataReference === 'relative:recoveries' && !this.canShowMapRelativeToRecoveries) {
+					this.mapDataReference = 'relative:cases';
+				}
+				if (this.mapDataReference === 'relative:cases' && !this.canShowMapRelativeToCases) {
+					this.mapDataReference = 'absolute';
+				}
+				if (this.mapDataReference === 'relative:outcomes' && !this.canShowMapRelativeToOutcomes) {
+					this.mapDataReference = 'absolute';
+				}
 			}
 		},
 		watch: {
@@ -685,15 +700,7 @@ function calculateDerivative(values) {
 				}
 			},
 			mapDataSource: function () {
-				if (this.mapDataReference === 'relative:recoveries' && !this.canShowMapRelativeToRecoveries) {
-					this.mapDataReference = 'relative:cases';
-				}
-				if (this.mapDataReference === 'relative:cases' && !this.canShowMapRelativeToCases) {
-					this.mapDataReference = 'absolute';
-				}
-				if (this.mapDataReference === 'relative:outcomes' && !this.canShowMapRelativeToOutcomes) {
-					this.mapDataReference = 'absolute';
-				}
+				this.fixMapDataConfiguration();
 				this.updateLocation();
 			},
 			mapDataReference: function () {
@@ -708,6 +715,7 @@ function calculateDerivative(values) {
 				this.graph.update();
 			},
 			mapScope: function () {
+				this.fixMapDataConfiguration();
 				this.updateLocation();
 				// TODO
 			},
@@ -831,13 +839,22 @@ function calculateDerivative(values) {
 				return true;
 				// return (this.axes === 'joint');
 			},
+			canShowMapSourceRecoveries: function () {
+				return this.mapScope !== 'USA';
+			},
 			canShowMapRelativeToCases: function () {
 				return this.mapDataSource !== 'cases';
 			},
 			canShowMapRelativeToRecoveries: function () {
+				if (this.mapScope === 'USA') {
+					return false; // currently unavailable for the US
+				}
 				return this.mapDataSource === 'deaths';
 			},
 			canShowMapRelativeToOutcomes: function () {
+				if (this.mapScope === 'USA') {
+					return false; // currently unavailable for the US
+				}
 				return this.mapDataSource !== 'cases';
 			},
 			sortedCountries: function () {

@@ -259,7 +259,7 @@
 								Metric:
 								<select id="map_data_source" v-model="mapDataSource">
 									<option value="cases">Cases</option>
-									<option value="recoveries">Recoveries</option>
+									<option value="recoveries" v-bind:disabled="!canShowMapSourceRecoveries">Recoveries</option>
 									<option value="deaths">Deaths</option>
 								</select>
 							</li>
