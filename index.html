@@ -88,13 +88,15 @@
 			<div class="sidebar">
 				<div id="geography_picker" class="geography-picker" v-bind:class="{set_comparison: comparisonMode}">
 
-					<div class="set_selector" v-if="comparisonMode">
-						<div>
+					<template v-if="comparisonMode">
+						<div class="set_selector">
 							<div>
-								<span class="active">Set A</span><span>Set B</span>
+								<div>
+									<span class="active">Set A</span><span>Set B</span><span>Set C</span>
+								</div>
 							</div>
 						</div>
-					</div>
+					</template>
 
 					<div class="modifiers pure-menu pure-menu-scrollable custom-restricted settings-block">
 

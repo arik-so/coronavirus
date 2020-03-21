@@ -737,6 +737,9 @@ function calculateDerivative(values) {
 		computed: {
 			showSelectionTotals: function () {
 				console.log('check selection totals');
+				if (this.comparisonMode) {
+					return false;
+				}
 				if (this.checkedCountries.length > 0) {
 					return true;
 				}
