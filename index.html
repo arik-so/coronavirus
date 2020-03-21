@@ -152,16 +152,30 @@
 				<div id="aggregation_configuration" class="aggregation-configuration">
 					<div id="config" class="settings-block pure-menu config">
 						<ul class="pure-menu-list">
-							<li class="pure-menu-list-item">
-								<input id="cases_checkbox" type="checkbox" v-model="showCases"/>
-								<label for="cases_checkbox">Cases</label>
-								<br/>
-								<input id="recoveries_checkbox" type="checkbox" v-model="showRecoveries"/>
-								<label for="recoveries_checkbox">Recoveries</label>
-								<br/>
-								<input id="deaths_checkbox" type="checkbox" v-model="showDeaths"/>
-								<label for="deaths_checkbox">Deaths</label>
-							</li>
+							<template v-if="!comparisonMode">
+								<li class="pure-menu-list-item">
+									<input id="cases_checkbox" type="checkbox" v-model="showCases"/>
+									<label for="cases_checkbox">Cases</label>
+									<br/>
+									<input id="recoveries_checkbox" type="checkbox" v-model="showRecoveries"/>
+									<label for="recoveries_checkbox">Recoveries</label>
+									<br/>
+									<input id="deaths_checkbox" type="checkbox" v-model="showDeaths"/>
+									<label for="deaths_checkbox">Deaths</label>
+								</li>
+							</template>
+							<template v-else>
+								<li class="pure-menu-list-item">
+									<input id="cases_data_type_radio" value="cases" type="radio" v-model="comparisonDataType"/>
+									<label for="cases_data_type_radio">Cases</label>
+									<br/>
+									<input id="recoveries_data_type_radio" value="recoveries" type="radio" v-model="comparisonDataType"/>
+									<label for="recoveries_data_type_radio">Recoveries</label>
+									<br/>
+									<input id="deaths_data_type_radio" value="deaths" type="radio" v-model="comparisonDataType"/>
+									<label for="deaths_data_type_radio">Deaths</label>
+								</li>
+							</template>
 							<li class="pure-menu-list-item">
 								<input type="radio" id="joint_axis_radio" name="axes" v-model="axes" value="joint"/>
 								<label for="joint_axis_radio">One Axis</label>

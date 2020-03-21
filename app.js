@@ -341,7 +341,10 @@ function calculateDerivative(values) {
 			},
 			includeCruiseShipDescendants: true,
 			graph: null,
+
 			comparisonMode: false,
+			comparisonDataType: 'cases',
+
 			map: null,
 			mapDate: dateLabels.size - 1,
 			mapDateMinimum: 0,
