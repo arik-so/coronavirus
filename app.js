@@ -559,7 +559,7 @@ for (const currentSet of selectionSets) {
 				const repaintGraph = () => {
 					this.graph.update();
 				};
-				graphUpdateTimeout = setTimeout(repaintGraph, 10);
+				graphUpdateTimeout = setTimeout(repaintGraph, 5);
 			},
 			updateLocation: function () {
 				// update router
