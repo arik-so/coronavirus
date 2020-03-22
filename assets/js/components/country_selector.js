@@ -3,7 +3,7 @@ Vue.component('country-selector', {
 		'setIndex'
 	],
 	data: function () {
-		console.log('accessing country selector data:', this.setIndex);
+		// console.log('accessing country selector data:', this.setIndex);
 		return {
 			setIndex: 0,
 			setData: selectionSets[this.setIndex]
@@ -148,14 +148,13 @@ Vue.component('country-selector', {
 		}
 	},
 	created: function () {
-		console.log('creating country selector');
-	},
-	mounted: function () {
-		console.log('mounting country selector');
-
+		// console.log('creating country selector');
 		this.setData.selectAll = this.selectAll;
 		this.setData.partialSelection = this.partialSelection;
 		this.setData.setName = this.setName || this.setData.defaultSetName;
+	},
+	mounted: function () {
+		// console.log('mounting country selector');
 	},
 	template: '<slot v-bind:setData="setData"></slot>'
 });

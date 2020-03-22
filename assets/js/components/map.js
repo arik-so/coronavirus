@@ -281,7 +281,7 @@ Vue.component('covid-map', {
 				const value = enumerator / denominator;
 				maximum = Math.max(maximum, value);
 			}
-			console.log('maximum:', maximum);
+			console.log('map historical country high:', maximum);
 			return maximum;
 		},
 	},

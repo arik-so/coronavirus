@@ -151,7 +151,7 @@ for (const currentSet of selectionSets) {
 	};
 
 	const provinceCodes = Array.from(chinaProvinceCodes).sort();
-	console.log('Province Codes:', JSON.stringify(provinceCodes, null, 4));
+	// console.log('Province Codes:', JSON.stringify(provinceCodes, null, 4));
 
 	const ticks = {
 		beginAtZero: true,
@@ -299,9 +299,10 @@ for (const currentSet of selectionSets) {
 		axes: ['join'/*, 'separate'*/],
 		scale: ['linear', 'log'],
 		regression: ['none', 'exponential', 'logistic'],
+		comparisonDataType: ['cases', 'recoveries', 'deaths'],
 		mapDataSource: ['cases', 'recoveries', 'deaths'],
 		mapDataReference: ['absolute', 'relative:cases', 'relative:recoveries', 'relative:population'],
-		mapScope: ['World', 'USA', 'Europe', 'China']
+		mapScope: ['World', 'USA', 'Europe', 'China'],
 	};
 
 	const params = {
@@ -317,10 +318,12 @@ for (const currentSet of selectionSets) {
 		extrapolationSize: 5,
 		mapDataSource: 'deaths',
 		mapDataReference: 'relative:outcomes',
-		mapScope: 'World'
+		mapScope: 'World',
+		comparisonMode: false,
+		comparisonDataType: 'cases'
 	};
 	// only accessor for the country computed value
-	const parametrizableKeys = ['countries', ...Object.keys(params)];
+	const parametrizableKeys = ['countries', 'setB', 'setC', ...Object.keys(params)];
 
 	const routes = [{
 		path: '/',
@@ -350,8 +353,6 @@ for (const currentSet of selectionSets) {
 			// pass to country-selector for component control
 			selectionSets,
 			activeSelectionSetIndex: 0,
-			comparisonMode: false,
-			comparisonDataType: 'cases',
 
 			...params,
 
@@ -393,19 +394,23 @@ for (const currentSet of selectionSets) {
 
 			let querySpecifiedCountries = false;
 
+			const countrySelectionKeys = ['countries', 'setB', 'setC'];
 			for (const key of Object.keys(query)) {
 				if (!parametrizableKeys.includes(key)) {
 					return;
 				}
 				const value = query[key];
-				if (['showCases', 'showDeaths', 'showRecoveries', 'derivative', 'includeCruiseShipDescendants'].includes(key)) {
+				if (['showCases', 'showDeaths', 'showRecoveries', 'derivative', 'comparisonMode'].includes(key)) {
 					// handle booleans
 					this[key] = (value === 'true');
-				} else if (key === 'countries') {
+				} else if (countrySelectionKeys.includes(key)) {
 					let checkedCountries = [];
 					let territorySelections = {};
+					const setIndex = countrySelectionKeys.indexOf(key);
 
-					querySpecifiedCountries = true;
+					if (setIndex === 0) {
+						querySpecifiedCountries = true;
+					}
 
 					const countryString = value || '';
 					const countryRegexMatch = countryString.match(/[^,()]+(\([^()]*\))?/gm);
@@ -433,16 +438,18 @@ for (const currentSet of selectionSets) {
 										territorySelections.push(currentTerritoryCode);
 									}
 								}
-								selectionSets[0].territorySelections[rawCountryCode] = territorySelections;
+								selectionSets[setIndex].territorySelections[rawCountryCode] = territorySelections;
 								if (territorySelections.length > 0 && territorySelections.length < availableTerritories.size) {
-									selectionSets[0].expandTerritories[rawCountryCode] = true;
+									selectionSets[setIndex].expandTerritories[rawCountryCode] = true;
 								}
 							} else if (canonicalCountries.has(currentCountryCode)) {
 								checkedCountries.push(currentCountryCode);
 							}
 						}
 					}
-					selectionSets[0].checkedCountries = checkedCountries;
+
+					selectionSets[setIndex].checkedCountries = checkedCountries;
+
 				} else if (key === 'modelOffset') {
 					let regression = parseInt(value);
 					if (!Number.isSafeInteger(regression)) {
@@ -480,6 +487,19 @@ for (const currentSet of selectionSets) {
 				title: 'Coronavirus tracker by @arikaleph and @elliebee',
 				text: ''
 			});
+			if (this.comparisonMode) {
+				// cycle initialization
+				// super hacky, but eh
+				this.$nextTick(() => {
+					this.activeSelectionSetIndex = 1;
+					this.$nextTick(() => {
+						this.activeSelectionSetIndex = 2;
+						this.$nextTick(() => {
+							this.activeSelectionSetIndex = 0;
+						});
+					});
+				});
+			}
 		},
 		methods: {
 			getCountryCodeForEntry: function (entry) {
@@ -569,6 +589,12 @@ for (const currentSet of selectionSets) {
 					for (const key of parametrizableKeys) {
 						query[key] = this[key];
 					}
+
+					if (this.comparisonMode) {
+						// special case handling
+						query['setB'] = this.countriesToParamString(1);
+						query['setC'] = this.countriesToParamString(2);
+					}
 					router.push({query}, (location) => {
 						// console.dir(location);
 						// this.shareableLinkRaw = window.location.href;
@@ -649,6 +675,34 @@ for (const currentSet of selectionSets) {
 				if (this.mapDataReference === 'relative:outcomes' && !this.canShowMapRelativeToOutcomes) {
 					this.mapDataReference = 'absolute';
 				}
+			},
+			countriesToParamString: function (setIndex = 0) {
+				// used for the URL calculation
+				// country names better not contain commas!
+				const checkedCountries = Array.from(selectionSets[setIndex].checkedCountries);
+				// console.log('checked countries');
+				// console.dir(checkedCountries);
+				for (const [countryCode, territoryCodes] of Object.entries(selectionSets[setIndex].territorySelections)) {
+					const availableTerritoryCodes = countrySubdivisions[countryCode];
+					const selectionCount = territoryCodes.length;
+					const availableCount = availableTerritoryCodes.size;
+					if (selectionCount > 0 && selectionCount < availableCount) {
+						// there is a partial selection
+						const partialSelection = Array.from(territoryCodes);
+						partialSelection.sort();
+
+						// remove the raw entry
+						const index = checkedCountries.indexOf(countryCode);
+						if (index > -1) {
+							checkedCountries.splice(index, 1);
+						}
+
+						// add the partial entry
+						checkedCountries.push(`${countryCode}(${partialSelection.join(',')})`)
+					}
+				}
+				checkedCountries.sort();
+				return checkedCountries.join(',');
 			}
 		},
 		watch: {
@@ -710,7 +764,6 @@ for (const currentSet of selectionSets) {
 				this.updateLocation();
 			},
 			timeSeries: function () {
-				console.log('time series changed');
 				this.updateLocation();
 				this.updateGraph();
 			},
@@ -722,9 +775,6 @@ for (const currentSet of selectionSets) {
 				this.fixMapDataConfiguration();
 				this.updateLocation();
 				// TODO
-			},
-			includeCruiseShipDescendants: function () {
-				this.updateLocation();
 			},
 			canShowRegression: function (newValue) {
 				if (newValue === false) {
@@ -758,7 +808,7 @@ for (const currentSet of selectionSets) {
 				return this.selectionSets.map(s => s.setName);
 			},
 			showSelectionTotals: function () {
-				console.log('check selection totals');
+				// console.log('check selection totals');
 				if (this.comparisonMode) {
 					return false;
 				}
@@ -809,9 +859,6 @@ for (const currentSet of selectionSets) {
 						// debugger
 						const currentCountry = this.getCountryCodeForEntry(currentLocation);
 						const currentState = this.getStateForEntry(currentLocation);
-						if (!this.includeCruiseShipDescendants && currentState.includes('From Diamond Princess')) {
-							continue;
-						}
 						const currentCount = this.parseRowEntryForDate(currentLocation, dateKey);
 						locationTotals[group][currentCountry] = locationTotals[group][currentCountry] || 0;
 						locationTotals[group]['total'] = locationTotals[group]['total'] || 0;
@@ -826,32 +873,7 @@ for (const currentSet of selectionSets) {
 				return validValues.mapScope
 			},
 			countries: function () {
-				// used for the URL calculation
-				// country names better not contain commas!
-				const checkedCountries = Array.from(selectionSets[0].checkedCountries);
-				// console.log('checked countries');
-				// console.dir(checkedCountries);
-				for (const [countryCode, territoryCodes] of Object.entries(selectionSets[0].territorySelections)) {
-					const availableTerritoryCodes = countrySubdivisions[countryCode];
-					const selectionCount = territoryCodes.length;
-					const availableCount = availableTerritoryCodes.size;
-					if (selectionCount > 0 && selectionCount < availableCount) {
-						// there is a partial selection
-						const partialSelection = Array.from(territoryCodes);
-						partialSelection.sort();
-
-						// remove the raw entry
-						const index = checkedCountries.indexOf(countryCode);
-						if (index > -1) {
-							checkedCountries.splice(index, 1);
-						}
-
-						// add the partial entry
-						checkedCountries.push(`${countryCode}(${partialSelection.join(',')})`)
-					}
-				}
-				checkedCountries.sort();
-				return checkedCountries.join(',');
+				return this.countriesToParamString(0);
 			},
 			shareableLink: function () {
 				return this.shareableLinkRaw;
@@ -984,6 +1006,10 @@ for (const currentSet of selectionSets) {
 					let setB = this.filterDatasetBySelectedCountries(this.comparisonDataSource, 1);
 					let setC = this.filterDatasetBySelectedCountries(this.comparisonDataSource, 2);
 
+					if (this.derivative) {
+						[setA, setB, setC] = [setA, setB, setC].map(calculateDerivative);
+					}
+
 					console.log('calculated new sets');
 
 					chartConfig.data.datasets[0].data = setA;
@@ -994,7 +1020,7 @@ for (const currentSet of selectionSets) {
 				}
 			},
 			aggregatedTotals: function () {
-				console.log('aggregating totals');
+				// console.log('aggregating totals');
 
 				const series = this.timeSeries;
 				const confirmedSeries = series[0];
