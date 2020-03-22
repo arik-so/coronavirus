@@ -92,59 +92,74 @@
 						<div class="set_selector">
 							<div>
 								<div>
-									<span class="active">Set A</span><span>Set B</span><span>Set C</span>
+									<span v-for="(dataSet, setIndex) in selectionSets"
+										  v-bind:class="{active: setIndex === activeSelectionSetIndex}"
+										  v-on:click="activeSelectionSetIndex = setIndex">Set {{dataSet.setName}}</span>
 								</div>
 							</div>
 						</div>
 					</template>
 
 					<div class="modifiers pure-menu pure-menu-scrollable custom-restricted settings-block">
-						<country-selector v-bind:key="activeSelectionSetIndex" v-bind:data-set.sync="selectionSets[activeSelectionSetIndex]">
-							<ul class="pure-menu-list">
-								<!--<li class="pure-menu-list-item">
-									<input id="cruise_ship_descendants" type="checkbox" v-model="includeCruiseShipDescendants"/>
-									<label for="cruise_ship_descendants" style="font-style: italic;">Abroad from Cruise Ship
-										(Modifier)</label>
-								</li>-->
-								<li class="pure-menu-list-item">
-									<input id="select_all_checkbox" type="checkbox" v-model="selectAll"
-										   :indeterminate.prop="partialSelection.total"/>
-									<label for="select_all_checkbox" class="country_label select_all">
-										<span class="country_name">Select All</span>
-										<span class="country_decoration" v-html="decoratedCountries['total']"></span>
-									</label>
-								</li>
-								<template v-for="country in sortedCountries">
-									<li class="pure-menu-list-item"
-										v-bind:class="{subdivided: country.hasSubdivisions, expanded: expandTerritories[country.code]}">
-										<span v-if="country.hasSubdivisions"
-											  class="subdivision_toggle"
-											  v-on:click="expandTerritories[country.code] = !expandTerritories[country.code]"></span>
-										<input type="checkbox"
-											   v-bind:id="'country_'+country.code"
-											   v-bind:value="country.code"
-											   v-model="checkedCountries"
-											   :indeterminate.prop="partialSelection[country.code]"
-										/>
-										<label v-bind:for="'country_'+country.code" class="country_label">
-											<span class="country_name">{{country.formated}}</span>
-											<span class="country_decoration" v-html="decoratedCountries[country.code]"></span>
-										</label>
-									</li>
-									<li v-for="territory in sortedTerritories[country.code]" class="pure-menu-list-item territory" v-show="expandTerritories[country.code]">
-										<input type="checkbox"
-											   v-bind:id="'territory_'+territory.code"
-											   v-bind:value="territory.code"
-											   v-model="territorySelections[country.code]"
-										/>
-										<label v-bind:for="'territory_'+territory.code" class="territory_label">
-											<span class="country_name">{{territory.formated}}</span>
-											<!--<span class="country_decoration" v-html="decoratedCountries[country.code]"></span>-->
-										</label>
-									</li>
+						<template v-for="(currentSelectionSet, setIndex) in selectionSets" v-if="setIndex === activeSelectionSetIndex">
+							<country-selector v-bind:set-index="setIndex" xv-bind:data-set.sync="currentSelectionSet" v-bind:key="'country_selector_'+activeSelectionSetIndex">
+								<template v-slot:default="selectionSlot">
+									<ul class="pure-menu-list">
+										<!--{{selectionSlot.setData}}
+										<input type="checkbox" v-model="selectionSlot.setData.abc" />
+										{{selectionSlot.setData.abc}}-->
+
+										<!--<li class="pure-menu-list-item">
+											<input id="cruise_ship_descendants" type="checkbox" v-model="includeCruiseShipDescendants"/>
+											<label for="cruise_ship_descendants" style="font-style: italic;">Abroad from Cruise Ship
+												(Modifier)</label>
+										</li>-->
+
+										<li class="pure-menu-list-item">
+											<input id="select_all_checkbox" type="checkbox" v-model="selectionSlot.setData.selectAll"
+												   :indeterminate.prop="selectionSlot.setData.partialSelection.total" />
+											<label for="select_all_checkbox" class="country_label select_all">
+												<span class="country_name">Select All</span>
+												<span class="country_decoration"
+													  v-html="decoratedCountries['total']"></span>
+											</label>
+										</li>
+										<template v-for="country in sortedCountries">
+											<li class="pure-menu-list-item"
+												v-bind:class="{subdivided: country.hasSubdivisions, expanded: selectionSlot.setData.expandTerritories[country.code]}">
+												<span v-if="country.hasSubdivisions"
+													  class="subdivision_toggle"
+													  v-on:click="selectionSlot.setData.expandTerritories[country.code] = !selectionSlot.setData.expandTerritories[country.code]"></span>
+												<input type="checkbox"
+													   v-bind:id="'country_'+country.code"
+													   v-bind:value="country.code"
+													   v-model="selectionSlot.setData.checkedCountries"
+													   :indeterminate.prop="selectionSlot.setData.partialSelection[country.code]"
+												/>
+												<label v-bind:for="'country_'+country.code" class="country_label">
+													<span class="country_name">{{country.formated}}</span>
+													<span class="country_decoration"
+														  v-html="decoratedCountries[country.code]"></span>
+												</label>
+											</li>
+											<li v-for="territory in sortedTerritories[country.code]"
+												class="pure-menu-list-item territory"
+												v-show="selectionSlot.setData.expandTerritories[country.code]">
+												<input type="checkbox"
+													   v-bind:id="'territory_'+territory.code"
+													   v-bind:value="territory.code"
+													   v-model="selectionSlot.setData.territorySelections[country.code]"
+												/>
+												<label v-bind:for="'territory_'+territory.code" class="territory_label">
+													<span class="country_name">{{territory.formated}}</span>
+													<!--<span class="country_decoration" v-html="decoratedCountries[country.code]"></span>-->
+												</label>
+											</li>
+										</template>
+									</ul>
 								</template>
-							</ul>
-						</country-selector>
+							</country-selector>
+						</template>
 					</div>
 				</div>
 
@@ -175,13 +190,13 @@
 									<label for="deaths_data_type_radio">Deaths</label>
 								</li>
 							</template>
-							<li class="pure-menu-list-item">
+							<!--<li class="pure-menu-list-item">
 								<input type="radio" id="joint_axis_radio" name="axes" v-model="axes" value="joint"/>
 								<label for="joint_axis_radio">One Axis</label>
 								<input type="radio" id="separate_axes_radio" name="axes" v-model="axes" value="separate"
 									   :disabled="!canSeparateAxes"/>
 								<label for="separate_axes_radio">Two Axes</label>
-							</li>
+							</li>-->
 							<li class="pure-menu-list-item" v-if="canShowLogScale">
 								<input type="radio" id="linear_scale_radio" name="scale" v-model="scale"
 									   value="linear"/>
@@ -240,7 +255,7 @@
 					<div>
 						<div>
 							<span v-bind:class="{active: !comparisonMode}"
-								  v-on:click="comparisonMode = false">Aggregate</span><span v-bind:class="{active: comparisonMode}"
+								  v-on:click="comparisonMode = false; activeSelectionSetIndex = 0;">Aggregate</span><span v-bind:class="{active: comparisonMode}"
 																							 v-on:click="comparisonMode = true">Compare</span>
 						</div>
 					</div>
