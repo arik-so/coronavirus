@@ -1,13 +1,3 @@
-function calculateDerivative(values) {
-	const derivative = [];
-	let previousValue = 0;
-	for (const currentValue of values) {
-		derivative.push(currentValue - previousValue);
-		previousValue = currentValue;
-	}
-	return derivative;
-}
-
 const selectionSets = [
 	{setName: 'Set A', defaultSetName: 'Set A'},
 	{setName: 'Set B', defaultSetName: 'Set B'},
@@ -251,13 +241,6 @@ for (const currentSet of selectionSets) {
 				// mode: 'x',
 				mode: 'index',
 				intersect: false,
-				callbacks: {
-					label: function (tooltipItem, data) {
-						const value = tooltipItem.value;
-						const label = data.datasets[tooltipItem.datasetIndex].label;
-						return `${label}: ${Number(value).toLocaleString()}`;
-					}
-				}
 			},
 			responsive: true,
 			maintainAspectRatio: false,
@@ -303,6 +286,7 @@ for (const currentSet of selectionSets) {
 		mapDataSource: ['cases', 'recoveries', 'deaths'],
 		mapDataReference: ['absolute', 'relative:cases', 'relative:recoveries', 'relative:population'],
 		mapScope: ['World', 'USA', 'Europe', 'China'],
+		derivativeType: ['absolute', 'relative']
 	};
 
 	const params = {
@@ -320,7 +304,8 @@ for (const currentSet of selectionSets) {
 		mapDataReference: 'relative:outcomes',
 		mapScope: 'World',
 		comparisonMode: false,
-		comparisonDataType: 'cases'
+		comparisonDataType: 'cases',
+		derivativeType: 'absolute'
 	};
 	// only accessor for the country computed value
 	const parametrizableKeys = ['countries', 'setB', 'setC', ...Object.keys(params)];
@@ -502,6 +487,25 @@ for (const currentSet of selectionSets) {
 			}
 		},
 		methods: {
+			calculateDerivative: function (values) {
+				const derivative = [];
+				let previousValue = 0;
+				for (const currentValue of values) {
+					let change = currentValue - previousValue;
+					if (this.derivativeType === 'relative') {
+						if (previousValue === 0) {
+							change = null;
+						} else if (currentValue === 0) {
+							change = 0;
+						} else {
+							change = Math.round((currentValue / previousValue) * 10000) / 100 - 100;
+						}
+					}
+					derivative.push(change);
+					previousValue = currentValue;
+				}
+				return derivative;
+			},
 			getCountryCodeForEntry: function (entry) {
 				// return entry['Country/Region'];
 				return entry['country']['short_name'] || entry['country']['long_name'];
@@ -558,6 +562,22 @@ for (const currentSet of selectionSets) {
 			},
 			createChart: function () {
 				const context = document.getElementById('graph_canvas').getContext('2d');
+				chartConfig.options.tooltips.callbacks = {
+					label: (tooltipItem, data) => {
+						const value = tooltipItem.value;
+						let label = data.datasets[tooltipItem.datasetIndex].label;
+
+						if (this.derivative) {
+							if (this.derivativeType === 'relative') {
+								return `${label} Increase: +${Number(value).toLocaleString()}%`;
+							} else {
+								return `New ${label}: ${Number(value).toLocaleString()}`;
+							}
+						}
+
+						return `${label}: ${Number(value).toLocaleString()}`;
+					}
+				};
 				this.graph = new Chart(context, chartConfig);
 			},
 			formatMapDate: function (date) {
@@ -943,7 +963,7 @@ for (const currentSet of selectionSets) {
 			athElapsedDays: function () {
 				let derivative = Array.from(this.timeSeries[0]);
 				if (!this.derivative) {
-					derivative = calculateDerivative(derivative);
+					derivative = this.calculateDerivative(derivative);
 				}
 				const maxValue = Math.max(...derivative);
 				const reverseChronologicalDerivative = derivative.reverse();
@@ -969,9 +989,9 @@ for (const currentSet of selectionSets) {
 					let recoveredYValues = this.filterDatasetBySelectedCountries(this.recoveries);
 
 					if (this.derivative) {
-						confirmedYValues = calculateDerivative(confirmedYValues);
-						deadYValues = calculateDerivative(deadYValues);
-						recoveredYValues = calculateDerivative(recoveredYValues);
+						confirmedYValues = this.calculateDerivative(confirmedYValues);
+						deadYValues = this.calculateDerivative(deadYValues);
+						recoveredYValues = this.calculateDerivative(recoveredYValues);
 					}
 
 					if (this.showCases) {
@@ -1007,7 +1027,7 @@ for (const currentSet of selectionSets) {
 					let setC = this.filterDatasetBySelectedCountries(this.comparisonDataSource, 2);
 
 					if (this.derivative) {
-						[setA, setB, setC] = [setA, setB, setC].map(calculateDerivative);
+						[setA, setB, setC] = [setA, setB, setC].map(this.calculateDerivative);
 					}
 
 					console.log('calculated new sets');

@@ -213,10 +213,16 @@
 									   v-bind:value="true"/>
 								<label for="delta_radio">Daily Increase</label>
 							</li>
-							<li class="pure-menu-list-item">
-								<select id="regression" v-model="regression" v-if="canShowRegression"
+							<li class="pure-menu-list-item" v-if="derivative">
+								<select id="derivative_type" v-model="derivativeType">
+									<option value="absolute">Absolute Increase</option>
+									<option value="relative">Relative Increase</option>
+								</select>
+							</li>
+							<li class="pure-menu-list-item" v-if="canShowRegression">
+								<select id="regression" v-model="regression"
 										:disabled="!canShowRegression">
-									<option value="none">Choose Regression Model</option>
+									<option value="none">Apply Regression…</option>
 									<option value="exponential">Exponential</option>
 									<option value="logistic">Logistic (Experimental)</option>
 								</select>
@@ -249,6 +255,20 @@
 							</ul>
 						</div>
 					</div>
+
+					<div class="settings-block" v-if="comparisonMode && false">
+						<div id="comparison_details" class="pure-menu">
+							<ul class="pure-menu-list">
+								<li class="pure-menu-list-item">
+									<label>Set B offset: </label>
+								</li>
+								<li class="pure-menu-list-item">
+									<label>Set C offset: </label>
+								</li>
+							</ul>
+						</div>
+					</div>
+
 				</div>
 
 				<div class="chart_selector">
