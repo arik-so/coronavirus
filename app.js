@@ -9,9 +9,9 @@ function calculateDerivative(values) {
 }
 
 const selectionSets = [
-	{setName: 'A'},
-	{setName: 'B'},
-	{setName: 'C'}
+	{setName: 'Set A', defaultSetName: 'Set A'},
+	{setName: 'Set B', defaultSetName: 'Set B'},
+	{setName: 'Set C', defaultSetName: 'Set C'}
 ];
 
 for (const currentSet of selectionSets) {
@@ -143,6 +143,11 @@ for (const currentSet of selectionSets) {
 	const countrySubdivisions = {
 		US: usaStateCodes,
 		CN: chinaProvinceCodes
+	};
+
+	const territoryNamesByCountryAndCode = {
+		CN: chinaProvinceNamesByCode,
+		US: usaStateNamesByCode
 	};
 
 	const provinceCodes = Array.from(chinaProvinceCodes).sort();
@@ -366,7 +371,8 @@ for (const currentSet of selectionSets) {
 				dateKeys,
 				countryNames,
 				countryPopulation,
-				countrySubdivisions
+				countrySubdivisions,
+				territoryNamesByCountryAndCode
 			},
 			graph: null,
 
@@ -679,13 +685,21 @@ for (const currentSet of selectionSets) {
 			},
 			comparisonMode: function (newValue) {
 				if (newValue) {
-					chartConfig.data.datasets[0].label = 'Set A';
-					chartConfig.data.datasets[1].label = 'Set B';
-					chartConfig.data.datasets[2].label = 'Set C';
-				}else{
+					chartConfig.data.datasets[0].label = selectionSets[0].setName;
+					chartConfig.data.datasets[1].label = selectionSets[1].setName;
+					chartConfig.data.datasets[2].label = selectionSets[2].setName;
+				} else {
 					chartConfig.data.datasets[0].label = defaultChartConfig.data.datasets[0].label;
 					chartConfig.data.datasets[1].label = defaultChartConfig.data.datasets[1].label;
 					chartConfig.data.datasets[2].label = defaultChartConfig.data.datasets[2].label;
+				}
+			},
+			setLabels: function (newValue) {
+				if (this.comparisonMode) {
+					chartConfig.data.datasets[0].label = newValue[0];
+					chartConfig.data.datasets[1].label = newValue[1];
+					chartConfig.data.datasets[2].label = newValue[2];
+					this.updateGraph();
 				}
 			},
 			mapDataSource: function () {
@@ -724,6 +738,25 @@ for (const currentSet of selectionSets) {
 			}
 		},
 		computed: {
+			aggregationLabel: function () {
+				if (this.selectionSets[0].setName !== this.selectionSets[0].defaultSetName) {
+					const customSetName = this.selectionSets[0].setName;
+					// const normalizedSetName = customSetName.normalize('NFC');
+					// const ascii = /^[ -~]+$/;
+					// if (ascii.test(customSetName)) {
+					// no emoji fuckery
+					// return customSetName;
+					// }
+					const emoji = /(?:[\u2700-\u27bf]|(?:\ud83c[\udde6-\uddff]){2}|[\ud800-\udbff][\udc00-\udfff]|[\u0023-\u0039]\ufe0f?\u20e3|\u3299|\u3297|\u303d|\u3030|\u24c2|\ud83c[\udd70-\udd71]|\ud83c[\udd7e-\udd7f]|\ud83c\udd8e|\ud83c[\udd91-\udd9a]|\ud83c[\udde6-\uddff]|[\ud83c\ude01-\ude02]|\ud83c\ude1a|\ud83c\ude2f|[\ud83c\ude32-\ude3a]|[\ud83c\ude50-\ude51]|\u203c|\u2049|[\u25aa-\u25ab]|\u25b6|\u25c0|[\u25fb-\u25fe]|\u00a9|\u00ae|\u2122|\u2139|\ud83c\udc04|[\u2600-\u26FF]|\u2b05|\u2b06|\u2b07|\u2b1b|\u2b1c|\u2b50|\u2b55|\u231a|\u231b|\u2328|\u23cf|[\u23e9-\u23f3]|[\u23f8-\u23fa]|\ud83c\udccf|\u2934|\u2935|[\u2190-\u21ff])/;
+					if (!emoji.test(customSetName)) {
+						return customSetName;
+					}
+				}
+				return 'Aggregate';
+			},
+			setLabels: function () {
+				return this.selectionSets.map(s => s.setName);
+			},
 			showSelectionTotals: function () {
 				console.log('check selection totals');
 				if (this.comparisonMode) {
