@@ -1,11 +1,26 @@
-function calculateDerivative(values) {
-	const derivative = [];
-	let previousValue = 0;
-	for (const currentValue of values) {
-		derivative.push(currentValue - previousValue);
-		previousValue = currentValue;
-	}
-	return derivative;
+const selectionSets = [
+	{setName: 'Set A', defaultSetName: 'Set A'},
+	{setName: 'Set B', defaultSetName: 'Set B'},
+	{setName: 'Set C', defaultSetName: 'Set C'}
+];
+
+for (const currentSet of selectionSets) {
+	// initialize
+	currentSet.selectAll = false;
+	currentSet.partialSelection = {
+		total: false,
+		US: false,
+		CN: false
+	};
+	currentSet.territorySelections = {
+		US: [],
+		CN: []
+	};
+	currentSet.expandTerritories = {
+		US: false,
+		CN: false
+	};
+	currentSet.checkedCountries = [];
 }
 
 (async () => {
@@ -120,8 +135,13 @@ function calculateDerivative(values) {
 		CN: chinaProvinceCodes
 	};
 
+	const territoryNamesByCountryAndCode = {
+		CN: chinaProvinceNamesByCode,
+		US: usaStateNamesByCode
+	};
+
 	const provinceCodes = Array.from(chinaProvinceCodes).sort();
-	console.log('Province Codes:', JSON.stringify(provinceCodes, null, 4));
+	// console.log('Province Codes:', JSON.stringify(provinceCodes, null, 4));
 
 	const ticks = {
 		beginAtZero: true,
@@ -154,6 +174,19 @@ function calculateDerivative(values) {
 	];
 	const singleAxis = [{ticks}];
 
+
+	const placeholderRegressionDataset = {
+		label: 'Case Regression',
+		data: [],
+		backgroundColor: 'rgba(50, 50, 150, 1)',
+		borderColor: 'rgba(50, 50, 150, 1)',
+		fill: false,
+		cubicInterpolationMode: 'monotone',
+		pointBorderWidth: 3,
+		pointHoverRadius: 5,
+		pointHoverBorderWidth: 1,
+		pointRadius: 1
+	};
 
 	// initialize data set context
 	const chartConfig = {
@@ -197,18 +230,7 @@ function calculateDerivative(values) {
 					pointHoverBorderWidth: 1,
 					pointRadius: 1
 				},
-				{
-					label: 'Case Regression',
-					data: [],
-					backgroundColor: 'rgba(50, 50, 150, 1)',
-					borderColor: 'rgba(50, 50, 150, 1)',
-					fill: false,
-					cubicInterpolationMode: 'monotone',
-					pointBorderWidth: 3,
-					pointHoverRadius: 5,
-					pointHoverBorderWidth: 1,
-					pointRadius: 1
-				},
+				{}
 			],
 		},
 		options: {
@@ -219,18 +241,13 @@ function calculateDerivative(values) {
 				// mode: 'x',
 				mode: 'index',
 				intersect: false,
-				callbacks: {
-					label: function (tooltipItem, data) {
-						const value = tooltipItem.value;
-						const label = data.datasets[tooltipItem.datasetIndex].label;
-						return `${label}: ${Number(value).toLocaleString()}`;
-					}
-				}
 			},
 			responsive: true,
 			maintainAspectRatio: false,
 		}
 	};
+
+	const defaultChartConfig = JSON.parse(JSON.stringify(chartConfig));
 
 
 	/*const mapData = (await axios({
@@ -262,12 +279,14 @@ function calculateDerivative(values) {
 	defaultCheckedCountries.delete('US'); // USA
 
 	const validValues = {
-		axes: ['join', 'separate'],
+		axes: ['join'/*, 'separate'*/],
 		scale: ['linear', 'log'],
 		regression: ['none', 'exponential', 'logistic'],
+		comparisonDataType: ['cases', 'recoveries', 'deaths'],
 		mapDataSource: ['cases', 'recoveries', 'deaths'],
 		mapDataReference: ['absolute', 'relative:cases', 'relative:recoveries', 'relative:population'],
-		mapScope: ['World', 'USA', 'Europe', 'China']
+		mapScope: ['World', 'USA', 'Europe', 'China'],
+		derivativeType: ['absolute', 'relative']
 	};
 
 	const params = {
@@ -283,9 +302,13 @@ function calculateDerivative(values) {
 		extrapolationSize: 5,
 		mapDataSource: 'deaths',
 		mapDataReference: 'relative:outcomes',
-		mapScope: 'World'
+		mapScope: 'World',
+		comparisonMode: false,
+		comparisonDataType: 'cases',
+		derivativeType: 'absolute'
 	};
-	const parametrizableKeys = ['countries', ...Object.keys(params)];
+	// only accessor for the country computed value
+	const parametrizableKeys = ['countries', 'setB', 'setC', ...Object.keys(params)];
 
 	const routes = [{
 		path: '/',
@@ -296,22 +319,30 @@ function calculateDerivative(values) {
 	const router = new VueRouter({routes});
 
 	let pathUpdateTimeout = null;
+	let graphUpdateTimeout = null;
 
 	const app = new Vue({
 		el: '#app',
 		router,
 		data: {
-			checkedCountries: [],
 			countryNames,
 			countryCodes,
+
 			cases: confirmedCases,
 			deaths: deadCases,
 			recoveries: recoveredCases,
-			selectAll: false,
+
 			regressionOffsetMinimum: 0,
 			regressionOffsetMaximum: dateLabels.size - 3,
+
+			// pass to country-selector for component control
+			selectionSets,
+			activeSelectionSetIndex: 0,
+
 			...params,
+
 			raw: {
+				canonicalCountries,
 				worldTopographyFeatures,
 				usaStateTopographyFeatures,
 				countryNamesByCode,
@@ -324,23 +355,13 @@ function calculateDerivative(values) {
 				recoveredCases,
 				deadCases,
 				dateKeys,
-				countryPopulation
+				countryNames,
+				countryPopulation,
+				countrySubdivisions,
+				territoryNamesByCountryAndCode
 			},
-			partialSelection: {
-				total: false,
-				US: false,
-				CN: false
-			},
-			territorySelections: {
-				US: [],
-				CN: []
-			},
-			expandTerritories: {
-				US: false,
-				CN: false
-			},
-			includeCruiseShipDescendants: true,
 			graph: null,
+
 			map: null,
 			mapDate: dateLabels.size - 1,
 			mapDateMinimum: 0,
@@ -358,19 +379,23 @@ function calculateDerivative(values) {
 
 			let querySpecifiedCountries = false;
 
+			const countrySelectionKeys = ['countries', 'setB', 'setC'];
 			for (const key of Object.keys(query)) {
 				if (!parametrizableKeys.includes(key)) {
 					return;
 				}
 				const value = query[key];
-				if (['showCases', 'showDeaths', 'showRecoveries', 'derivative', 'includeCruiseShipDescendants'].includes(key)) {
+				if (['showCases', 'showDeaths', 'showRecoveries', 'derivative', 'comparisonMode'].includes(key)) {
 					// handle booleans
 					this[key] = (value === 'true');
-				} else if (key === 'countries') {
+				} else if (countrySelectionKeys.includes(key)) {
 					let checkedCountries = [];
 					let territorySelections = {};
+					const setIndex = countrySelectionKeys.indexOf(key);
 
-					querySpecifiedCountries = true;
+					if (setIndex === 0) {
+						querySpecifiedCountries = true;
+					}
 
 					const countryString = value || '';
 					const countryRegexMatch = countryString.match(/[^,()]+(\([^()]*\))?/gm);
@@ -398,16 +423,18 @@ function calculateDerivative(values) {
 										territorySelections.push(currentTerritoryCode);
 									}
 								}
-								this.territorySelections[rawCountryCode] = territorySelections;
+								selectionSets[setIndex].territorySelections[rawCountryCode] = territorySelections;
 								if (territorySelections.length > 0 && territorySelections.length < availableTerritories.size) {
-									this.expandTerritories[rawCountryCode] = true;
+									selectionSets[setIndex].expandTerritories[rawCountryCode] = true;
 								}
 							} else if (canonicalCountries.has(currentCountryCode)) {
 								checkedCountries.push(currentCountryCode);
 							}
 						}
 					}
-					this.checkedCountries = checkedCountries;
+
+					selectionSets[setIndex].checkedCountries = checkedCountries;
+
 				} else if (key === 'modelOffset') {
 					let regression = parseInt(value);
 					if (!Number.isSafeInteger(regression)) {
@@ -436,7 +463,7 @@ function calculateDerivative(values) {
 			}
 
 			if (!querySpecifiedCountries) {
-				this.checkedCountries = Array.from(defaultCheckedCountries);
+				selectionSets[0].checkedCountries = Array.from(defaultCheckedCountries);
 			}
 		},
 		mounted: function () {
@@ -445,8 +472,40 @@ function calculateDerivative(values) {
 				title: 'Coronavirus tracker by @arikaleph and @elliebee',
 				text: ''
 			});
+			if (this.comparisonMode) {
+				// cycle initialization
+				// super hacky, but eh
+				this.$nextTick(() => {
+					this.activeSelectionSetIndex = 1;
+					this.$nextTick(() => {
+						this.activeSelectionSetIndex = 2;
+						this.$nextTick(() => {
+							this.activeSelectionSetIndex = 0;
+						});
+					});
+				});
+			}
 		},
 		methods: {
+			calculateDerivative: function (values) {
+				const derivative = [];
+				let previousValue = 0;
+				for (const currentValue of values) {
+					let change = currentValue - previousValue;
+					if (this.derivativeType === 'relative') {
+						if (previousValue === 0) {
+							change = null;
+						} else if (currentValue === 0) {
+							change = 0;
+						} else {
+							change = Math.round((currentValue / previousValue) * 10000) / 100 - 100;
+						}
+					}
+					derivative.push(change);
+					previousValue = currentValue;
+				}
+				return derivative;
+			},
 			getCountryCodeForEntry: function (entry) {
 				// return entry['Country/Region'];
 				return entry['country']['short_name'] || entry['country']['long_name'];
@@ -503,6 +562,22 @@ function calculateDerivative(values) {
 			},
 			createChart: function () {
 				const context = document.getElementById('graph_canvas').getContext('2d');
+				chartConfig.options.tooltips.callbacks = {
+					label: (tooltipItem, data) => {
+						const value = tooltipItem.value;
+						let label = data.datasets[tooltipItem.datasetIndex].label;
+
+						if (this.derivative) {
+							if (this.derivativeType === 'relative') {
+								return `${label} Increase: +${Number(value).toLocaleString()}%`;
+							} else {
+								return `New ${label}: ${Number(value).toLocaleString()}`;
+							}
+						}
+
+						return `${label}: ${Number(value).toLocaleString()}`;
+					}
+				};
 				this.graph = new Chart(context, chartConfig);
 			},
 			formatMapDate: function (date) {
@@ -518,6 +593,14 @@ function calculateDerivative(values) {
 				}
 				return country;
 			},
+			updateGraph: function () {
+				// update router
+				clearTimeout(graphUpdateTimeout);
+				const repaintGraph = () => {
+					this.graph.update();
+				};
+				graphUpdateTimeout = setTimeout(repaintGraph, 5);
+			},
 			updateLocation: function () {
 				// update router
 				clearTimeout(pathUpdateTimeout);
@@ -525,6 +608,12 @@ function calculateDerivative(values) {
 					const query = {};
 					for (const key of parametrizableKeys) {
 						query[key] = this[key];
+					}
+
+					if (this.comparisonMode) {
+						// special case handling
+						query['setB'] = this.countriesToParamString(1);
+						query['setC'] = this.countriesToParamString(2);
 					}
 					router.push({query}, (location) => {
 						// console.dir(location);
@@ -545,24 +634,24 @@ function calculateDerivative(values) {
 				}*/
 				return entry;
 			},
-			filterDatasetBySelectedCountries: function (data) {
+			filterDatasetBySelectedCountries: function (data, setIndex = 0) {
 				const filteredData = [];
 				for (const currentLocation of data) {
 					const currentCountry = this.getCountryCodeForEntry(currentLocation);
-					const currentState = this.getStateForEntry(currentLocation);
 					if (countrySubdivisions[currentCountry]) {
 						// this country has territory subdivisions
-						const selectedTerritories = this.territorySelections[currentCountry] || [];
+						const selectedTerritories = selectionSets[setIndex].territorySelections[currentCountry] || [];
 						if (!selectedTerritories.includes(currentLocation['state']['short_name'])) {
 							// this territory has not been selected
 							continue;
 						}
-					} else if (!this.checkedCountries.includes(currentCountry)) {
+					} else if (!selectionSets[setIndex].checkedCountries.includes(currentCountry)) {
 						continue;
 					}
-					if (!this.includeCruiseShipDescendants && currentState.includes('From Diamond Princess')) {
-						continue;
-					}
+					// const currentState = this.getStateForEntry(currentLocation);
+					// if (!this.includeCruiseShipDescendants && currentState.includes('From Diamond Princess')) {
+					// 	continue;
+					// }
 
 
 					let dateIndex = 0;
@@ -606,75 +695,37 @@ function calculateDerivative(values) {
 				if (this.mapDataReference === 'relative:outcomes' && !this.canShowMapRelativeToOutcomes) {
 					this.mapDataReference = 'absolute';
 				}
+			},
+			countriesToParamString: function (setIndex = 0) {
+				// used for the URL calculation
+				// country names better not contain commas!
+				const checkedCountries = Array.from(selectionSets[setIndex].checkedCountries);
+				// console.log('checked countries');
+				// console.dir(checkedCountries);
+				for (const [countryCode, territoryCodes] of Object.entries(selectionSets[setIndex].territorySelections)) {
+					const availableTerritoryCodes = countrySubdivisions[countryCode];
+					const selectionCount = territoryCodes.length;
+					const availableCount = availableTerritoryCodes.size;
+					if (selectionCount > 0 && selectionCount < availableCount) {
+						// there is a partial selection
+						const partialSelection = Array.from(territoryCodes);
+						partialSelection.sort();
+
+						// remove the raw entry
+						const index = checkedCountries.indexOf(countryCode);
+						if (index > -1) {
+							checkedCountries.splice(index, 1);
+						}
+
+						// add the partial entry
+						checkedCountries.push(`${countryCode}(${partialSelection.join(',')})`)
+					}
+				}
+				checkedCountries.sort();
+				return checkedCountries.join(',');
 			}
 		},
 		watch: {
-			selectAll: function (newValue) {
-				if (newValue) {
-					this.checkedCountries = Array.from(canonicalCountries);
-					this.partialSelection.total = false;
-				} else {
-					this.checkedCountries = [];
-				}
-			},
-			checkedCountries: function (newValue, oldValue) {
-				const selectedCountryCount = newValue.length;
-				const totalCountryCount = this.countryNames.size;
-				if (selectedCountryCount === 0 || selectedCountryCount === totalCountryCount) {
-					this.selectAll = (selectedCountryCount === totalCountryCount);
-					this.partialSelection.total = false;
-					this.partialSelection.CN = false;
-					this.partialSelection.US = false;
-				} else {
-					this.partialSelection.total = true;
-				}
-
-				for (const countryCode of Object.keys(countrySubdivisions)) {
-					// these country codes have subdivisions
-
-					if (newValue.includes(countryCode) && !oldValue.includes(countryCode)) {
-						// has this country been added?
-						this.territorySelections[countryCode] = Array.from(countrySubdivisions[countryCode]);
-					} else if (!newValue.includes(countryCode) && oldValue.includes(countryCode)) {
-						// has this country been removed?
-						this.territorySelections[countryCode] = [];
-					}
-				}
-			},
-			territorySelections: {
-				deep: true,
-				handler: function (newValue) {
-					// console.log('old territory selections:', JSON.stringify(oldValue, null, 4));
-					// console.log('new territory selections:', JSON.stringify(newValue, null, 4));
-					let totalTerritoryCount = 0;
-					for (const [countryCode, territoryCodes] of Object.entries(newValue)) {
-						const availableTerritoryCodes = countrySubdivisions[countryCode];
-						const selectionCount = territoryCodes.length;
-						const availableCount = availableTerritoryCodes.size;
-
-						totalTerritoryCount += selectionCount;
-
-						if (selectionCount === 0 || selectionCount === availableCount) {
-							this.partialSelection[countryCode] = false;
-						} else {
-							this.partialSelection[countryCode] = true;
-							this.partialSelection.total = true;
-						}
-
-						if (selectionCount === availableCount && !this.checkedCountries.includes(countryCode)) {
-							this.checkedCountries.push(countryCode);
-						} else if (selectionCount === 0 && this.checkedCountries.includes(countryCode)) {
-							console.log('removing country', countryCode);
-							const index = this.checkedCountries.indexOf(countryCode);
-							this.checkedCountries.splice(index, 1);
-						}
-					}
-
-					if (totalTerritoryCount === 0 && this.checkedCountries.length === 0) {
-						this.partialSelection.total = false;
-					}
-				}
-			},
 			axes: function (newValue) {
 				if (newValue === 'joint') {
 					// remove second y axis
@@ -682,21 +733,47 @@ function calculateDerivative(values) {
 					delete chartConfig.data.datasets[0].yAxisID;
 					delete chartConfig.data.datasets[1].yAxisID;
 					delete chartConfig.data.datasets[2].yAxisID;
-					delete chartConfig.data.datasets[3].yAxisID;
+
+					if (chartConfig.data.datasets[CONFIRMED_REGRESSION_DATASET_INDEX]) {
+						delete chartConfig.data.datasets[3].yAxisID;
+					}
 				} else {
 					chartConfig.options.scales.yAxes = doubleAxes;
 					chartConfig.data.datasets[CONFIRMED_DATASET_INDEX].yAxisID = doubleAxes[0].id;
 					chartConfig.data.datasets[RECOVERED_DATASET_INDEX].yAxisID = doubleAxes[0].id;
-					chartConfig.data.datasets[CONFIRMED_REGRESSION_DATASET_INDEX].yAxisID = doubleAxes[0].id;
 					chartConfig.data.datasets[DEAD_DATASET_INDEX].yAxisID = doubleAxes[1].id;
+
+
+					if (chartConfig.data.datasets[CONFIRMED_REGRESSION_DATASET_INDEX]) {
+						chartConfig.data.datasets[CONFIRMED_REGRESSION_DATASET_INDEX].yAxisID = doubleAxes[0].id;
+					}
 				}
 				this.validateGraphLayout();
 				this.updateLocation();
-				this.graph.update();
+				this.updateGraph();
 			},
 			canSeparateAxes: function (newValue) {
 				if (!newValue) {
 					this.axes = 'joint';
+				}
+			},
+			comparisonMode: function (newValue) {
+				if (newValue) {
+					chartConfig.data.datasets[0].label = selectionSets[0].setName;
+					chartConfig.data.datasets[1].label = selectionSets[1].setName;
+					chartConfig.data.datasets[2].label = selectionSets[2].setName;
+				} else {
+					chartConfig.data.datasets[0].label = defaultChartConfig.data.datasets[0].label;
+					chartConfig.data.datasets[1].label = defaultChartConfig.data.datasets[1].label;
+					chartConfig.data.datasets[2].label = defaultChartConfig.data.datasets[2].label;
+				}
+			},
+			setLabels: function (newValue) {
+				if (this.comparisonMode) {
+					chartConfig.data.datasets[0].label = newValue[0];
+					chartConfig.data.datasets[1].label = newValue[1];
+					chartConfig.data.datasets[2].label = newValue[2];
+					this.updateGraph();
 				}
 			},
 			mapDataSource: function () {
@@ -708,19 +785,16 @@ function calculateDerivative(values) {
 			},
 			timeSeries: function () {
 				this.updateLocation();
-				this.graph.update();
+				this.updateGraph();
 			},
 			regressionSeries: function () {
 				this.updateLocation();
-				this.graph.update();
+				this.updateGraph();
 			},
 			mapScope: function () {
 				this.fixMapDataConfiguration();
 				this.updateLocation();
 				// TODO
-			},
-			includeCruiseShipDescendants: function () {
-				this.updateLocation();
 			},
 			canShowRegression: function (newValue) {
 				if (newValue === false) {
@@ -729,17 +803,39 @@ function calculateDerivative(values) {
 			},
 			scale: function () {
 				this.validateGraphLayout();
-				this.graph.update();
+				this.updateGraph();
 				this.updateLocation();
 			}
 		},
 		computed: {
+			aggregationLabel: function () {
+				if (this.selectionSets[0].setName !== this.selectionSets[0].defaultSetName) {
+					const customSetName = this.selectionSets[0].setName;
+					// const normalizedSetName = customSetName.normalize('NFC');
+					// const ascii = /^[ -~]+$/;
+					// if (ascii.test(customSetName)) {
+					// no emoji fuckery
+					// return customSetName;
+					// }
+					const emoji = /(?:[\u2700-\u27bf]|(?:\ud83c[\udde6-\uddff]){2}|[\ud800-\udbff][\udc00-\udfff]|[\u0023-\u0039]\ufe0f?\u20e3|\u3299|\u3297|\u303d|\u3030|\u24c2|\ud83c[\udd70-\udd71]|\ud83c[\udd7e-\udd7f]|\ud83c\udd8e|\ud83c[\udd91-\udd9a]|\ud83c[\udde6-\uddff]|[\ud83c\ude01-\ude02]|\ud83c\ude1a|\ud83c\ude2f|[\ud83c\ude32-\ude3a]|[\ud83c\ude50-\ude51]|\u203c|\u2049|[\u25aa-\u25ab]|\u25b6|\u25c0|[\u25fb-\u25fe]|\u00a9|\u00ae|\u2122|\u2139|\ud83c\udc04|[\u2600-\u26FF]|\u2b05|\u2b06|\u2b07|\u2b1b|\u2b1c|\u2b50|\u2b55|\u231a|\u231b|\u2328|\u23cf|[\u23e9-\u23f3]|[\u23f8-\u23fa]|\ud83c\udccf|\u2934|\u2935|[\u2190-\u21ff])/;
+					if (!emoji.test(customSetName)) {
+						return customSetName;
+					}
+				}
+				return 'Aggregate';
+			},
+			setLabels: function () {
+				return this.selectionSets.map(s => s.setName);
+			},
 			showSelectionTotals: function () {
-				console.log('check selection totals');
-				if (this.checkedCountries.length > 0) {
+				// console.log('check selection totals');
+				if (this.comparisonMode) {
+					return false;
+				}
+				if (selectionSets[0].checkedCountries.length > 0) {
 					return true;
 				}
-				for (const [, territories] of Object.entries(this.territorySelections)) {
+				for (const [, territories] of Object.entries(selectionSets[0].territorySelections)) {
 					if (territories.length > 0) {
 						return true;
 					}
@@ -783,9 +879,6 @@ function calculateDerivative(values) {
 						// debugger
 						const currentCountry = this.getCountryCodeForEntry(currentLocation);
 						const currentState = this.getStateForEntry(currentLocation);
-						if (!this.includeCruiseShipDescendants && currentState.includes('From Diamond Princess')) {
-							continue;
-						}
 						const currentCount = this.parseRowEntryForDate(currentLocation, dateKey);
 						locationTotals[group][currentCountry] = locationTotals[group][currentCountry] || 0;
 						locationTotals[group]['total'] = locationTotals[group]['total'] || 0;
@@ -800,37 +893,13 @@ function calculateDerivative(values) {
 				return validValues.mapScope
 			},
 			countries: function () {
-				// country names better not contain commas!
-				const checkedCountries = Array.from(this.checkedCountries);
-				// console.log('checked countries');
-				// console.dir(checkedCountries);
-				for (const [countryCode, territoryCodes] of Object.entries(this.territorySelections)) {
-					const availableTerritoryCodes = countrySubdivisions[countryCode];
-					const selectionCount = territoryCodes.length;
-					const availableCount = availableTerritoryCodes.size;
-					if (selectionCount > 0 && selectionCount < availableCount) {
-						// there is a partial selection
-						const partialSelection = Array.from(territoryCodes);
-						partialSelection.sort();
-
-						// remove the raw entry
-						const index = checkedCountries.indexOf(countryCode);
-						if (index > -1) {
-							checkedCountries.splice(index, 1);
-						}
-
-						// add the partial entry
-						checkedCountries.push(`${countryCode}(${partialSelection.join(',')})`)
-					}
-				}
-				checkedCountries.sort();
-				return checkedCountries.join(',');
+				return this.countriesToParamString(0);
 			},
 			shareableLink: function () {
 				return this.shareableLinkRaw;
 			},
 			canShowRegression: function () {
-				return !!this.showCases && !this.derivative;
+				return !!this.showCases && !this.derivative && !this.comparisonMode;
 			},
 			canSeparateAxes: function () {
 				return (this.showCases || this.showRecoveries) && this.showDeaths;
@@ -894,51 +963,84 @@ function calculateDerivative(values) {
 			athElapsedDays: function () {
 				let derivative = Array.from(this.timeSeries[0]);
 				if (!this.derivative) {
-					derivative = calculateDerivative(derivative);
+					derivative = this.calculateDerivative(derivative);
 				}
 				const maxValue = Math.max(...derivative);
 				const reverseChronologicalDerivative = derivative.reverse();
 				const elapsedDays = reverseChronologicalDerivative.indexOf(maxValue);
 				return elapsedDays;
 			},
+			comparisonDataSource: function () {
+				if (this.comparisonDataType === 'cases') {
+					return this.cases;
+				} else if (this.comparisonDataType === 'recoveries') {
+					return this.recoveries;
+				} else if (this.comparisonDataType === 'deaths') {
+					return this.deaths;
+				}
+				console.error('invalid comparison data type');
+				return [];
+			},
 			timeSeries: function () {
-				let confirmedYValues = this.filterDatasetBySelectedCountries(this.cases);
-				let deadYValues = this.filterDatasetBySelectedCountries(this.deaths);
-				let recoveredYValues = this.filterDatasetBySelectedCountries(this.recoveries);
+				if (!this.comparisonMode) {
+					// we are drilling down into different data types from one set
+					let confirmedYValues = this.filterDatasetBySelectedCountries(this.cases);
+					let deadYValues = this.filterDatasetBySelectedCountries(this.deaths);
+					let recoveredYValues = this.filterDatasetBySelectedCountries(this.recoveries);
 
-				if (this.derivative) {
-					confirmedYValues = calculateDerivative(confirmedYValues);
-					deadYValues = calculateDerivative(deadYValues);
-					recoveredYValues = calculateDerivative(recoveredYValues);
-				}
+					if (this.derivative) {
+						confirmedYValues = this.calculateDerivative(confirmedYValues);
+						deadYValues = this.calculateDerivative(deadYValues);
+						recoveredYValues = this.calculateDerivative(recoveredYValues);
+					}
 
-				if (this.showCases) {
-					chartConfig.data.datasets[CONFIRMED_DATASET_INDEX].data = confirmedYValues;
+					if (this.showCases) {
+						chartConfig.data.datasets[CONFIRMED_DATASET_INDEX].data = confirmedYValues;
+					} else {
+						chartConfig.data.datasets[CONFIRMED_DATASET_INDEX].data = [];
+					}
+
+					if (this.showDeaths) {
+						chartConfig.data.datasets[DEAD_DATASET_INDEX].data = deadYValues;
+					} else {
+						chartConfig.data.datasets[DEAD_DATASET_INDEX].data = [];
+					}
+
+					if (this.showRecoveries) {
+						chartConfig.data.datasets[RECOVERED_DATASET_INDEX].data = recoveredYValues;
+					} else {
+						chartConfig.data.datasets[RECOVERED_DATASET_INDEX].data = [];
+					}
+
+					if (this.regression === 'none') {
+						chartConfig.data.labels = Array.from(dateLabels);
+						if (chartConfig.data.datasets[CONFIRMED_REGRESSION_DATASET_INDEX]) {
+							chartConfig.data.datasets.pop();
+						}
+					}
+
+					return [confirmedYValues, deadYValues, recoveredYValues];
 				} else {
-					chartConfig.data.datasets[CONFIRMED_DATASET_INDEX].data = [];
-				}
+					// we are aggregating sets
+					let setA = this.filterDatasetBySelectedCountries(this.comparisonDataSource, 0);
+					let setB = this.filterDatasetBySelectedCountries(this.comparisonDataSource, 1);
+					let setC = this.filterDatasetBySelectedCountries(this.comparisonDataSource, 2);
 
-				if (this.showDeaths) {
-					chartConfig.data.datasets[DEAD_DATASET_INDEX].data = deadYValues;
-				} else {
-					chartConfig.data.datasets[DEAD_DATASET_INDEX].data = [];
-				}
+					if (this.derivative) {
+						[setA, setB, setC] = [setA, setB, setC].map(this.calculateDerivative);
+					}
 
-				if (this.showRecoveries) {
-					chartConfig.data.datasets[RECOVERED_DATASET_INDEX].data = recoveredYValues;
-				} else {
-					chartConfig.data.datasets[RECOVERED_DATASET_INDEX].data = [];
-				}
+					console.log('calculated new sets');
 
-				if (this.regression === 'none') {
-					chartConfig.data.labels = Array.from(dateLabels);
-					chartConfig.data.datasets[CONFIRMED_REGRESSION_DATASET_INDEX].data = [];
-				}
+					chartConfig.data.datasets[0].data = setA;
+					chartConfig.data.datasets[1].data = setB;
+					chartConfig.data.datasets[2].data = setC;
 
-				return [confirmedYValues, deadYValues, recoveredYValues];
+					return [setA, setB, setC];
+				}
 			},
 			aggregatedTotals: function () {
-				console.log('aggregating totals');
+				// console.log('aggregating totals');
 
 				const series = this.timeSeries;
 				const confirmedSeries = series[0];
@@ -958,9 +1060,12 @@ function calculateDerivative(values) {
 				const deadYValues = this.timeSeries[1];
 				const deadExtrapolationBasis = deadYValues.slice(this.modelOffset);
 
-				const regressionDetails = {};
+				const regressionDetails = {
+					extrapolation: []
+				};
 
 				chartConfig.data.labels = Array.from(dateLabels);
+				chartConfig.data.datasets[CONFIRMED_REGRESSION_DATASET_INDEX] = placeholderRegressionDataset;
 				chartConfig.data.datasets[CONFIRMED_REGRESSION_DATASET_INDEX].data = [];
 
 				if (this.regression !== 'none') {
@@ -992,6 +1097,7 @@ function calculateDerivative(values) {
 								}
 								return Math.round(value);
 							});
+							regressionDetails.extrapolation = extrapolationY;
 						} else if (this.regression === 'logistic') {
 							const logisticParams = LogisticFitter.fitSigmoid(confirmedExtrapolationBasis);
 							const sigmoid = logisticParams[0];
@@ -1003,6 +1109,7 @@ function calculateDerivative(values) {
 								}
 								return Math.round(value);
 							});
+							regressionDetails.extrapolation = extrapolationY;
 						}
 					} catch (e) {
 						// regression failed
@@ -1024,9 +1131,132 @@ function calculateDerivative(values) {
 					// console.dir(extrapolationY);
 					regressionDetails.cases = regressionParams;
 
+				} else {
+					if (chartConfig.data.datasets[CONFIRMED_REGRESSION_DATASET_INDEX]) {
+						chartConfig.data.datasets.pop();
+					}
+					// delete chartConfig.data.datasets[CONFIRMED_REGRESSION_DATASET_INDEX];
 				}
 
 				return regressionDetails;
+			},
+
+			experimentalChartConfig: function () {
+				const ticks = {
+					beginAtZero: true,
+					callback: function (value) {
+						return Number(value).toLocaleString();
+					}
+				};
+
+				const doubleAxes = [
+					{
+						id: 'cases-axis',
+						ticks,
+						scaleLabel: {
+							display: true,
+							labelString: 'Cases'
+						},
+						labelString: 'Cases',
+						color: 'orange'
+					},
+					{
+						id: 'deaths-axis',
+						ticks,
+						position: 'right',
+						scaleLabel: {
+							display: true,
+							labelString: 'Deaths'
+						},
+						color: 'red'
+					}
+				];
+				const singleAxis = [{ticks}];
+
+
+				// initialize data set context
+				const datasets = [
+					{
+						label: 'Cases',
+						data: this.timeSeries[0],
+						backgroundColor: 'rgba(80, 120, 226, 1)',
+						borderColor: 'rgba(80, 120, 226, 1)',
+						fill: false,
+						cubicInterpolationMode: 'monotone',
+						pointBorderWidth: 3,
+						pointHoverRadius: 5,
+						pointHoverBorderWidth: 1,
+						pointRadius: 1
+					},
+					{
+						label: 'Recoveries',
+						data: this.timeSeries[1],
+						backgroundColor: 'rgba(40, 200, 150, 1)',
+						borderColor: 'rgba(40, 200, 150, 1)',
+						fill: false,
+						cubicInterpolationMode: 'monotone',
+						pointBorderWidth: 3,
+						pointHoverRadius: 5,
+						pointHoverBorderWidth: 1,
+						pointRadius: 1
+					},
+					{
+						label: 'Deaths',
+						data: this.timeSeries[2],
+						backgroundColor: 'rgba(155, 66, 254, 1)',
+						borderColor: 'rgba(155, 66, 254, 1)',
+						fill: false,
+						cubicInterpolationMode: 'monotone',
+						pointBorderWidth: 3,
+						pointHoverRadius: 5,
+						pointHoverBorderWidth: 1,
+						pointRadius: 1
+					}
+				];
+
+				if (this.canShowRegression && this.regression !== 'none') {
+					datasets.push({
+						label: 'Case Regression',
+						data: this.regressionSeries.extrapolation || [],
+						backgroundColor: 'rgba(50, 50, 150, 1)',
+						borderColor: 'rgba(50, 50, 150, 1)',
+						fill: false,
+						cubicInterpolationMode: 'monotone',
+						pointBorderWidth: 3,
+						pointHoverRadius: 5,
+						pointHoverBorderWidth: 1,
+						pointRadius: 1
+					});
+				}
+
+				const chartConfig = {
+					type: 'line',
+					data: {
+						labels: Array.from(dateLabels),
+						datasets,
+					},
+					options: {
+						scales: {
+							yAxes: singleAxis
+						},
+						tooltips: {
+							// mode: 'x',
+							mode: 'index',
+							intersect: false,
+							callbacks: {
+								label: function (tooltipItem, data) {
+									const value = tooltipItem.value;
+									const label = data.datasets[tooltipItem.datasetIndex].label;
+									return `${label}: ${Number(value).toLocaleString()}`;
+								}
+							}
+						},
+						responsive: true,
+						maintainAspectRatio: false,
+					}
+				};
+
+				return chartConfig;
 			}
 		}
 	});
