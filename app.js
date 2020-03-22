@@ -276,6 +276,7 @@ for (const currentSet of selectionSets) {
 	defaultCheckedCountries.delete('CN'); // China
 	defaultCheckedCountries.delete('Diamond Princess Cruise Ship');
 	defaultCheckedCountries.delete('Grand Princess Cruise Ship');
+	defaultCheckedCountries.delete('IR'); // Iran
 	defaultCheckedCountries.delete('US'); // USA
 
 	const validValues = {
@@ -939,8 +940,11 @@ for (const currentSet of selectionSets) {
 				this.moveArrayEntry(countries, diamondCruiseShipIndex, 0);
 				const grandCruiseShipIndex = countries.indexOf('Grand Princess Cruise Ship');
 				this.moveArrayEntry(countries, grandCruiseShipIndex, 1);
-				const chinaIndex = countries.indexOf('China');
+
+				/* const chinaIndex = countries.indexOf('China');
 				this.moveArrayEntry(countries, chinaIndex, 2);
+				const usIndex = countries.indexOf('United States');
+				this.moveArrayEntry(countries, usIndex, 3); */
 
 				return countries.map(c => ({
 					code: countryCodesByName[c] || c,
