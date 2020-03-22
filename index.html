@@ -99,7 +99,7 @@
 					</template>
 
 					<div class="modifiers pure-menu pure-menu-scrollable custom-restricted settings-block">
-						<template>
+						<country-selector v-bind:key="activeSelectionSetIndex" v-bind:data-set.sync="selectionSets[activeSelectionSetIndex]">
 							<ul class="pure-menu-list">
 								<!--<li class="pure-menu-list-item">
 									<input id="cruise_ship_descendants" type="checkbox" v-model="includeCruiseShipDescendants"/>
@@ -144,7 +144,7 @@
 									</li>
 								</template>
 							</ul>
-						</template>
+						</country-selector>
 					</div>
 				</div>
 
@@ -379,10 +379,13 @@
 		const cacheResetter = Math.round(Date.now() / (10 * 60 * 1000));
 		const appScript = document.createElement('script');
 		const mapScript = document.createElement('script');
+		const countrySelectionScript = document.createElement('script');
 		appScript.setAttribute("src", `app.js?cache=${cacheResetter}`);
 		mapScript.setAttribute("src", `assets/js/components/map.js?cache=${cacheResetter}`);
+		countrySelectionScript.setAttribute("src", `assets/js/components/country_selector.js?cache=${cacheResetter}`);
 		document.getElementsByTagName("body")[0].appendChild(appScript);
 		document.getElementsByTagName("body")[0].appendChild(mapScript);
+		document.getElementsByTagName("body")[0].appendChild(countrySelectionScript);
 	})();
 </script>
 </body>

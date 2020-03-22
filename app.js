@@ -310,6 +310,11 @@ function calculateDerivative(values) {
 			selectAll: false,
 			regressionOffsetMinimum: 0,
 			regressionOffsetMaximum: dateLabels.size - 3,
+
+			// pass to country-selector for component control
+			selectionSets: [],
+			activeSelectionSetIndex: 0,
+
 			...params,
 			raw: {
 				worldTopographyFeatures,
