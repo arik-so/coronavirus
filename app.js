@@ -569,7 +569,11 @@ for (const currentSet of selectionSets) {
 
 						if (this.derivative) {
 							if (this.derivativeType === 'relative') {
-								return `${label} Increase: +${Number(value).toLocaleString()}%`;
+								let localeString = Number(value).toLocaleString();
+								if (value > 0) {
+									localeString = `+${localeString}`;
+								}
+								return `${label} Increase: ${localeString}%`;
 							} else {
 								return `New ${label}: ${Number(value).toLocaleString()}`;
 							}
