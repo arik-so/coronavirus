@@ -18,9 +18,6 @@ Vue.component('country-selector', {
 			}
 		},
 		'setData.checkedCountries': function (newValue, oldValue) {
-			const selectedCountryCount = newValue.length;
-			const totalCountryCount = this.$parent.raw.countryNames.size;
-
 			for (const countryCode of Object.keys(this.$parent.raw.countrySubdivisions)) {
 				// these country codes have subdivisions
 
@@ -68,9 +65,9 @@ Vue.component('country-selector', {
 				}
 			}
 		},
-		// selectAll: function (newValue) {
-		// 	this.setData.selectAll = newValue;
-		// },
+		selectAll: function (newValue) {
+			this.setData.selectAll = newValue;
+		},
 		partialSelection: function (newValue) {
 			this.setData.partialSelection = newValue;
 		},
@@ -83,7 +80,13 @@ Vue.component('country-selector', {
 			const selectedCountryCount = this.setData.checkedCountries.length;
 			const totalCountryCount = this.$parent.raw.countryNames.size;
 
-			return (selectedCountryCount === totalCountryCount);
+			if (selectedCountryCount === totalCountryCount) {
+				return true;
+			} else if (selectedCountryCount === 0) {
+				return false;
+			}
+			// no change otherwise
+			return this.setData.selectAll;
 		},
 		partialSelection: function () {
 			const countrySelectionCount = this.setData.checkedCountries.length;
@@ -152,6 +155,21 @@ Vue.component('country-selector', {
 		this.setData.selectAll = this.selectAll;
 		this.setData.partialSelection = this.partialSelection;
 		this.setData.setName = this.setName || this.setData.defaultSetName;
+
+		for (const [countryCode, territories] of Object.entries(this.$parent.raw.countrySubdivisions)) {
+			// these country codes have subdivisions
+			if (this.setData.checkedCountries.includes(countryCode)) {
+				this.setData.territorySelections[countryCode] = Array.from(territories);
+			}
+		}
+
+		// trigger the country selection
+		// const selection = Array.from(this.setData.checkedCountries);
+		// this.setData.checkedCountries = [];
+		// this.$nextTick(() => {
+		// 	this.setData.checkedCountries = selection;
+		// 	this.setData.setName = this.setName || this.setData.defaultSetName;
+		// });
 	},
 	mounted: function () {
 		// console.log('mounting country selector');
