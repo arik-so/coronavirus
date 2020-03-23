@@ -508,6 +508,24 @@ for (const currentSet of selectionSets) {
 				if (!querySpecifiedCountries) {
 					selectionSets[0].checkedCountries = Array.from(defaultCheckedCountries);
 				}
+
+
+				if (oldRoute && this.comparisonMode) {
+					// cycle initialization
+					// super hacky, but eh
+
+					const initialSetIndex = this.activeSelectionSetIndex;
+					this.$nextTick(() => {
+						this.activeSelectionSetIndex = (initialSetIndex + 1) % 3;
+						this.$nextTick(() => {
+							this.activeSelectionSetIndex = (initialSetIndex + 2) % 3;
+							this.$nextTick(() => {
+								this.activeSelectionSetIndex = initialSetIndex % 3;
+							});
+						});
+					});
+				}
+
 			},
 			calculateSetPopulation: function (set) {
 				let setPopulation = 0;
