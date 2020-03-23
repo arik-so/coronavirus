@@ -229,8 +229,7 @@ for (const currentSet of selectionSets) {
 					pointHoverRadius: 5,
 					pointHoverBorderWidth: 1,
 					pointRadius: 1
-				},
-				{}
+				}
 			],
 		},
 		options: {
@@ -468,10 +467,12 @@ for (const currentSet of selectionSets) {
 			}
 		},
 		mounted: function () {
-			this.createChart();
 			SocialShareKit.init({
 				title: 'Coronavirus tracker by @arikaleph and @elliebee',
 				text: ''
+			});
+			this.$nextTick(() => {
+				this.createChart();
 			});
 			if (this.comparisonMode) {
 				// cycle initialization
@@ -731,7 +732,7 @@ for (const currentSet of selectionSets) {
 			}
 		},
 		watch: {
-			axes: function (newValue) {
+			/*axes: function (newValue) {
 				if (newValue === 'joint') {
 					// remove second y axis
 					chartConfig.options.scales.yAxes = singleAxis;
@@ -761,7 +762,7 @@ for (const currentSet of selectionSets) {
 				if (!newValue) {
 					this.axes = 'joint';
 				}
-			},
+			},*/
 			comparisonMode: function (newValue) {
 				if (newValue) {
 					chartConfig.data.datasets[0].label = selectionSets[0].setName;
@@ -788,13 +789,49 @@ for (const currentSet of selectionSets) {
 			mapDataReference: function () {
 				this.updateLocation();
 			},
-			timeSeries: function () {
-				this.updateLocation();
-				this.updateGraph();
-			},
-			regressionSeries: function () {
-				this.updateLocation();
-				this.updateGraph();
+			dataSets: {
+				immediate: true,
+				handler: function (newValue) {
+					chartConfig.data.datasets[CONFIRMED_DATASET_INDEX].data = newValue[0];
+					chartConfig.data.datasets[RECOVERED_DATASET_INDEX].data = newValue[1];
+					chartConfig.data.datasets[DEAD_DATASET_INDEX].data = newValue[2];
+
+					if (!this.comparisonMode) {
+						if (!this.showCases) {
+							chartConfig.data.datasets[CONFIRMED_DATASET_INDEX].data = [];
+						}
+						if (!this.showRecoveries) {
+							chartConfig.data.datasets[RECOVERED_DATASET_INDEX].data = [];
+						}
+						if (!this.showDeaths) {
+							chartConfig.data.datasets[DEAD_DATASET_INDEX].data = [];
+						}
+					}
+
+					if (this.regression !== 'none' && !this.comparisonMode) {
+						// show regression
+						chartConfig.data.labels = Array.from(dateLabels);
+						// console.dir(chartConfig.data.datasets[CONFIRMED_REGRESSION_DATASET_INDEX]);
+						chartConfig.data.datasets[CONFIRMED_REGRESSION_DATASET_INDEX] = placeholderRegressionDataset;
+						chartConfig.data.datasets[CONFIRMED_REGRESSION_DATASET_INDEX].data = newValue[3];
+						// console.dir(chartConfig.data.datasets[CONFIRMED_REGRESSION_DATASET_INDEX]);
+
+						const regressionDateLabels = Array.from(dateLabels);
+						const extrapolationSize = Math.round(this.extrapolationSize);
+						for (let x = 1; x <= extrapolationSize; x++) {
+							regressionDateLabels.push(`+${x}`);
+						}
+						chartConfig.data.labels = regressionDateLabels;
+					} else {
+						chartConfig.data.labels = Array.from(dateLabels);
+						if (chartConfig.data.datasets[CONFIRMED_REGRESSION_DATASET_INDEX]) {
+							chartConfig.data.datasets.pop();
+						}
+					}
+
+					this.updateLocation();
+					this.updateGraph();
+				}
 			},
 			mapScope: function () {
 				this.fixMapDataConfiguration();
@@ -969,12 +1006,13 @@ for (const currentSet of selectionSets) {
 				return territories;
 			},
 			athElapsedDays: function () {
-				const rawCases = this.filterDatasetBySelectedCountries(this.cases);
+				const rawCases = this.rawTimeSeries[0];
 				const derivative = this.calculateDerivative(rawCases, true);
 				const maxValue = Math.max(...derivative);
 				const reverseChronologicalDerivative = derivative.reverse();
 				const elapsedDays = reverseChronologicalDerivative.indexOf(maxValue);
-				return elapsedDays;
+				const dateLabel = Array.from(dateLabels)[dateLabels.size-1-elapsedDays];
+				return elapsedDays + ` (${dateLabel})`;
 			},
 			comparisonDataSource: function () {
 				if (this.comparisonDataType === 'cases') {
@@ -987,7 +1025,90 @@ for (const currentSet of selectionSets) {
 				console.error('invalid comparison data type');
 				return [];
 			},
-			timeSeries: function () {
+			rawTimeSeries: function () {
+				if (!this.comparisonMode) {
+					const confirmedYValues = this.filterDatasetBySelectedCountries(this.cases);
+					const recoveredYValues = this.filterDatasetBySelectedCountries(this.recoveries);
+					const deadYValues = this.filterDatasetBySelectedCountries(this.deaths);
+					return [confirmedYValues, recoveredYValues, deadYValues];
+				} else {
+					const setA = this.filterDatasetBySelectedCountries(this.comparisonDataSource, 0);
+					const setB = this.filterDatasetBySelectedCountries(this.comparisonDataSource, 1);
+					const setC = this.filterDatasetBySelectedCountries(this.comparisonDataSource, 2);
+					return [setA, setB, setC];
+				}
+			},
+			derivedTimeSeries: function () {
+				return this.rawTimeSeries.map(this.calculateDerivative);
+			},
+			regressionSeries: function () {
+				const confirmedYValues = this.rawTimeSeries[0];
+				const confirmedExtrapolationBasis = confirmedYValues.slice(this.modelOffset);
+
+				const regressionDetails = {
+					extrapolation: [],
+					cases: {
+						equation: [NaN, NaN],
+						parameterValues: [NaN, NaN, NaN],
+					}
+				};
+
+				if (this.regression === 'none') {
+					return regressionDetails;
+				}
+
+				const regressionRange = [];
+				const extrapolationSize = Math.round(this.extrapolationSize);
+				for (let x = 0; x < confirmedYValues.length + extrapolationSize; x++) {
+					regressionRange.push(x);
+				}
+
+				let extrapolationY = [];
+				let regressionParams = {};
+
+				try {
+					if (this.regression === 'exponential') {
+						const regressionData = confirmedExtrapolationBasis.map((value, index) => [index, value]);
+						regressionParams = regression.exponential(regressionData);
+						const extrapolationValues = regressionRange.map(y => regressionParams.predict(y - this.modelOffset));
+						extrapolationY = extrapolationValues.map(([x, value], index) => {
+							if (index < this.modelOffset) {
+								return null;
+							}
+							return Math.round(value);
+						});
+						regressionDetails.extrapolation = extrapolationY;
+					} else if (this.regression === 'logistic') {
+						const logisticParams = LogisticFitter.fitSigmoid(confirmedExtrapolationBasis);
+						const sigmoid = logisticParams[0];
+						regressionParams = logisticParams[1];
+						const extrapolationValues = regressionRange.map(y => sigmoid(y - this.modelOffset));
+						extrapolationY = extrapolationValues.map((value, index) => {
+							if (index < this.modelOffset) {
+								return null;
+							}
+							return Math.round(value);
+						});
+						regressionDetails.extrapolation = extrapolationY;
+					}
+				} catch (e) {
+					// regression failed
+					return {
+						regressionError: e,
+						...regressionDetails
+					}
+				}
+
+				return regressionDetails;
+			},
+			dataSets: function () {
+				const factualData = this.derivative ? this.derivedTimeSeries : this.rawTimeSeries;
+				const dataSets = [...factualData];
+				if (Array.isArray(this.regressionSeries.extrapolation)) {
+					dataSets.push(this.regressionSeries.extrapolation);
+				}
+				return dataSets;
+
 				if (!this.comparisonMode) {
 					// we are drilling down into different data types from one set
 					let confirmedYValues = this.filterDatasetBySelectedCountries(this.cases);
@@ -1048,7 +1169,10 @@ for (const currentSet of selectionSets) {
 			aggregatedTotals: function () {
 				// console.log('aggregating totals');
 
-				const series = this.timeSeries;
+				let series = this.rawTimeSeries;
+				if (this.derivative) {
+					series = series.map(s => this.calculateDerivative(s, true));
+				}
 				const confirmedSeries = series[0];
 				const deadSeries = series[1];
 				const recoveredSeries = series[2];
@@ -1060,210 +1184,123 @@ for (const currentSet of selectionSets) {
 				};
 			},
 
-			regressionSeries: function () {
-				const confirmedYValues = this.timeSeries[0];
-				const confirmedExtrapolationBasis = confirmedYValues.slice(this.modelOffset);
-				const deadYValues = this.timeSeries[1];
-				const deadExtrapolationBasis = deadYValues.slice(this.modelOffset);
-
-				const regressionDetails = {
-					extrapolation: []
-				};
-
-				chartConfig.data.labels = Array.from(dateLabels);
-				chartConfig.data.datasets[CONFIRMED_REGRESSION_DATASET_INDEX] = placeholderRegressionDataset;
-				chartConfig.data.datasets[CONFIRMED_REGRESSION_DATASET_INDEX].data = [];
-
-				if (this.regression !== 'none') {
-					const regressionDateLabels = Array.from(dateLabels);
-					const regressionRange = [];
-					const extrapolationSize = Math.round(this.extrapolationSize);
-					for (let x = 0; x < confirmedYValues.length + extrapolationSize; x++) {
-						regressionRange.push(x);
-					}
-					for (let x = 1; x <= extrapolationSize; x++) {
-						regressionDateLabels.push(`+${x}`);
-					}
-					chartConfig.data.labels = regressionDateLabels;
-
-					// console.log('regressionRange:');
-					// console.dir(regressionRange);
-
-					let extrapolationY = [];
-					let regressionParams = {};
-
-					try {
-						if (this.regression === 'exponential') {
-							const regressionData = confirmedExtrapolationBasis.map((value, index) => [index, value]);
-							regressionParams = regression.exponential(regressionData);
-							const extrapolationValues = regressionRange.map(y => regressionParams.predict(y - this.modelOffset));
-							extrapolationY = extrapolationValues.map(([x, value], index) => {
-								if (index < this.modelOffset) {
-									return null;
-								}
-								return Math.round(value);
-							});
-							regressionDetails.extrapolation = extrapolationY;
-						} else if (this.regression === 'logistic') {
-							const logisticParams = LogisticFitter.fitSigmoid(confirmedExtrapolationBasis);
-							const sigmoid = logisticParams[0];
-							regressionParams = logisticParams[1];
-							const extrapolationValues = regressionRange.map(y => sigmoid(y - this.modelOffset));
-							extrapolationY = extrapolationValues.map((value, index) => {
-								if (index < this.modelOffset) {
-									return null;
-								}
-								return Math.round(value);
-							});
-							regressionDetails.extrapolation = extrapolationY;
-						}
-					} catch (e) {
-						// regression failed
-						return {
-							regressionError: e,
-							cases: {
-								equation: [NaN, NaN],
-								parameterValues: [NaN, NaN, NaN],
-							}
-						}
-					}
-
-					// console.log('regressionParams:');
-					// console.dir(regressionParams);
-					// console.log('extrapolationY:');
-					// console.dir(extrapolationY);
-					chartConfig.data.datasets[CONFIRMED_REGRESSION_DATASET_INDEX].data = extrapolationY;
-					// console.log('extrapolationY:');
-					// console.dir(extrapolationY);
-					regressionDetails.cases = regressionParams;
-
-				} else {
-					if (chartConfig.data.datasets[CONFIRMED_REGRESSION_DATASET_INDEX]) {
-						chartConfig.data.datasets.pop();
-					}
-					// delete chartConfig.data.datasets[CONFIRMED_REGRESSION_DATASET_INDEX];
-				}
-
-				return regressionDetails;
-			},
-
-			experimentalChartConfig: function () {
-				const ticks = {
-					beginAtZero: true,
-					callback: function (value) {
-						return Number(value).toLocaleString();
-					}
-				};
-
-				const doubleAxes = [
-					{
-						id: 'cases-axis',
-						ticks,
-						scaleLabel: {
-							display: true,
-							labelString: 'Cases'
-						},
-						labelString: 'Cases',
-						color: 'orange'
-					},
-					{
-						id: 'deaths-axis',
-						ticks,
-						position: 'right',
-						scaleLabel: {
-							display: true,
-							labelString: 'Deaths'
-						},
-						color: 'red'
-					}
-				];
-				const singleAxis = [{ticks}];
-
-
-				// initialize data set context
-				const datasets = [
-					{
-						label: 'Cases',
-						data: this.timeSeries[0],
-						backgroundColor: 'rgba(80, 120, 226, 1)',
-						borderColor: 'rgba(80, 120, 226, 1)',
-						fill: false,
-						cubicInterpolationMode: 'monotone',
-						pointBorderWidth: 3,
-						pointHoverRadius: 5,
-						pointHoverBorderWidth: 1,
-						pointRadius: 1
-					},
-					{
-						label: 'Recoveries',
-						data: this.timeSeries[1],
-						backgroundColor: 'rgba(40, 200, 150, 1)',
-						borderColor: 'rgba(40, 200, 150, 1)',
-						fill: false,
-						cubicInterpolationMode: 'monotone',
-						pointBorderWidth: 3,
-						pointHoverRadius: 5,
-						pointHoverBorderWidth: 1,
-						pointRadius: 1
-					},
-					{
-						label: 'Deaths',
-						data: this.timeSeries[2],
-						backgroundColor: 'rgba(155, 66, 254, 1)',
-						borderColor: 'rgba(155, 66, 254, 1)',
-						fill: false,
-						cubicInterpolationMode: 'monotone',
-						pointBorderWidth: 3,
-						pointHoverRadius: 5,
-						pointHoverBorderWidth: 1,
-						pointRadius: 1
-					}
-				];
-
-				if (this.canShowRegression && this.regression !== 'none') {
-					datasets.push({
-						label: 'Case Regression',
-						data: this.regressionSeries.extrapolation || [],
-						backgroundColor: 'rgba(50, 50, 150, 1)',
-						borderColor: 'rgba(50, 50, 150, 1)',
-						fill: false,
-						cubicInterpolationMode: 'monotone',
-						pointBorderWidth: 3,
-						pointHoverRadius: 5,
-						pointHoverBorderWidth: 1,
-						pointRadius: 1
-					});
-				}
-
-				const chartConfig = {
-					type: 'line',
-					data: {
-						labels: Array.from(dateLabels),
-						datasets,
-					},
-					options: {
-						scales: {
-							yAxes: singleAxis
-						},
-						tooltips: {
-							// mode: 'x',
-							mode: 'index',
-							intersect: false,
-							callbacks: {
-								label: function (tooltipItem, data) {
-									const value = tooltipItem.value;
-									const label = data.datasets[tooltipItem.datasetIndex].label;
-									return `${label}: ${Number(value).toLocaleString()}`;
-								}
-							}
-						},
-						responsive: true,
-						maintainAspectRatio: false,
-					}
-				};
-
-				return chartConfig;
-			}
+			// experimentalChartConfig: function () {
+			// 	const ticks = {
+			// 		beginAtZero: true,
+			// 		callback: function (value) {
+			// 			return Number(value).toLocaleString();
+			// 		}
+			// 	};
+			//
+			// 	const doubleAxes = [
+			// 		{
+			// 			id: 'cases-axis',
+			// 			ticks,
+			// 			scaleLabel: {
+			// 				display: true,
+			// 				labelString: 'Cases'
+			// 			},
+			// 			labelString: 'Cases',
+			// 			color: 'orange'
+			// 		},
+			// 		{
+			// 			id: 'deaths-axis',
+			// 			ticks,
+			// 			position: 'right',
+			// 			scaleLabel: {
+			// 				display: true,
+			// 				labelString: 'Deaths'
+			// 			},
+			// 			color: 'red'
+			// 		}
+			// 	];
+			// 	const singleAxis = [{ticks}];
+			//
+			//
+			// 	// initialize data set context
+			// 	const datasets = [
+			// 		{
+			// 			label: 'Cases',
+			// 			data: this.timeSeries[0],
+			// 			backgroundColor: 'rgba(80, 120, 226, 1)',
+			// 			borderColor: 'rgba(80, 120, 226, 1)',
+			// 			fill: false,
+			// 			cubicInterpolationMode: 'monotone',
+			// 			pointBorderWidth: 3,
+			// 			pointHoverRadius: 5,
+			// 			pointHoverBorderWidth: 1,
+			// 			pointRadius: 1
+			// 		},
+			// 		{
+			// 			label: 'Recoveries',
+			// 			data: this.timeSeries[1],
+			// 			backgroundColor: 'rgba(40, 200, 150, 1)',
+			// 			borderColor: 'rgba(40, 200, 150, 1)',
+			// 			fill: false,
+			// 			cubicInterpolationMode: 'monotone',
+			// 			pointBorderWidth: 3,
+			// 			pointHoverRadius: 5,
+			// 			pointHoverBorderWidth: 1,
+			// 			pointRadius: 1
+			// 		},
+			// 		{
+			// 			label: 'Deaths',
+			// 			data: this.timeSeries[2],
+			// 			backgroundColor: 'rgba(155, 66, 254, 1)',
+			// 			borderColor: 'rgba(155, 66, 254, 1)',
+			// 			fill: false,
+			// 			cubicInterpolationMode: 'monotone',
+			// 			pointBorderWidth: 3,
+			// 			pointHoverRadius: 5,
+			// 			pointHoverBorderWidth: 1,
+			// 			pointRadius: 1
+			// 		}
+			// 	];
+			//
+			// 	if (this.canShowRegression && this.regression !== 'none') {
+			// 		datasets.push({
+			// 			label: 'Case Regression',
+			// 			data: this.regressionSeries.extrapolation || [],
+			// 			backgroundColor: 'rgba(50, 50, 150, 1)',
+			// 			borderColor: 'rgba(50, 50, 150, 1)',
+			// 			fill: false,
+			// 			cubicInterpolationMode: 'monotone',
+			// 			pointBorderWidth: 3,
+			// 			pointHoverRadius: 5,
+			// 			pointHoverBorderWidth: 1,
+			// 			pointRadius: 1
+			// 		});
+			// 	}
+			//
+			// 	const chartConfig = {
+			// 		type: 'line',
+			// 		data: {
+			// 			labels: Array.from(dateLabels),
+			// 			datasets,
+			// 		},
+			// 		options: {
+			// 			scales: {
+			// 				yAxes: singleAxis
+			// 			},
+			// 			tooltips: {
+			// 				// mode: 'x',
+			// 				mode: 'index',
+			// 				intersect: false,
+			// 				callbacks: {
+			// 					label: function (tooltipItem, data) {
+			// 						const value = tooltipItem.value;
+			// 						const label = data.datasets[tooltipItem.datasetIndex].label;
+			// 						return `${label}: ${Number(value).toLocaleString()}`;
+			// 					}
+			// 				}
+			// 			},
+			// 			responsive: true,
+			// 			maintainAspectRatio: false,
+			// 		}
+			// 	};
+			//
+			// 	return chartConfig;
+			// }
 		}
 	});
 
