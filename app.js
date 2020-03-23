@@ -144,10 +144,7 @@ for (const currentSet of selectionSets) {
 	// console.log('Province Codes:', JSON.stringify(provinceCodes, null, 4));
 
 	const ticks = {
-		beginAtZero: true,
-		callback: function (value) {
-			return Number(value).toLocaleString();
-		}
+		beginAtZero: true
 	};
 
 	const doubleAxes = [
@@ -596,6 +593,16 @@ for (const currentSet of selectionSets) {
 			},
 			createChart: function () {
 				const context = document.getElementById('graph_canvas').getContext('2d');
+				chartConfig.options.scales.yAxes[0].ticks.callback = (value) => {
+					const formatedValue = Number(value).toLocaleString();
+					if (this.derivative && this.derivativeType === 'relative') {
+						return formatedValue + '%';
+					}
+					if (this.relationType === 'relative') {
+						return formatedValue + '‱';
+					}
+					return formatedValue;
+				};
 				chartConfig.options.tooltips.callbacks = {
 					label: (tooltipItem, data) => {
 						const value = tooltipItem.value;
