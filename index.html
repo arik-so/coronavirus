@@ -105,6 +105,7 @@
 							<country-selector v-bind:set-index="setIndex" xv-bind:data-set.sync="currentSelectionSet" v-bind:key="'country_selector_'+activeSelectionSetIndex">
 								<template v-slot:default="selectionSlot">
 									<ul class="pure-menu-list">
+										<!--{{se`tPopulations[setIndex]}}-->
 										<!--{{selectionSlot.setData}}
 										<input type="checkbox" v-model="selectionSlot.setData.abc" />
 										{{selectionSlot.setData.abc}}-->
@@ -206,13 +207,22 @@
 								<label for="log_scale_radio">Log Scale</label>
 							</li>
 							<li class="pure-menu-list-item">
-								<input type="radio" id="total_radio" name="derivative" v-model="derivative"
+								<input type="radio" id="total_radio" v-model="derivative"
 									   v-bind:value="false"/>
 								<label for="total_radio">Total</label>
-								<input type="radio" id="delta_radio" name="derivative" v-model="derivative"
+								<input type="radio" id="delta_radio" v-model="derivative"
 									   v-bind:value="true"/>
 								<label for="delta_radio">Daily Increase</label>
 							</li>
+							<li class="pure-menu-list-item" v-if="canShowRelation">
+								<input type="radio" id="relation_absolute_radio"  v-model="relationType"
+									   value="absolute"/>
+								<label for="relation_absolute_radio">Absolute</label>
+								<input type="radio" id="relation_relative:population_radio"  v-model="relationType"
+									   value="relative" v-bind:disabled="!canCalculateRelation"/>
+								<label for="relation_relative:population_radio">Relative to Population (‱)</label>
+							</li>
+
 							<li class="pure-menu-list-item" v-if="derivative">
 								<select id="derivative_type" v-model="derivativeType">
 									<option value="absolute">Absolute Increase</option>

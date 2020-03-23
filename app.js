@@ -286,7 +286,8 @@ for (const currentSet of selectionSets) {
 		mapDataSource: ['cases', 'recoveries', 'deaths'],
 		mapDataReference: ['absolute', 'relative:cases', 'relative:recoveries', 'relative:population'],
 		mapScope: ['World', 'USA', 'Europe', 'China'],
-		derivativeType: ['absolute', 'relative']
+		derivativeType: ['absolute', 'relative'],
+		relationType: ['absolute', 'relative']
 	};
 
 	const params = {
@@ -305,7 +306,8 @@ for (const currentSet of selectionSets) {
 		mapScope: 'World',
 		comparisonMode: false,
 		comparisonDataType: 'cases',
-		derivativeType: 'absolute'
+		derivativeType: 'absolute',
+		relationType: 'absolute'
 	};
 	// only accessor for the country computed value
 	const parametrizableKeys = ['countries', 'setB', 'setC', ...Object.keys(params)];
@@ -489,6 +491,36 @@ for (const currentSet of selectionSets) {
 			}
 		},
 		methods: {
+			calculateSetPopulation: function (set) {
+				let setPopulation = 0;
+				const skipTerritories = {};
+				const territoryMappers = {CN: 'China', US: 'USA'};
+				for (const currentCountryCode of set.checkedCountries) {
+					if (countrySubdivisions[currentCountryCode]) {
+						// we'll deal with territories later
+						skipTerritories[currentCountryCode] = true;
+					}
+					const currentCountryPopulation = countryPopulation[currentCountryCode];
+					if (!currentCountryPopulation) {
+						return NaN;
+					}
+					setPopulation += currentCountryPopulation;
+				}
+				for (const [currentCountryCode, territoryCodes] of Object.entries(set.territorySelections)) {
+					if (skipTerritories[currentCountryCode]) {
+						continue;
+					}
+					const countryKey = territoryMappers[currentCountryCode];
+					for (const currentTerritoryCode of territoryCodes) {
+						const currentTerritoryPopulation = countryPopulation[countryKey][currentTerritoryCode];
+						if (!currentTerritoryPopulation) {
+							return NaN;
+						}
+						setPopulation += currentTerritoryPopulation;
+					}
+				}
+				return setPopulation;
+			},
 			calculateDerivative: function (values, forceAbsolute = false) {
 				const derivative = [];
 				let previousValue = 0;
@@ -579,6 +611,10 @@ for (const currentSet of selectionSets) {
 							} else {
 								return `New ${label}: ${Number(value).toLocaleString()}`;
 							}
+						}
+
+						if (this.relationType === 'relative') {
+							return `${label}: ${Number(value).toLocaleString()}‱`;
 						}
 
 						return `${label}: ${Number(value).toLocaleString()}`;
@@ -831,6 +867,11 @@ for (const currentSet of selectionSets) {
 					this.regression = 'none';
 				}
 			},
+			canCalculateRelation: function (newValue) {
+				if (newValue === false) {
+					this.relationType = 'absolute';
+				}
+			},
 			scale: function () {
 				this.validateGraphLayout();
 				this.updateGraph();
@@ -931,6 +972,25 @@ for (const currentSet of selectionSets) {
 			canShowRegression: function () {
 				return !!this.showCases && !this.derivative && !this.comparisonMode;
 			},
+			canShowRelation: function () {
+				return !this.derivative;
+			},
+			canCalculateRelation: function () {
+				if (!this.canShowRelation) {
+					return false;
+				}
+				debugger
+				for (const [index, currentSet] of selectionSets.entries()) {
+					if (!this.comparisonMode && index !== 0) {
+						break;
+					}
+					const setPopulation = this.calculateSetPopulation(currentSet);
+					if (isNaN(setPopulation)) {
+						return false;
+					}
+				}
+				return true;
+			},
 			canSeparateAxes: function () {
 				return (this.showCases || this.showRecoveries) && this.showDeaths;
 			},
@@ -1026,6 +1086,34 @@ for (const currentSet of selectionSets) {
 					return [setA, setB, setC];
 				}
 			},
+			totalTimeSeries: function () {
+				if (this.relationType === 'relative') {
+					// divide each one by the population
+					const relativeTimeSeries = [];
+					for (const [index, currentSeries] of this.rawTimeSeries.entries()) {
+						let currentRelativeSeries = [];
+						const currentDivisor = this.setPopulations[index];
+						for (const currentValue of currentSeries) {
+							const relativeValue = Math.round(currentValue / currentDivisor * 100000000) / 10000;
+							currentRelativeSeries.push(relativeValue);
+						}
+						relativeTimeSeries.push(currentRelativeSeries);
+					}
+					return relativeTimeSeries;
+				}
+				return this.rawTimeSeries;
+			},
+			setPopulations: function () {
+				if (!this.canCalculateRelation) {
+					return [NaN, NaN, NaN];
+				}
+				const populations = [];
+				for (const currentSet of selectionSets) {
+					const currentPopulation = this.calculateSetPopulation(currentSet);
+					populations.push(currentPopulation);
+				}
+				return populations;
+			},
 			derivedTimeSeries: function () {
 				return this.rawTimeSeries.map(s => this.calculateDerivative(s));
 			},
@@ -1091,10 +1179,17 @@ for (const currentSet of selectionSets) {
 				return regressionDetails;
 			},
 			dataSets: function () {
-				const factualData = this.derivative ? this.derivedTimeSeries : this.rawTimeSeries;
+				const factualData = this.derivative ? this.derivedTimeSeries : this.totalTimeSeries;
 				const dataSets = [...factualData];
 				if (Array.isArray(this.regressionSeries.extrapolation)) {
-					dataSets.push(this.regressionSeries.extrapolation);
+					if (this.relationType === 'relative') {
+						const absoluteRegression = this.regressionSeries.extrapolation;
+						const divisor = this.setPopulations[0];
+						const relativeRegression = absoluteRegression.map(r => Math.round(r / divisor * 100000000) / 10000);
+						dataSets.push(relativeRegression);
+					} else {
+						dataSets.push(this.regressionSeries.extrapolation);
+					}
 				}
 				if (!this.comparisonMode) {
 					if (!this.showCases) {
