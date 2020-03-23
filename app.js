@@ -1079,6 +1079,7 @@ for (const currentSet of selectionSets) {
 						});
 						regressionDetails.extrapolation = extrapolationY;
 					}
+					regressionDetails.cases = regressionParams;
 				} catch (e) {
 					// regression failed
 					return {
