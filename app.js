@@ -488,12 +488,12 @@ for (const currentSet of selectionSets) {
 			}
 		},
 		methods: {
-			calculateDerivative: function (values) {
+			calculateDerivative: function (values, forceAbsolute = false) {
 				const derivative = [];
 				let previousValue = 0;
 				for (const currentValue of values) {
 					let change = currentValue - previousValue;
-					if (this.derivativeType === 'relative') {
+					if (this.derivativeType === 'relative' && !forceAbsolute) {
 						if (previousValue === 0) {
 							change = null;
 						} else if (currentValue === 0) {
@@ -969,10 +969,8 @@ for (const currentSet of selectionSets) {
 				return territories;
 			},
 			athElapsedDays: function () {
-				let derivative = Array.from(this.timeSeries[0]);
-				if (!this.derivative) {
-					derivative = this.calculateDerivative(derivative);
-				}
+				const rawCases = this.filterDatasetBySelectedCountries(this.cases);
+				const derivative = this.calculateDerivative(rawCases, true);
 				const maxValue = Math.max(...derivative);
 				const reverseChronologicalDerivative = derivative.reverse();
 				const elapsedDays = reverseChronologicalDerivative.indexOf(maxValue);
