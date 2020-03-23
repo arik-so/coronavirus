@@ -324,6 +324,8 @@ for (const currentSet of selectionSets) {
 		el: '#app',
 		router,
 		data: {
+			suspendRouteWatching: false,
+
 			countryNames,
 			countryCodes,
 
@@ -374,98 +376,11 @@ for (const currentSet of selectionSets) {
 				this.territorySelections[countryCode] = [];
 			}*/
 
-			const query = this.$route.query;
-
-			let querySpecifiedCountries = false;
-
-			const countrySelectionKeys = ['countries', 'setB', 'setC'];
-			for (const key of Object.keys(query)) {
-				if (!parametrizableKeys.includes(key)) {
-					return;
-				}
-				const value = query[key];
-				if (['showCases', 'showDeaths', 'showRecoveries', 'derivative', 'comparisonMode'].includes(key)) {
-					// handle booleans
-					this[key] = (value === 'true');
-				} else if (countrySelectionKeys.includes(key)) {
-					let checkedCountries = [];
-					let territorySelections = {};
-					const setIndex = countrySelectionKeys.indexOf(key);
-
-					if (setIndex === 0) {
-						querySpecifiedCountries = true;
-					}
-
-					const countryString = value || '';
-					const countryRegexMatch = countryString.match(/[^,()]+(\([^()]*\))?/gm);
-					// const countries = countryString.split(',');
-					if (Array.isArray(countryRegexMatch) && countryRegexMatch.length > 0) {
-						for (const currentCountryCode of countryRegexMatch) {
-							if (currentCountryCode.includes('(')) {
-
-								const parenthesisIndex = currentCountryCode.indexOf('(');
-								const rawCountryCode = currentCountryCode.substr(0, parenthesisIndex);
-								if (!canonicalCountries.has(rawCountryCode)) {
-									continue;
-								}
-								const availableTerritories = countrySubdivisions[rawCountryCode];
-								if (!availableTerritories) {
-									continue;
-								}
-
-								const territoryCodeString = currentCountryCode.substring(parenthesisIndex + 1, currentCountryCode.length - 1) || '';
-								const territoryCodes = territoryCodeString.split(',');
-
-								territorySelections = [];
-								for (const currentTerritoryCode of territoryCodes) {
-									if (availableTerritories.has(currentTerritoryCode)) {
-										territorySelections.push(currentTerritoryCode);
-									}
-								}
-								selectionSets[setIndex].territorySelections[rawCountryCode] = territorySelections;
-								if (territorySelections.length > 0 && territorySelections.length < availableTerritories.size) {
-									selectionSets[setIndex].expandTerritories[rawCountryCode] = true;
-								}
-							} else if (canonicalCountries.has(currentCountryCode)) {
-								checkedCountries.push(currentCountryCode);
-							}
-						}
-					}
-
-					selectionSets[setIndex].checkedCountries = checkedCountries;
-
-				} else if (key === 'modelOffset') {
-					let regression = parseInt(value);
-					if (!Number.isSafeInteger(regression)) {
-						continue;
-					}
-					regression = Math.max(regression, this.regressionOffsetMinimum);
-					regression = Math.min(regression, this.regressionOffsetMaximum);
-					this[key] = regression;
-				} else if (key === 'extrapolationSize') {
-					let extrapolation = parseInt(value);
-					if (!Number.isSafeInteger(extrapolation)) {
-						continue;
-					}
-					extrapolation = Math.max(extrapolation, 0);
-					extrapolation = Math.min(extrapolation, 15);
-					this[key] = extrapolation;
-				} else {
-					const currentValidValues = validValues[key];
-					if (!Array.isArray(currentValidValues)) {
-						console.log('no valid values for query setting:', key);
-					} else if (!currentValidValues.includes(value)) {
-						continue;
-					}
-					this[key] = value;
-				}
-			}
-
-			if (!querySpecifiedCountries) {
-				selectionSets[0].checkedCountries = Array.from(defaultCheckedCountries);
-			}
+			console.log('created vue');
+			this.handleRoute(this.$route);
 		},
 		mounted: function () {
+			console.log('mounted vue');
 			SocialShareKit.init({
 				title: 'Coronavirus tracker by @arikaleph and @elliebee',
 				text: ''
@@ -488,6 +403,112 @@ for (const currentSet of selectionSets) {
 			}
 		},
 		methods: {
+			handleRoute: function (newRoute, oldRoute) {
+
+				const query = newRoute.query;
+
+				/*
+				if (oldRoute) {
+					console.log('old route:', oldRoute.query);
+				}
+				console.log('new route:', query);
+				console.log('suspended?', this.suspendRouteWatching);
+				*/
+
+				if (this.suspendRouteWatching && oldRoute) {
+					// if there is no old route, and it's at the beginning, we won't suspend
+					return;
+				}
+
+				let querySpecifiedCountries = false;
+
+				const countrySelectionKeys = ['countries', 'setB', 'setC'];
+				for (const key of Object.keys(query)) {
+					if (!parametrizableKeys.includes(key)) {
+						return;
+					}
+					const value = query[key];
+					if (['showCases', 'showDeaths', 'showRecoveries', 'derivative', 'comparisonMode'].includes(key)) {
+						// handle booleans
+						this[key] = (value === 'true' || value === true);
+					} else if (countrySelectionKeys.includes(key)) {
+						let checkedCountries = [];
+						let territorySelections = {};
+						const setIndex = countrySelectionKeys.indexOf(key);
+
+						if (setIndex === 0) {
+							querySpecifiedCountries = true;
+						}
+
+						const countryString = value || '';
+						const countryRegexMatch = countryString.match(/[^,()]+(\([^()]*\))?/gm);
+						// const countries = countryString.split(',');
+						if (Array.isArray(countryRegexMatch) && countryRegexMatch.length > 0) {
+							for (const currentCountryCode of countryRegexMatch) {
+								if (currentCountryCode.includes('(')) {
+
+									const parenthesisIndex = currentCountryCode.indexOf('(');
+									const rawCountryCode = currentCountryCode.substr(0, parenthesisIndex);
+									if (!canonicalCountries.has(rawCountryCode)) {
+										continue;
+									}
+									const availableTerritories = countrySubdivisions[rawCountryCode];
+									if (!availableTerritories) {
+										continue;
+									}
+
+									const territoryCodeString = currentCountryCode.substring(parenthesisIndex + 1, currentCountryCode.length - 1) || '';
+									const territoryCodes = territoryCodeString.split(',');
+
+									territorySelections = [];
+									for (const currentTerritoryCode of territoryCodes) {
+										if (availableTerritories.has(currentTerritoryCode)) {
+											territorySelections.push(currentTerritoryCode);
+										}
+									}
+									selectionSets[setIndex].territorySelections[rawCountryCode] = territorySelections;
+									if (territorySelections.length > 0 && territorySelections.length < availableTerritories.size) {
+										selectionSets[setIndex].expandTerritories[rawCountryCode] = true;
+									}
+								} else if (canonicalCountries.has(currentCountryCode)) {
+									checkedCountries.push(currentCountryCode);
+								}
+							}
+						}
+
+						selectionSets[setIndex].checkedCountries = checkedCountries;
+
+					} else if (key === 'modelOffset') {
+						let regression = parseInt(value);
+						if (!Number.isSafeInteger(regression)) {
+							continue;
+						}
+						regression = Math.max(regression, this.regressionOffsetMinimum);
+						regression = Math.min(regression, this.regressionOffsetMaximum);
+						this[key] = regression;
+					} else if (key === 'extrapolationSize') {
+						let extrapolation = parseInt(value);
+						if (!Number.isSafeInteger(extrapolation)) {
+							continue;
+						}
+						extrapolation = Math.max(extrapolation, 0);
+						extrapolation = Math.min(extrapolation, 15);
+						this[key] = extrapolation;
+					} else {
+						const currentValidValues = validValues[key];
+						if (!Array.isArray(currentValidValues)) {
+							console.log('no valid values for query setting:', key);
+						} else if (!currentValidValues.includes(value)) {
+							continue;
+						}
+						this[key] = value;
+					}
+				}
+
+				if (!querySpecifiedCountries) {
+					selectionSets[0].checkedCountries = Array.from(defaultCheckedCountries);
+				}
+			},
 			calculateSetPopulation: function (set) {
 				let setPopulation = 0;
 				const skipTerritories = {};
@@ -652,6 +673,7 @@ for (const currentSet of selectionSets) {
 			},
 			updateLocation: function () {
 				// update router
+				this.suspendRouteWatching = true;
 				clearTimeout(pathUpdateTimeout);
 				const refreshRoute = () => {
 					const query = {};
@@ -669,6 +691,9 @@ for (const currentSet of selectionSets) {
 						// this.shareableLinkRaw = window.location.href;
 						this.showCopyLink = true;
 						this.shareableLinkRaw = `${window.location.origin}${window.location.pathname}${window.location.search}#${location.fullPath}`;
+					});
+					this.$nextTick(() => {
+						this.suspendRouteWatching = false;
 					});
 					// this.shareableLinkRaw = `${window.location.origin}${window.location.pathname}${window.location.search}#?`
 				};
@@ -775,6 +800,9 @@ for (const currentSet of selectionSets) {
 			}
 		},
 		watch: {
+			$route(newRoute, oldRoute) {
+				this.handleRoute(newRoute, oldRoute);
+			},
 			/*axes: function (newValue) {
 				if (newValue === 'joint') {
 					// remove second y axis
@@ -835,6 +863,7 @@ for (const currentSet of selectionSets) {
 			dataSets: {
 				immediate: true,
 				handler: function (newValue) {
+					console.log('dataSets changed');
 					chartConfig.data.datasets[CONFIRMED_DATASET_INDEX].data = newValue[0];
 					chartConfig.data.datasets[RECOVERED_DATASET_INDEX].data = newValue[1];
 					chartConfig.data.datasets[DEAD_DATASET_INDEX].data = newValue[2];
@@ -860,8 +889,8 @@ for (const currentSet of selectionSets) {
 						}
 					}
 
-					this.updateLocation();
 					this.updateGraph();
+					this.updateLocation();
 				}
 			},
 			mapScope: function () {
@@ -986,7 +1015,6 @@ for (const currentSet of selectionSets) {
 				if (!this.canShowRelation) {
 					return false;
 				}
-				debugger
 				for (const [index, currentSet] of selectionSets.entries()) {
 					if (!this.comparisonMode && index !== 0) {
 						break;
