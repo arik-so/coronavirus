@@ -796,18 +796,6 @@ for (const currentSet of selectionSets) {
 					chartConfig.data.datasets[RECOVERED_DATASET_INDEX].data = newValue[1];
 					chartConfig.data.datasets[DEAD_DATASET_INDEX].data = newValue[2];
 
-					if (!this.comparisonMode) {
-						if (!this.showCases) {
-							chartConfig.data.datasets[CONFIRMED_DATASET_INDEX].data = [];
-						}
-						if (!this.showRecoveries) {
-							chartConfig.data.datasets[RECOVERED_DATASET_INDEX].data = [];
-						}
-						if (!this.showDeaths) {
-							chartConfig.data.datasets[DEAD_DATASET_INDEX].data = [];
-						}
-					}
-
 					if (this.regression !== 'none' && !this.comparisonMode) {
 						// show regression
 						chartConfig.data.labels = Array.from(dateLabels);
@@ -1011,7 +999,7 @@ for (const currentSet of selectionSets) {
 				const maxValue = Math.max(...derivative);
 				const reverseChronologicalDerivative = derivative.reverse();
 				const elapsedDays = reverseChronologicalDerivative.indexOf(maxValue);
-				const dateLabel = Array.from(dateLabels)[dateLabels.size-1-elapsedDays];
+				const dateLabel = Array.from(dateLabels)[dateLabels.size - 1 - elapsedDays];
 				return elapsedDays + ` (${dateLabel})`;
 			},
 			comparisonDataSource: function () {
@@ -1106,6 +1094,17 @@ for (const currentSet of selectionSets) {
 				const dataSets = [...factualData];
 				if (Array.isArray(this.regressionSeries.extrapolation)) {
 					dataSets.push(this.regressionSeries.extrapolation);
+				}
+				if (!this.comparisonMode) {
+					if (!this.showCases) {
+						dataSets[0] = [];
+					}
+					if (!this.showRecoveries) {
+						dataSets[1] = [];
+					}
+					if (!this.showDeaths) {
+						dataSets[2] = [];
+					}
 				}
 				return dataSets;
 
