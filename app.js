@@ -1161,7 +1161,11 @@ for (const currentSet of selectionSets) {
 					return [NaN, NaN, NaN];
 				}
 				const populations = [];
-				for (const currentSet of selectionSets) {
+				for (const [index, currentSet] of selectionSets.entries()) {
+					if (!this.comparisonMode && index !== 0) {
+						populations.push(populations[0]);
+						continue;
+					}
 					const currentPopulation = this.calculateSetPopulation(currentSet);
 					populations.push(currentPopulation);
 				}
