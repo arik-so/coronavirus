@@ -1276,8 +1276,8 @@ for (const currentSet of selectionSets) {
 					series = series.map(s => this.calculateDerivative(s, true));
 				}
 				const confirmedSeries = series[0];
-				const deadSeries = series[1];
-				const recoveredSeries = series[2];
+				const recoveredSeries = series[1];
+				const deadSeries = series[2];
 
 				return {
 					cases: Number(confirmedSeries[confirmedSeries.length - 1]).toLocaleString(),
