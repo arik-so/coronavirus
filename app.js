@@ -497,9 +497,9 @@ for (const currentSet of selectionSets) {
 					if (this.derivativeType === 'relative' && !forceAbsolute) {
 						if (previousValue === 0) {
 							change = null;
-						} else if (currentValue === 0) {
+						} /*else if (currentValue === 0) {
 							change = 0;
-						} else {
+						} */ else {
 							change = Math.round((currentValue / previousValue) * 10000) / 100 - 100;
 						}
 					}
@@ -1027,7 +1027,7 @@ for (const currentSet of selectionSets) {
 				}
 			},
 			derivedTimeSeries: function () {
-				return this.rawTimeSeries.map(this.calculateDerivative);
+				return this.rawTimeSeries.map(s => this.calculateDerivative(s));
 			},
 			regressionSeries: function () {
 				const confirmedYValues = this.rawTimeSeries[0];
@@ -1153,7 +1153,7 @@ for (const currentSet of selectionSets) {
 					let setC = this.filterDatasetBySelectedCountries(this.comparisonDataSource, 2);
 
 					if (this.derivative) {
-						[setA, setB, setC] = [setA, setB, setC].map(this.calculateDerivative);
+						[setA, setB, setC] = [setA, setB, setC].map(s => this.calculateDerivative(s));
 					}
 
 					console.log('calculated new sets');
