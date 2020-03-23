@@ -36,16 +36,20 @@ div.header {
 	padding-bottom: 10px;
 	background-color: white;
 	/*margin-bottom: 10px;*/
-	box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.05);
+	box-shadow: 0 0 5px rgba(0, 0, 0, 0.05);
 }
 
-div.header > div.container > div.desktop_header {
+div.header>div.container>div.desktop-header {
 	padding-left: 20px;
 	padding-right: 20px;
 }
 
-div.desktop_header > div.link_container {
+div.desktop-header>div.link-container {
 	padding-top: 7px;
+}
+
+.header-text {
+	float: left;
 }
 
 h1 {
@@ -76,7 +80,7 @@ div.footer {
 	width: 100%;
 	background-color: white;
 	height: 150px;
-	box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.01);
+	box-shadow: 0 0 10px rgba(0, 0, 0, 0.01);
 }
 
 .chart-container.disabled {
@@ -93,33 +97,33 @@ div.sidebar {
 	/*display: none;*/
 }
 
-div#share_section div.sidebar {
+div.share-section div.sidebar {
 	margin-top: -10px;
 	border-radius: 10px;
 	padding: 0;
 	padding-bottom: 10px;
 }
 
-div#share_section > div {
+div.share-section>div {
 	margin-top: -10px;
 	padding-left: 10px;
 	padding-right: 10px;
 	overflow: hidden;
 }
 
-div.share_container {
+div.share-container {
 	background: #fff;
 	padding: 20px;
 	border-radius: 10px;
-	box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.05);
+	box-shadow: 0 0 5px rgba(0, 0, 0, 0.05);
 }
 
-div.share_container tr > td:nth-child(2) {
+div.share-container tr>td:nth-child(2) {
 	padding-left: 5px;
 	padding-right: 5px;
 }
 
-div.share_container tr > td:nth-child(2) > input {
+div.share-container tr>td:nth-child(2)>input {
 	width: calc(100% - 10px);
 }
 
@@ -128,11 +132,11 @@ div.geography-picker {
 	width: 300px;
 }
 
-div.geography-picker:not(.set_comparison) {
+div.geography-picker:not(.set-comparison) {
 	margin-top: 10px;
 }
 
-div.geography-picker.set_comparison > div.settings-block {
+div.geography-picker.set-comparison>div.settings-block {
 	border-top-left-radius: 0;
 	position: relative;
 	z-index: 1;
@@ -144,26 +148,26 @@ div.aggregation-configuration {
 	margin-top: 45px;
 }
 
-div.chart_container {
+div.chart-container {
 	margin-left: 310px;
 	margin-right: 210px;
 	background: #fff;
 	padding: 20px;
 	border-radius: 10px;
 	border-top-left-radius: 0;
-	box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.05);
+	box-shadow: 0 0 5px rgba(0, 0, 0, 0.05);
 }
 
-div.chart_selector {
+div.chart-selector {
 	padding-left: 10px;
 }
 
-div.chart_selector, div.set_selector {
+div.chart-selector, div.set-selector {
 	overflow: hidden;
 	padding-top: 10px;
 }
 
-div.set_selector {
+div.set-selector {
 	width: fit-content;
 	padding-left: 10px;
 	margin-left: -10px;
@@ -171,10 +175,10 @@ div.set_selector {
 	z-index: 2;
 }
 
-div.set_selector > div > div, div.chart_selector > div > div {
+div.set-selector>div>div, div.chart-selector>div>div {
 	border-top-left-radius: 10px;
 	border-top-right-radius: 10px;
-	box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.05);
+	box-shadow: 0 0 5px rgba(0, 0, 0, 0.05);
 	display: inline-block;
 	overflow: hidden;
 	vertical-align: top;
@@ -183,22 +187,21 @@ div.set_selector > div > div, div.chart_selector > div > div {
 	border-left: 0;
 }
 
-div.map_selector {
+div.map-selector {
 	overflow: hidden;
 	padding-top: 5px;
 	padding-left: 10px;
 	padding-right: 10px;
-
 }
 
-div.map_selector > div.sidebar {
+div.map-selector>div.sidebar {
 	padding: 0;
 }
 
-div.map_selector > div > div {
+div.map-selector>div>div {
 	border-top-left-radius: 10px;
 	border-top-right-radius: 10px;
-	box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.05);
+	box-shadow: 0 0 5px rgba(0, 0, 0, 0.05);
 	display: inline-block;
 	overflow: hidden;
 	vertical-align: top;
@@ -207,20 +210,20 @@ div.map_selector > div > div {
 	border-left: 0;
 }
 
-li.subdivided > span.subdivision_toggle {
+li.subdivided>span.subdivision-toggle {
 	display: inline-block;
 	transition: 0.3s cubic-bezier(0.2, 0.3, 0, 1);
 }
 
-li.subdivided > span.subdivision_toggle:before {
+li.subdivided>span.subdivision-toggle:before {
 	content: '▶︎';
 }
 
-li.subdivided.expanded > span.subdivision_toggle {
+li.subdivided.expanded>span.subdivision-toggle {
 	transform: rotate(90deg);
 }
 
-li.subdivided > input {
+li.subdivided>input {
 	margin-left: 5px;
 }
 
@@ -229,45 +232,44 @@ li.pure-menu-list-item.territory {
 	padding-left: 35px;
 }
 
-label.country_label {
+label.country-label {
 	/*display: inline-block;*/
 	/*vertical-align: top;*/
 }
 
-label.country_label.select_all > span.country_name {
+label.country-label.select-all>span.country-name {
 	font-size: 12px;
 	/*text-transform: uppercase;*/
 }
 
-label.country_label > span.country_name {
+label.country-label>span.country-name {
 	font-size: 11px;
 }
 
-label.country_label > span.country_decoration {
+label.country-label>span.country-decoration {
 	font-size: 9px;
 	display: inline-block;
 	padding-left: 7px;
 }
 
-label.country_label > span.country_decoration:before {
+label.country-label>span.country-decoration:before {
 	content: '(';
 }
 
-label.country_label > span.country_decoration:after {
+label.country-label>span.country-decoration:after {
 	content: ')';
 }
 
-
-label.country_label > span.country_decoration > span:not(:last-child) {
+label.country-label>span.country-decoration>span:not(:last-child) {
 	padding-right: 5px;
 }
 
-div.chart_container > div {
+div.chart-container>div {
 	text-align: center;
 	padding-bottom: 10px;
 }
 
-div.map_selector > div > div > span, div.chart_container > div > span, div.chart_selector > div > div > span, div.set_selector > div > div > span {
+div.map-selector>div>div>span, div.chart-container>div>span, div.chart-selector>div>div>span, div.set-selector>div>div>span {
 	display: inline-block;
 	padding: 12px;
 	padding-bottom: 9px;
@@ -277,46 +279,43 @@ div.map_selector > div > div > span, div.chart_container > div > span, div.chart
 	/*border-top: 1px solid rgba(0, 0, 0, 0.05);*/
 }
 
-div.chart_container > div > span:first-child {
+div.chart-container>div>span:first-child {
 	padding-left: 0;
 }
 
-div.chart_container > div > span:last-child {
+div.chart-container>div>span:last-child {
 	padding-right: 0;
 }
 
-div.set_selector > div > div > span:not(:first-child), div.chart_selector > div > div > span:not(:first-child), div.map_selector > div > div > span:not(:first-child) {
+div.set-selector>div>div>span:not(:first-child), div.chart-selector>div>div>span:not(:first-child), div.map-selector>div>div>span:not(:first-child) {
 	border-left: 1px solid rgba(0, 0, 0, 0.05);
 }
 
-div.map_selector > span:last-child {
+div.map-selector>span:last-child {}
 
-}
-
-div.set_selector > div > div > span:not(.active), div.chart_selector > div > div > span:not(.active), div.map_selector > div > div > span:not(.active) {
+div.set-selector>div>div>span:not(.active), div.chart-selector>div>div>span:not(.active), div.map-selector>div>div>span:not(.active) {
 	color: #757575;
 	cursor: pointer;
 }
 
-div.set_selector > div > div > span:not(.active):hover, div.chart_selector > div > div > span:not(.active):hover, div.map_selector > div > div > span:not(.active):hover {
+div.set-selector>div>div>span:not(.active):hover, div.chart-selector>div>div>span:not(.active):hover, div.map-selector>div>div>span:not(.active):hover {
 	color: rgb(80, 120, 226);
 }
 
-div.set_selector > div > div > span.active, div.chart_selector > div > div > span.active, div.map_selector > div > div > span.active {
+div.set-selector>div>div>span.active, div.chart-selector>div>div>span.active, div.map-selector>div>div>span.active {
 	background-color: #ffffff;
 }
 
-
-div.map_container {
+div.map-container {
 	background: #fff;
 	padding: 20px;
 	border-radius: 10px;
 	border-top-left-radius: 0;
-	box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.05);
+	box-shadow: 0 0 5px rgba(0, 0, 0, 0.05);
 	margin-bottom: 10px;
 }
 
-div.map_container div.canvas_container {
+div.map-container div.canvas-container {
 	padding-top: 10px;
 	padding-bottom: 10px;
 	position: relative;
@@ -324,7 +323,7 @@ div.map_container div.canvas_container {
 	min-height: 0;
 }
 
-div.map_container div.canvas_container > canvas {
+div.map-container div.canvas-container>canvas {
 	width: 100%;
 	max-height: 80vh;
 }
@@ -358,7 +357,7 @@ div.map_container div.canvas_container > canvas {
 	padding: 20px 15px;
 	overflow: scroll;
 	margin-bottom: 10px;
-	box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.05);
+	box-shadow: 0 0 5px rgba(0, 0, 0, 0.05);
 }
 
 .settings-block.disabled {
@@ -395,40 +394,32 @@ label {
 		max-width: none;
 		width: 100%;
 	}
-
 	div.header {
 		margin-bottom: 5px;
 	}
-
-	div.header > div.container {
+	div.header>div.container {
 		padding: 0;
 		text-align: center;
 	}
-
-	div.share_container tr > td:nth-child(2) {
+	div.share-container tr>td:nth-child(2) {
 		padding-left: 10px;
 		padding-right: 10px;
 	}
-
-	div.share_container tr > td:nth-child(2) > input {
+	div.share-container tr>td:nth-child(2)>input {
 		width: calc(100% - 20px);
 	}
-
-	div.header > div.container > div.desktop_header > div.link_container {
+	div.header>div.container>div.desktop-header>div.link-container {
 		padding-top: 12px;
 	}
-
-	div.chart_selector {
+	div.chart-selector {
 		padding-left: 0;
 		padding-top: 5px;
 		position: relative;
 		z-index: 2;
 	}
-
 	div.aggregation-configuration {
 		margin-top: 5px;
 	}
-
 	div.geography-picker {
 		float: none;
 		width: calc(100vw - 10px);
@@ -437,7 +428,6 @@ label {
 		order: 3;
 		margin-bottom: 5px;
 	}
-
 	div.aggregation-configuration {
 		float: none;
 		width: calc(100vw - 10px);
@@ -445,8 +435,7 @@ label {
 		order: 2;
 		margin-bottom: 5px;
 	}
-
-	div.x_chart_container {
+	div.x_chart-container {
 		width: calc(100vw - 20px);
 		left: 0;
 		margin: 0;
@@ -455,47 +444,37 @@ label {
 		padding: 5px;
 		border-radius: 5px;
 		margin-bottom: 5px;
-
 	}
-
-	div.chart_container {
+	div.chart-container {
 		margin: 0;
 		padding: 5px;
 		border-radius: 5px;
 		margin-bottom: 5px;
 		border-top-left-radius: 0;
 	}
-
-	div.chart_container > div > span {
+	div.chart-container>div>span {
 		padding: 6px;
 	}
-
-	div.chart_container > div:last-child {
+	div.chart-container>div:first-child {
 		height: 50vh;
 	}
-
-	div.map_selector {
+	div.map-selector {
 		padding-left: 5px;
 		padding-right: 5px;
 	}
-
-	div.map_selector > div > div {
+	div.map-selector>div>div {
 		width: fit-content;
 	}
-
-	div.map_container {
+	div.map-container {
 		margin-bottom: 5px;
-	!important;
+		!important;
 		position: relative;
 		z-index: 1;
 	}
-
-	div.map_selector > div > div {
+	div.map-selector>div>div {
 		z-index: 2;
 		position: relative;
 	}
-
-
 	.sidebar {
 		position: static;
 		height: initial;
@@ -505,7 +484,6 @@ label {
 		padding-top: 0;
 		padding-bottom: 0;
 	}
-
 	.settings-block {
 		border-radius: 5px;
 		padding: 5px;
@@ -513,34 +491,27 @@ label {
 		width: 100%;
 		margin: 0;
 	}
-
-	div#share_section div.sidebar {
+	div.share-section div.sidebar {
 		margin-top: -5px;
 	}
-
-	div.share_container {
+	div.share-container {
 		border-radius: 5px;
 	}
-
-	div#share_section > div {
+	div.share-section>div {
 		margin-top: -5px;
 		padding-left: 5px;
 		padding-right: 5px;
 	}
-
-	div.aggregation-configuration > div.settings-block:only-child {
+	div.aggregation-configuration>div.settings-block:only-child {
 		width: 100%;
 	}
-
-	div.aggregation-configuration > div.settings-block:not(:only-child) {
+	div.aggregation-configuration>div.settings-block:not(:only-child) {
 		width: 50%;
 	}
-
-	div.aggregation-configuration > div.settings-block:not(:only-child):first-child {
+	div.aggregation-configuration>div.settings-block:not(:only-child):first-child {
 		width: calc(50% - 5px);
 		margin-right: 5px;
 	}
-
 	.chart-container {
 		width: 100vw;
 		left: 0;
@@ -552,7 +523,7 @@ label {
 	padding-top: 15px;
 }
 
-input[type=radio] + label {
+input[type=radio]+label {
 	vertical-align: top;
 }
 
@@ -656,25 +627,25 @@ input[type=checkbox]:indeterminate:after {
 	display: none;
 }
 
-.md-radio input[type="radio"]:checked + label:before {
+.md-radio input[type="radio"]:checked+label:before {
 	border-color: #5062fe;
 	animation: ripple 0.2s linear forwards;
 }
 
-.md-radio input[type="radio"]:checked:disabled + label:before {
+.md-radio input[type="radio"]:checked:disabled+label:before {
 	border-color: #7a7a7a;
 	animation: ripple 0.2s linear forwards;
 }
 
-.md-radio input[type="radio"]:checked:disabled + label:after {
+.md-radio input[type="radio"]:checked:disabled+label:after {
 	background: #7a7a7a;
 }
 
-.md-radio input[type="radio"]:disabled + label {
+.md-radio input[type="radio"]:disabled+label {
 	cursor: not-allowed;
 }
 
-.md-radio input[type="radio"]:checked + label:after {
+.md-radio input[type="radio"]:checked+label:after {
 	transform: scale(1);
 }
 
@@ -713,4 +684,46 @@ input[type=checkbox]:indeterminate:after {
 	height: 10px;
 	transform: scale(0);
 	background: #5062fe;
+}
+
+.select-css {
+	display: inline-block;
+	font-size: 10px;
+	color: #444;
+	line-height: 1.3;
+	padding: .4em 1.8em .2em .8em;
+	max-width: 100%;
+	box-sizing: border-box;
+	margin: 0;
+	border: 1px solid #aaa;
+	border-radius: .5em;
+	-moz-appearance: none;
+	-webkit-appearance: none;
+	appearance: none;
+	background-color: #fff;
+	cursor: pointer;
+	background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23007CB2%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E'), linear-gradient(to bottom, #ffffff 0%, #e5e5e5 100%);
+	background-repeat: no-repeat, repeat;
+	background-position: right .7em top 50%, 0 0;
+	background-size: .65em auto, 100%;
+}
+
+.select-css::-ms-expand {
+	display: none;
+}
+
+.select-css:hover {
+	border-color: rgb(36, 35, 35);
+}
+
+.select-css:focus {
+	border-color: #aaa;
+	box-shadow: 0 0 1px 2px rgba(59, 153, 252, .5);
+	box-shadow: 0 0 0 2px -moz-mac-focusring;
+	color: #222;
+	outline: none;
+}
+
+.select-css option {
+	font-weight: normal;
 }

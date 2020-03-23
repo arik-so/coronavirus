@@ -3,9 +3,9 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale = 1.0">
-	<title>👑🦠 Coronavirus Tracker: Charts, graphs, and maps of COVID-19 infections, recoveries, and deaths.</title>
+	<title>???? Coronavirus Tracker: Charts, graphs, and maps of COVID-19 infections, recoveries, and deaths.</title>
 	<meta property="og:title"
-		  content="👑🦠 Coronavirus Tracker: Charts, graphs, and maps of COVID-19 infections, recoveries, and deaths.">
+		  content="???? Coronavirus Tracker: Charts, graphs, and maps of COVID-19 infections, recoveries, and deaths. ">
 
 	<meta name="description"
 		  content="Coronavirus/COVID-19 metrics tracking tool with charts supporting multi-country aggregation, regression analysis, and a map with absolute and relative figures on a sliding scale for historical adjustment.">
@@ -50,11 +50,11 @@
 
 		<div id="header" class="header">
 			<div class="container">
-				<div class="desktop_header">
-					<div style="float: left;">
+				<div class="desktop-header">
+					<div class="header-text">
 						<h1>COVID-19 Progression</h1>
 					</div>
-					<div class="link_container" style="float: right;">
+					<div class="link-container" style="float: right;">
 						<a href="javascript:" v-on:click="toggleShare()" class="ssk ssk-icon ssk-link"
 						   title="Share chart setup"></a>
 					</div>
@@ -63,10 +63,10 @@
 			</div>
 		</div>
 
-		<div id="share_section" class="container" v-show="showShare" style="display: none;">
+		<div class="container share-section" v-show="showShare" style="display: none;">
 			<div>
 				<div class="sidebar">
-					<div class="share_container">
+					<div class="share-container">
 						<table cellspacing="2px">
 							<tr>
 								<td>
@@ -83,13 +83,13 @@
 			</div>
 		</div>
 
-		<div id="aggregation_section" class="container">
+		<div id="aggregation-section" class="container">
 
 			<div class="sidebar">
-				<div id="geography_picker" class="geography-picker" v-bind:class="{set_comparison: comparisonMode}">
+				<div class="geography-picker" v-bind:class="{set_comparison: comparisonMode}">
 
 					<template v-if="comparisonMode">
-						<div class="set_selector">
+						<div class="set-selector">
 							<div>
 								<div>
 									<span v-for="(dataSet, setIndex) in selectionSets"
@@ -116,11 +116,11 @@
 										</li>-->
 
 										<li class="pure-menu-list-item">
-											<input id="select_all_checkbox" type="checkbox" v-model="selectionSlot.setData.selectAll"
+											<input id="select-all_checkbox" type="checkbox" v-model="selectionSlot.setData.selectAll"
 												   :indeterminate.prop="selectionSlot.setData.partialSelection.total" />
-											<label for="select_all_checkbox" class="country_label select_all">
+											<label for="select-all_checkbox" class="country-label select-all">
 												<span class="country_name">Select All</span>
-												<span class="country_decoration"
+												<span class="country-decoration"
 													  v-html="decoratedCountries['total']"></span>
 											</label>
 										</li>
@@ -128,7 +128,7 @@
 											<li class="pure-menu-list-item"
 												v-bind:class="{subdivided: country.hasSubdivisions, expanded: selectionSlot.setData.expandTerritories[country.code]}">
 												<span v-if="country.hasSubdivisions"
-													  class="subdivision_toggle"
+													  class="subdivision-toggle"
 													  v-on:click="selectionSlot.setData.expandTerritories[country.code] = !selectionSlot.setData.expandTerritories[country.code]"></span>
 												<input type="checkbox"
 													   v-bind:id="'country_'+country.code"
@@ -136,9 +136,9 @@
 													   v-model="selectionSlot.setData.checkedCountries"
 													   :indeterminate.prop="selectionSlot.setData.partialSelection[country.code]"
 												/>
-												<label v-bind:for="'country_'+country.code" class="country_label">
+												<label v-bind:for="'country_'+country.code" class="country-label">
 													<span class="country_name">{{country.formated}}</span>
-													<span class="country_decoration"
+													<span class="country-decoration"
 														  v-html="decoratedCountries[country.code]"></span>
 												</label>
 											</li>
@@ -152,7 +152,7 @@
 												/>
 												<label v-bind:for="'territory_'+territory.code" class="territory_label">
 													<span class="country_name">{{territory.formated}}</span>
-													<!--<span class="country_decoration" v-html="decoratedCountries[country.code]"></span>-->
+													<!--<span class="country-decoration" v-html="decoratedCountries[country.code]"></span>-->
 												</label>
 											</li>
 										</template>
@@ -214,15 +214,15 @@
 								<label for="delta_radio">Daily Increase</label>
 							</li>
 							<li class="pure-menu-list-item" v-if="derivative">
-								<select id="derivative_type" v-model="derivativeType">
+								<select id="derivative_type" v-model="derivativeType" class="select-css">
 									<option value="absolute">Absolute Increase</option>
 									<option value="relative">Relative Increase</option>
 								</select>
 							</li>
 							<li class="pure-menu-list-item" v-if="canShowRegression">
 								<select id="regression" v-model="regression"
-										:disabled="!canShowRegression">
-									<option value="none">Apply Regression…</option>
+										:disabled="!canShowRegression" class="select-css">
+									<option value="none">Apply Regression�</option>
 									<option value="exponential">Exponential</option>
 									<option value="logistic">Logistic (Experimental)</option>
 								</select>
@@ -271,7 +271,7 @@
 
 				</div>
 
-				<div class="chart_selector">
+				<div class="chart-selector">
 					<div>
 						<div>
 							<span v-bind:class="{active: !comparisonMode}"
@@ -281,26 +281,25 @@
 					</div>
 				</div>
 
-				<div class="chart_container">
+				<div class="chart-container">
+					<div>
+						<canvas id="graph_canvas" style="width: 100%;" xclass="pure-u-5-6"></canvas>
+					</div>
 					<template v-if="showSelectionTotals">
 						<div v-if="!derivative">
-							<span>🤒 Infected: {{aggregatedTotals.cases}}</span>
-							<span>👍 Recovered: {{aggregatedTotals.recoveries}}</span>
-							<span>☠️ Dead: {{aggregatedTotals.deaths}}</span>
+							<span>?? Infected: {{aggregatedTotals.cases}}</span>
+							<span>?? Recovered: {{aggregatedTotals.recoveries}}</span>
+							<span>?? Dead: {{aggregatedTotals.deaths}}</span>
 						</div>
 						<div v-if="derivative">
-							<span>🤒 New Infections: {{aggregatedTotals.cases}}</span>
-							<span>👍 New Recoveries: {{aggregatedTotals.recoveries}}</span>
-							<span>☠️ New Deaths: {{aggregatedTotals.deaths}}</span>
+							<span>?? New Infections: {{aggregatedTotals.cases}}</span>
+							<span>?? New Recoveries: {{aggregatedTotals.recoveries}}</span>
+							<span>?? New Deaths: {{aggregatedTotals.deaths}}</span>
 						</div>
 						<div>
 							<span>Days since most new infections: {{athElapsedDays}}</span>
 						</div>
 					</template>
-
-					<div>
-						<canvas id="graph_canvas" style="width: 100%;" xclass="pure-u-5-6"></canvas>
-					</div>
 				</div>
 
 				<div style="clear: both;"></div>
@@ -315,7 +314,7 @@
 		</div> -->
 
 		<div id="map_section" class="container">
-			<div class="map_selector">
+			<div class="map-selector">
 				<div class="sidebar">
 					<div>
 						<span v-for="currentMap in mapScopes" v-bind:class="{active: currentMap === mapScope}"
@@ -324,12 +323,12 @@
 				</div>
 			</div>
 			<div class="sidebar">
-				<div class="map_container">
+				<div class="map-container">
 					<div style="/*float: right;*/">
 						<ul class="pure-menu-list">
 							<li class="pure-menu-list-item">
 								Metric:
-								<select id="map_data_source" v-model="mapDataSource">
+								<select id="map_data_source" v-model="mapDataSource" class="select-css">
 									<option value="cases">Cases</option>
 									<option value="recoveries" v-bind:disabled="!canShowMapSourceRecoveries">Recoveries</option>
 									<option value="deaths">Deaths</option>
@@ -337,7 +336,7 @@
 							</li>
 							<li class="pure-menu-list-item">
 								Reference:
-								<select id="map_data_reference" v-model="mapDataReference">
+								<select id="map_data_reference" v-model="mapDataReference" class="select-css">
 									<option value="absolute">Absolute</option>
 									<option value="relative:population">Relative to Population</option>
 									<option value="relative:cases" v-if="canShowMapRelativeToCases">Relative to Cases
@@ -354,7 +353,7 @@
 					</div>
 					<div style="clear: both;"></div>
 
-					<div class="canvas_container">
+					<div class="canvas-container">
 						<covid-map v-bind:scope="mapScope"
 								   v-bind:map-date="mapDate"
 								   v-bind:map-data-source="mapDataSource"
@@ -401,7 +400,7 @@
 				href="https://github.com/CSSEGISandData/COVID-19/tree/master/csse_covid_19_data/csse_covid_19_time_series"
 				target="_blank">Data</a> (Latest known inaccuracy: <a
 				href="https://github.com/CSSEGISandData/COVID-19/issues/1113" target="_blank">#1113</a>)</p>
-			<p>Built wearing 😷 by <a href="https://twitter.com/arikaleph" target="_blank"
+			<p>Built wearing ?? by <a href="https://twitter.com/arikaleph" target="_blank"
 									  xclass="ssk ssk-text ssk-twitter ssk-xs">@arikaleph</a> and <a
 				href="https://twitter.com/elliebee" target="_blank">@elliebee</a>.</p>
 		</div>
