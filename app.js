@@ -368,7 +368,10 @@ for (const currentSet of selectionSets) {
 			mapDateMaximum: dateLabels.size - 1,
 			shareableLinkRaw: window.location.href,
 			showShare: false,
-			showCopyLink: true
+			showCopyLink: true,
+
+			developerMode: false,
+			graphExportURL: null
 		},
 		created: function () {
 			/*for (const countryCode of Object.keys(countrySubdivisions)) {
@@ -402,6 +405,12 @@ for (const currentSet of selectionSets) {
 			}
 		},
 		methods: {
+			handleExportGraph: function (element, event) {
+				debugger
+				element.href = 'https://stackoverflow.com';
+				return true;
+				return true;
+			},
 			handleRoute: function (newRoute, oldRoute) {
 
 				const query = newRoute.query;
@@ -630,7 +639,8 @@ for (const currentSet of selectionSets) {
 				});
 			},
 			createChart: function () {
-				const context = document.getElementById('graph_canvas').getContext('2d');
+				const canvas = document.getElementById('graph_canvas');
+				const context = canvas.getContext('2d');
 				chartConfig.options.scales.yAxes[0].ticks.callback = (value) => {
 					const formatedValue = Number(value).toLocaleString();
 					if (this.derivative && this.derivativeType === 'relative') {
@@ -665,6 +675,14 @@ for (const currentSet of selectionSets) {
 						return `${label}: ${Number(value).toLocaleString()}`;
 					}
 				};
+				if(this.developerMode) {
+					chartConfig.options.animation = {
+						onComplete: () => {
+							const data = canvas.toDataURL('image/png');
+							this.graphExportURL = data;
+						}
+					};
+				}
 				this.graph = new Chart(context, chartConfig);
 			},
 			formatMapDate: function (date) {

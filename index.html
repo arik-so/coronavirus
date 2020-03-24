@@ -311,6 +311,11 @@
 					<div>
 						<canvas id="graph_canvas" style="width: 100%;" xclass="pure-u-5-6"></canvas>
 					</div>
+					<template v-if="developerMode">
+						<div style="text-align: right;">
+							<a v-bind:href="graphExportURL" target="_blank">Export Graph</a>
+						</div>
+					</template>
 				</div>
 
 				<div style="clear: both;"></div>
