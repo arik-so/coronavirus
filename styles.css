@@ -283,6 +283,19 @@ div.map_selector > div > div > span, div.chart_container > div > span, div.chart
 	/*border-top: 1px solid rgba(0, 0, 0, 0.05);*/
 }
 
+div.chart_selector > div > span{
+	display: inline-block;
+	padding: 12px;
+	padding-top: 14px;
+	padding-bottom: 9px;
+	color: #757575;
+}
+
+span.note{
+	float: right;
+	margin-right: 5px;
+}
+
 div.chart_container > div > span:first-child {
 	padding-left: 0;
 }

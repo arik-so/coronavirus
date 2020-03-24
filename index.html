@@ -107,8 +107,11 @@
 						</template>
 
 						<div class="modifiers pure-menu pure-menu-scrollable custom-restricted settings-block">
-							<template v-for="(currentSelectionSet, setIndex) in selectionSets" v-if="setIndex === activeSelectionSetIndex">
-								<country-selector v-bind:set-index="setIndex" xv-bind:data-set.sync="currentSelectionSet" v-bind:key="'country_selector_'+activeSelectionSetIndex">
+							<template v-for="(currentSelectionSet, setIndex) in selectionSets"
+									  v-if="setIndex === activeSelectionSetIndex">
+								<country-selector v-bind:set-index="setIndex"
+												  xv-bind:data-set.sync="currentSelectionSet"
+												  v-bind:key="'country_selector_'+activeSelectionSetIndex">
 									<template v-slot:default="selectionSlot">
 										<ul class="pure-menu-list">
 											<!--{{se`tPopulations[setIndex]}}-->
@@ -123,8 +126,9 @@
 											</li>-->
 
 											<li class="pure-menu-list-item">
-												<input id="select_all_checkbox" type="checkbox" v-model="selectionSlot.setData.selectAll"
-													   :indeterminate.prop="selectionSlot.setData.partialSelection.total" />
+												<input id="select_all_checkbox" type="checkbox"
+													   v-model="selectionSlot.setData.selectAll"
+													   :indeterminate.prop="selectionSlot.setData.partialSelection.total"/>
 												<label for="select_all_checkbox" class="country_label select_all">
 													<span class="country_name">Select All</span>
 													<span class="country_decoration"
@@ -157,7 +161,8 @@
 														   v-bind:value="territory.code"
 														   v-model="selectionSlot.setData.territorySelections[country.code]"
 													/>
-													<label v-bind:for="'territory_'+territory.code" class="territory_label">
+													<label v-bind:for="'territory_'+territory.code"
+														   class="territory_label">
 														<span class="country_name">{{territory.formated}}</span>
 														<!--<span class="country_decoration" v-html="decoratedCountries[country.code]"></span>-->
 													</label>
@@ -187,13 +192,16 @@
 								</template>
 								<template v-else>
 									<li class="pure-menu-list-item">
-										<input id="cases_data_type_radio" value="cases" type="radio" v-model="comparisonDataType"/>
+										<input id="cases_data_type_radio" value="cases" type="radio"
+											   v-model="comparisonDataType"/>
 										<label for="cases_data_type_radio">Cases</label>
 										<br/>
-										<input id="recoveries_data_type_radio" value="recoveries" type="radio" v-model="comparisonDataType"/>
+										<input id="recoveries_data_type_radio" value="recoveries" type="radio"
+											   v-model="comparisonDataType"/>
 										<label for="recoveries_data_type_radio">Recoveries</label>
 										<br/>
-										<input id="deaths_data_type_radio" value="deaths" type="radio" v-model="comparisonDataType"/>
+										<input id="deaths_data_type_radio" value="deaths" type="radio"
+											   v-model="comparisonDataType"/>
 										<label for="deaths_data_type_radio">Deaths</label>
 									</li>
 								</template>
@@ -208,7 +216,8 @@
 								<li class="pure-menu-list-item" v-if="!comparisonMode">
 									<input type="radio" id="joint_axis_radio" name="axes" v-model="axes" value="joint"/>
 									<label for="joint_axis_radio">One Axis</label>
-									<input type="radio" id="separate_axes_radio" name="axes" v-model="axes" value="separate"
+									<input type="radio" id="separate_axes_radio" name="axes" v-model="axes"
+										   value="separate"
 										   :disabled="!canSeparateAxes"/>
 									<label for="separate_axes_radio">Two Axes</label>
 								</li>
@@ -221,30 +230,30 @@
 									<label for="delta_radio">Daily Increase</label>
 								</li>
 								<li class="pure-menu-list-item" v-if="canShowRelation">
-									<input type="radio" id="relation_absolute_radio"  v-model="relationType"
+									<input type="radio" id="relation_absolute_radio" v-model="relationType"
 										   value="absolute"/>
 									<label for="relation_absolute_radio">Absolute</label>
-									<input type="radio" id="relation_relative:population_radio"  v-model="relationType"
+									<input type="radio" id="relation_relative:population_radio" v-model="relationType"
 										   value="relative" v-bind:disabled="!canCalculateRelation"/>
 									<label for="relation_relative:population_radio">Relative to Population (‱)</label>
 								</li>
 
-							<li class="pure-menu-list-item" v-if="derivative">
-								<select id="derivative_type" v-model="derivativeType" class="select-css">
-									<option value="absolute">Absolute Increase</option>
-									<option value="relative">Relative Increase</option>
-								</select>
-							</li>
-							<li class="pure-menu-list-item" v-if="canShowRegression">
-								<select id="regression" v-model="regression"
-										:disabled="!canShowRegression" class="select-css">
-									<option value="none">Apply Regression…</option>
-									<option value="exponential">Exponential</option>
-									<option value="logistic">Logistic (Experimental)</option>
-								</select>
-							</li>
-						</ul>
-					</div>
+								<li class="pure-menu-list-item" v-if="derivative">
+									<select id="derivative_type" v-model="derivativeType" class="select-css">
+										<option value="absolute">Absolute Increase</option>
+										<option value="relative">Relative Increase</option>
+									</select>
+								</li>
+								<li class="pure-menu-list-item" v-if="canShowRegression">
+									<select id="regression" v-model="regression"
+											:disabled="!canShowRegression" class="select-css">
+										<option value="none">Apply Regression…</option>
+										<option value="exponential">Exponential</option>
+										<option value="logistic">Logistic (Experimental)</option>
+									</select>
+								</li>
+							</ul>
+						</div>
 
 						<div id="details" class="settings-block" v-if="regression !== 'none'">
 							<div id="regression_details" class="pure-menu">
@@ -289,39 +298,41 @@
 
 					<div class="chart_selector">
 						<div>
+							<span class="note">We're <a href="https://github.com/CSSEGISandData/COVID-19/issues/1250#issuecomment-602949194" target="_blank">desperately awaiting</a> March 23rd data from Johns Hopkins. Please bear with us.</span>
 							<div>
 								<span v-bind:class="{active: !comparisonMode}"
-									  v-on:click="comparisonMode = false; activeSelectionSetIndex = 0;">{{aggregationLabel}}</span><span v-bind:class="{active: comparisonMode}"
-																								 v-on:click="comparisonMode = true">Compare</span>
+									  v-on:click="comparisonMode = false; activeSelectionSetIndex = 0;">{{aggregationLabel}}</span><span
+								v-bind:class="{active: comparisonMode}"
+								v-on:click="comparisonMode = true">Compare</span>
 							</div>
 						</div>
 					</div>
 
-				<div class="chart_container">
-					<div class="graph-canvas-wrapper">
-						<canvas id="graph_canvas" style="width: 100%;" xclass="pure-u-5-6"></canvas>
+					<div class="chart_container">
+						<div class="graph-canvas-wrapper">
+							<canvas id="graph_canvas" style="width: 100%;" xclass="pure-u-5-6"></canvas>
+						</div>
+						<template v-if="developerMode">
+							<div style="text-align: right;">
+								<a v-bind:href="graphExportURL" target="_blank">Export Graph</a>
+							</div>
+						</template>
+						<template v-if="showSelectionTotals">
+							<div v-if="!derivative">
+								<span>🤒 Infected: {{aggregatedTotals.cases}}</span>
+								<span>👍 Recovered: {{aggregatedTotals.recoveries}}</span>
+								<span>☠️ Dead: {{aggregatedTotals.deaths}}</span>
+							</div>
+							<div v-if="derivative">
+								<span>🤒 New Infections: {{aggregatedTotals.cases}}</span>
+								<span>👍 New Recoveries: {{aggregatedTotals.recoveries}}</span>
+								<span>☠️ New Deaths: {{aggregatedTotals.deaths}}</span>
+							</div>
+							<div>
+								<span>Days since most new infections: {{athElapsedDays}}</span>
+							</div>
+						</template>
 					</div>
-					<template v-if="developerMode">
-						<div style="text-align: right;">
-							<a v-bind:href="graphExportURL" target="_blank">Export Graph</a>
-						</div>
-					</template>
-					<template v-if="showSelectionTotals">
-						<div v-if="!derivative">
-							<span>🤒 Infected: {{aggregatedTotals.cases}}</span>
-							<span>👍 Recovered: {{aggregatedTotals.recoveries}}</span>
-							<span>☠️ Dead: {{aggregatedTotals.deaths}}</span>
-						</div>
-						<div v-if="derivative">
-							<span>🤒 New Infections: {{aggregatedTotals.cases}}</span>
-							<span>👍 New Recoveries: {{aggregatedTotals.recoveries}}</span>
-							<span>☠️ New Deaths: {{aggregatedTotals.deaths}}</span>
-						</div>
-						<div>
-							<span>Days since most new infections: {{athElapsedDays}}</span>
-						</div>
-					</template>
-				</div>
 
 					<div style="clear: both;"></div>
 
@@ -334,45 +345,50 @@
 				<span>Source: <a href="https://github.com/arik-so/coronavirus/tree/gh-pages">https://github.com/arik-so/coronavirus/tree/gh-pages</a></span>
 			</div> -->
 
-		<div id="map_section" class="container">
-			<div class="map_selector">
-				<div class="sidebar">
-					<div>
+			<div id="map_section" class="container">
+				<div class="map_selector">
+					<div class="sidebar">
+						<div>
 						<span v-for="currentMap in mapScopes" v-bind:class="{active: currentMap === mapScope}"
 							  v-on:click="mapScope = currentMap">{{currentMap}}</span>
+						</div>
 					</div>
 				</div>
-			</div>
-			<div class="sidebar">
-				<div class="map_container">
-					<div style="/*float: right;*/">
-						<ul class="pure-menu-list">
-							<li class="pure-menu-list-item">
-								Metric:
-								<select id="map_data_source" v-model="mapDataSource" class="select-css">
-									<option value="cases">Cases</option>
-									<option value="recoveries" v-bind:disabled="!canShowMapSourceRecoveries">Recoveries</option>
-									<option value="deaths">Deaths</option>
-								</select>
-							</li>
-							<li class="pure-menu-list-item">
-								Reference:
-								<select id="map_data_reference" v-model="mapDataReference" class="select-css">
-									<option value="absolute">Absolute</option>
-									<option value="relative:population">Relative to Population</option>
-									<option value="relative:cases" v-if="canShowMapRelativeToCases">Relative to Cases
-									</option>
-									<option value="relative:outcomes" v-if="canShowMapRelativeToOutcomes">Relative to
-										Known Outcomes
-									</option>
-									<option value="relative:recoveries" v-if="canShowMapRelativeToRecoveries">Relative
-										to Recoveries
-									</option>
-								</select>
-							</li>
-						</ul>
-					</div>
-					<div style="clear: both;"></div>
+				<div class="sidebar">
+					<div class="map_container">
+						<div style="/*float: right;*/">
+							<ul class="pure-menu-list">
+								<li class="pure-menu-list-item">
+									Metric:
+									<select id="map_data_source" v-model="mapDataSource" class="select-css">
+										<option value="cases">Cases</option>
+										<option value="recoveries" v-bind:disabled="!canShowMapSourceRecoveries">
+											Recoveries
+										</option>
+										<option value="deaths">Deaths</option>
+									</select>
+								</li>
+								<li class="pure-menu-list-item">
+									Reference:
+									<select id="map_data_reference" v-model="mapDataReference" class="select-css">
+										<option value="absolute">Absolute</option>
+										<option value="relative:population">Relative to Population</option>
+										<option value="relative:cases" v-if="canShowMapRelativeToCases">Relative to
+											Cases
+										</option>
+										<option value="relative:outcomes" v-if="canShowMapRelativeToOutcomes">Relative
+											to
+											Known Outcomes
+										</option>
+										<option value="relative:recoveries" v-if="canShowMapRelativeToRecoveries">
+											Relative
+											to Recoveries
+										</option>
+									</select>
+								</li>
+							</ul>
+						</div>
+						<div style="clear: both;"></div>
 
 						<div class="canvas_container">
 							<covid-map v-bind:scope="mapScope"
@@ -422,7 +438,7 @@
 			<p><a href="https://github.com/arik-so/coronavirus/tree/gh-pages" target="_blank">Github</a> | <a
 				href="https://github.com/CSSEGISandData/COVID-19/tree/master/csse_covid_19_data/csse_covid_19_time_series"
 				target="_blank">Data</a> (Latest known inaccuracy: <a
-				href="https://github.com/CSSEGISandData/COVID-19/issues/1113" target="_blank">#1113</a>)</p>
+				href="https://github.com/CSSEGISandData/COVID-19/issues/1321" target="_blank">#1321</a>)</p>
 			<p>Built wearing 😷 by <a href="https://twitter.com/arikaleph" target="_blank"
 									  xclass="ssk ssk-text ssk-twitter ssk-xs">@arikaleph</a> and <a
 				href="https://twitter.com/elliebee" target="_blank">@elliebee</a>.</p>
