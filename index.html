@@ -292,6 +292,14 @@
 				</div>
 
 				<div class="chart_container">
+					<div class="graph-canvas-wrapper">
+						<canvas id="graph_canvas" style="width: 100%;" xclass="pure-u-5-6"></canvas>
+					</div>
+					<template v-if="developerMode">
+						<div style="text-align: right;">
+							<a v-bind:href="graphExportURL" target="_blank">Export Graph</a>
+						</div>
+					</template>
 					<template v-if="showSelectionTotals">
 						<div v-if="!derivative">
 							<span>🤒 Infected: {{aggregatedTotals.cases}}</span>
@@ -305,15 +313,6 @@
 						</div>
 						<div>
 							<span>Days since most new infections: {{athElapsedDays}}</span>
-						</div>
-					</template>
-
-					<div>
-						<canvas id="graph_canvas" style="width: 100%;" xclass="pure-u-5-6"></canvas>
-					</div>
-					<template v-if="developerMode">
-						<div style="text-align: right;">
-							<a v-bind:href="graphExportURL" target="_blank">Export Graph</a>
 						</div>
 					</template>
 				</div>

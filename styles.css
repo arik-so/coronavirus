@@ -470,7 +470,7 @@ label {
 		padding: 6px;
 	}
 
-	div.chart_container > div:last-child {
+	div.chart_container .graph-canvas-wrapper {
 		height: 50vh;
 	}
 
