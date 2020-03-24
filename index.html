@@ -224,14 +224,14 @@
 							</li>
 
 							<li class="pure-menu-list-item" v-if="derivative">
-								<select id="derivative_type" v-model="derivativeType">
+								<select id="derivative_type" v-model="derivativeType" class="select-css">
 									<option value="absolute">Absolute Increase</option>
 									<option value="relative">Relative Increase</option>
 								</select>
 							</li>
 							<li class="pure-menu-list-item" v-if="canShowRegression">
 								<select id="regression" v-model="regression"
-										:disabled="!canShowRegression">
+										:disabled="!canShowRegression" class="select-css">
 									<option value="none">Apply Regression…</option>
 									<option value="exponential">Exponential</option>
 									<option value="logistic">Logistic (Experimental)</option>
@@ -343,7 +343,7 @@
 						<ul class="pure-menu-list">
 							<li class="pure-menu-list-item">
 								Metric:
-								<select id="map_data_source" v-model="mapDataSource">
+								<select id="map_data_source" v-model="mapDataSource" class="select-css">
 									<option value="cases">Cases</option>
 									<option value="recoveries" v-bind:disabled="!canShowMapSourceRecoveries">Recoveries</option>
 									<option value="deaths">Deaths</option>
@@ -351,7 +351,7 @@
 							</li>
 							<li class="pure-menu-list-item">
 								Reference:
-								<select id="map_data_reference" v-model="mapDataReference">
+								<select id="map_data_reference" v-model="mapDataReference" class="select-css">
 									<option value="absolute">Absolute</option>
 									<option value="relative:population">Relative to Population</option>
 									<option value="relative:cases" v-if="canShowMapRelativeToCases">Relative to Cases
