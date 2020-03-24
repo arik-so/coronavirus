@@ -191,13 +191,6 @@
 									<label for="deaths_data_type_radio">Deaths</label>
 								</li>
 							</template>
-							<!--<li class="pure-menu-list-item">
-								<input type="radio" id="joint_axis_radio" name="axes" v-model="axes" value="joint"/>
-								<label for="joint_axis_radio">One Axis</label>
-								<input type="radio" id="separate_axes_radio" name="axes" v-model="axes" value="separate"
-									   :disabled="!canSeparateAxes"/>
-								<label for="separate_axes_radio">Two Axes</label>
-							</li>-->
 							<li class="pure-menu-list-item" v-if="canShowLogScale">
 								<input type="radio" id="linear_scale_radio" name="scale" v-model="scale"
 									   value="linear"/>
@@ -205,6 +198,13 @@
 								<input type="radio" id="log_scale_radio" name="scale" v-model="scale" value="log"
 									   :disabled="!canShowLogScale"/>
 								<label for="log_scale_radio">Log Scale</label>
+							</li>
+							<li class="pure-menu-list-item" v-if="!comparisonMode">
+								<input type="radio" id="joint_axis_radio" name="axes" v-model="axes" value="joint"/>
+								<label for="joint_axis_radio">One Axis</label>
+								<input type="radio" id="separate_axes_radio" name="axes" v-model="axes" value="separate"
+									   :disabled="!canSeparateAxes"/>
+								<label for="separate_axes_radio">Two Axes</label>
 							</li>
 							<li class="pure-menu-list-item">
 								<input type="radio" id="total_radio" v-model="derivative"

@@ -155,7 +155,6 @@ for (const currentSet of selectionSets) {
 				display: true,
 				labelString: 'Cases'
 			},
-			labelString: 'Cases',
 			color: 'orange'
 		},
 		{
@@ -821,7 +820,7 @@ for (const currentSet of selectionSets) {
 			$route(newRoute, oldRoute) {
 				this.handleRoute(newRoute, oldRoute);
 			},
-			/*axes: function (newValue) {
+			axes: function (newValue) {
 				if (newValue === 'joint') {
 					// remove second y axis
 					chartConfig.options.scales.yAxes = singleAxis;
@@ -834,12 +833,20 @@ for (const currentSet of selectionSets) {
 					}
 				} else {
 					chartConfig.options.scales.yAxes = doubleAxes;
-					chartConfig.data.datasets[CONFIRMED_DATASET_INDEX].yAxisID = doubleAxes[0].id;
-					chartConfig.data.datasets[RECOVERED_DATASET_INDEX].yAxisID = doubleAxes[0].id;
-					chartConfig.data.datasets[DEAD_DATASET_INDEX].yAxisID = doubleAxes[1].id;
-
-
-					if (chartConfig.data.datasets[CONFIRMED_REGRESSION_DATASET_INDEX]) {
+					const dataToggles = [this.showCases, this.showRecoveries, this.showDeaths];
+					const axisLabels = ['Cases', 'Recoveries', 'Deaths'];
+					let axisIndex = 0;
+					for (const [index, toggle] of dataToggles.entries()) {
+						if (toggle) {
+							chartConfig.data.datasets[index].yAxisID = doubleAxes[axisIndex].id;
+							chartConfig.options.scales.yAxes[axisIndex].scaleLabel.labelString = axisLabels[index];
+							axisIndex++;
+							if (axisIndex > 1) {
+								break;
+							}
+						}
+					}
+					if (chartConfig.data.datasets[CONFIRMED_REGRESSION_DATASET_INDEX] && this.showCases) {
 						chartConfig.data.datasets[CONFIRMED_REGRESSION_DATASET_INDEX].yAxisID = doubleAxes[0].id;
 					}
 				}
@@ -851,7 +858,7 @@ for (const currentSet of selectionSets) {
 				if (!newValue) {
 					this.axes = 'joint';
 				}
-			},*/
+			},
 			comparisonMode: function (newValue) {
 				if (newValue) {
 					chartConfig.data.datasets[0].label = selectionSets[0].setName;
@@ -1045,7 +1052,22 @@ for (const currentSet of selectionSets) {
 				return true;
 			},
 			canSeparateAxes: function () {
-				return (this.showCases || this.showRecoveries) && this.showDeaths;
+				if (this.comparisonMode) {
+					return false;
+				}
+				let viewCount = 0;
+
+				if (this.showCases) {
+					viewCount++;
+				}
+				if (this.showRecoveries) {
+					viewCount++;
+				}
+				if (this.showDeaths) {
+					viewCount++;
+				}
+
+				return viewCount === 2;
 			},
 			canShowLogScale: function () {
 				return true;
