@@ -63,165 +63,171 @@
 			</div>
 		</div>
 
-		<div id="share_section" class="container" v-show="showShare" style="display: none;">
-			<div>
-				<div class="sidebar">
-					<div class="share_container">
-						<table cellspacing="2px">
-							<tr>
-								<td>
-									<a href="javascript:" v-on:click="copyLink()"
-									   v-show="showCopyLink">Copy&nbsp;link</a>
-									<span style="display: none;" v-show="!showCopyLink">Copied!</span>
-								</td>
-								<td width="100%"><input id="link_box" v-model="shareableLink"/></td>
-								<td><a href="" class="ssk ssk-twitter ssk-xs ssk-round"></a></td>
-							</tr>
-						</table>
+		<div v-if="loading" class="loading-section">
+			Loading…
+		</div>
+
+		<template>
+
+			<div id="share_section" class="container" v-show="showShare" style="display: none;">
+				<div>
+					<div class="sidebar">
+						<div class="share_container">
+							<table cellspacing="2px">
+								<tr>
+									<td>
+										<a href="javascript:" v-on:click="copyLink()"
+										   v-show="showCopyLink">Copy&nbsp;link</a>
+										<span style="display: none;" v-show="!showCopyLink">Copied!</span>
+									</td>
+									<td width="100%"><input id="link_box" v-model="shareableLink"/></td>
+									<td><a href="" class="ssk ssk-twitter ssk-xs ssk-round"></a></td>
+								</tr>
+							</table>
+						</div>
 					</div>
 				</div>
 			</div>
-		</div>
 
-		<div id="aggregation_section" class="container">
+			<div id="aggregation_section" class="container">
 
-			<div class="sidebar">
-				<div id="geography_picker" class="geography-picker" v-bind:class="{set_comparison: comparisonMode}">
+				<div class="sidebar">
+					<div id="geography_picker" class="geography-picker" v-bind:class="{set_comparison: comparisonMode}">
 
-					<template v-if="comparisonMode">
-						<div class="set_selector">
-							<div>
+						<template v-if="comparisonMode">
+							<div class="set_selector">
 								<div>
-									<span v-for="(dataSet, setIndex) in selectionSets"
-										  v-bind:class="{active: setIndex === activeSelectionSetIndex}"
-										  v-on:click="activeSelectionSetIndex = setIndex">{{dataSet.defaultSetName}}</span>
+									<div>
+										<span v-for="(dataSet, setIndex) in selectionSets"
+											  v-bind:class="{active: setIndex === activeSelectionSetIndex}"
+											  v-on:click="activeSelectionSetIndex = setIndex">{{dataSet.defaultSetName}}</span>
+									</div>
 								</div>
 							</div>
-						</div>
-					</template>
-
-					<div class="modifiers pure-menu pure-menu-scrollable custom-restricted settings-block">
-						<template v-for="(currentSelectionSet, setIndex) in selectionSets" v-if="setIndex === activeSelectionSetIndex">
-							<country-selector v-bind:set-index="setIndex" xv-bind:data-set.sync="currentSelectionSet" v-bind:key="'country_selector_'+activeSelectionSetIndex">
-								<template v-slot:default="selectionSlot">
-									<ul class="pure-menu-list">
-										<!--{{se`tPopulations[setIndex]}}-->
-										<!--{{selectionSlot.setData}}
-										<input type="checkbox" v-model="selectionSlot.setData.abc" />
-										{{selectionSlot.setData.abc}}-->
-
-										<!--<li class="pure-menu-list-item">
-											<input id="cruise_ship_descendants" type="checkbox" v-model="includeCruiseShipDescendants"/>
-											<label for="cruise_ship_descendants" style="font-style: italic;">Abroad from Cruise Ship
-												(Modifier)</label>
-										</li>-->
-
-										<li class="pure-menu-list-item">
-											<input id="select_all_checkbox" type="checkbox" v-model="selectionSlot.setData.selectAll"
-												   :indeterminate.prop="selectionSlot.setData.partialSelection.total" />
-											<label for="select_all_checkbox" class="country_label select_all">
-												<span class="country_name">Select All</span>
-												<span class="country_decoration"
-													  v-html="decoratedCountries['total']"></span>
-											</label>
-										</li>
-										<template v-for="country in sortedCountries">
-											<li class="pure-menu-list-item"
-												v-bind:class="{subdivided: country.hasSubdivisions, expanded: selectionSlot.setData.expandTerritories[country.code]}">
-												<span v-if="country.hasSubdivisions"
-													  class="subdivision_toggle"
-													  v-on:click="selectionSlot.setData.expandTerritories[country.code] = !selectionSlot.setData.expandTerritories[country.code]"></span>
-												<input type="checkbox"
-													   v-bind:id="'country_'+country.code"
-													   v-bind:value="country.code"
-													   v-model="selectionSlot.setData.checkedCountries"
-													   :indeterminate.prop="selectionSlot.setData.partialSelection[country.code]"
-												/>
-												<label v-bind:for="'country_'+country.code" class="country_label">
-													<span class="country_name">{{country.formated}}</span>
-													<span class="country_decoration"
-														  v-html="decoratedCountries[country.code]"></span>
-												</label>
-											</li>
-											<li v-for="territory in sortedTerritories[country.code]"
-												class="pure-menu-list-item territory"
-												v-show="selectionSlot.setData.expandTerritories[country.code]">
-												<input type="checkbox"
-													   v-bind:id="'territory_'+territory.code"
-													   v-bind:value="territory.code"
-													   v-model="selectionSlot.setData.territorySelections[country.code]"
-												/>
-												<label v-bind:for="'territory_'+territory.code" class="territory_label">
-													<span class="country_name">{{territory.formated}}</span>
-													<!--<span class="country_decoration" v-html="decoratedCountries[country.code]"></span>-->
-												</label>
-											</li>
-										</template>
-									</ul>
-								</template>
-							</country-selector>
 						</template>
-					</div>
-				</div>
 
-				<div id="aggregation_configuration" class="aggregation-configuration">
-					<div id="config" class="settings-block pure-menu config">
-						<ul class="pure-menu-list">
-							<template v-if="!comparisonMode">
-								<li class="pure-menu-list-item">
-									<input id="cases_checkbox" type="checkbox" v-model="showCases"/>
-									<label for="cases_checkbox">Cases</label>
-									<br/>
-									<input id="recoveries_checkbox" type="checkbox" v-model="showRecoveries"/>
-									<label for="recoveries_checkbox">Recoveries</label>
-									<br/>
-									<input id="deaths_checkbox" type="checkbox" v-model="showDeaths"/>
-									<label for="deaths_checkbox">Deaths</label>
-								</li>
+						<div class="modifiers pure-menu pure-menu-scrollable custom-restricted settings-block">
+							<template v-for="(currentSelectionSet, setIndex) in selectionSets" v-if="setIndex === activeSelectionSetIndex">
+								<country-selector v-bind:set-index="setIndex" xv-bind:data-set.sync="currentSelectionSet" v-bind:key="'country_selector_'+activeSelectionSetIndex">
+									<template v-slot:default="selectionSlot">
+										<ul class="pure-menu-list">
+											<!--{{se`tPopulations[setIndex]}}-->
+											<!--{{selectionSlot.setData}}
+											<input type="checkbox" v-model="selectionSlot.setData.abc" />
+											{{selectionSlot.setData.abc}}-->
+
+											<!--<li class="pure-menu-list-item">
+												<input id="cruise_ship_descendants" type="checkbox" v-model="includeCruiseShipDescendants"/>
+												<label for="cruise_ship_descendants" style="font-style: italic;">Abroad from Cruise Ship
+													(Modifier)</label>
+											</li>-->
+
+											<li class="pure-menu-list-item">
+												<input id="select_all_checkbox" type="checkbox" v-model="selectionSlot.setData.selectAll"
+													   :indeterminate.prop="selectionSlot.setData.partialSelection.total" />
+												<label for="select_all_checkbox" class="country_label select_all">
+													<span class="country_name">Select All</span>
+													<span class="country_decoration"
+														  v-html="decoratedCountries['total']"></span>
+												</label>
+											</li>
+											<template v-for="country in sortedCountries">
+												<li class="pure-menu-list-item"
+													v-bind:class="{subdivided: country.hasSubdivisions, expanded: selectionSlot.setData.expandTerritories[country.code]}">
+													<span v-if="country.hasSubdivisions"
+														  class="subdivision_toggle"
+														  v-on:click="selectionSlot.setData.expandTerritories[country.code] = !selectionSlot.setData.expandTerritories[country.code]"></span>
+													<input type="checkbox"
+														   v-bind:id="'country_'+country.code"
+														   v-bind:value="country.code"
+														   v-model="selectionSlot.setData.checkedCountries"
+														   :indeterminate.prop="selectionSlot.setData.partialSelection[country.code]"
+													/>
+													<label v-bind:for="'country_'+country.code" class="country_label">
+														<span class="country_name">{{country.formated}}</span>
+														<span class="country_decoration"
+															  v-html="decoratedCountries[country.code]"></span>
+													</label>
+												</li>
+												<li v-for="territory in sortedTerritories[country.code]"
+													class="pure-menu-list-item territory"
+													v-show="selectionSlot.setData.expandTerritories[country.code]">
+													<input type="checkbox"
+														   v-bind:id="'territory_'+territory.code"
+														   v-bind:value="territory.code"
+														   v-model="selectionSlot.setData.territorySelections[country.code]"
+													/>
+													<label v-bind:for="'territory_'+territory.code" class="territory_label">
+														<span class="country_name">{{territory.formated}}</span>
+														<!--<span class="country_decoration" v-html="decoratedCountries[country.code]"></span>-->
+													</label>
+												</li>
+											</template>
+										</ul>
+									</template>
+								</country-selector>
 							</template>
-							<template v-else>
-								<li class="pure-menu-list-item">
-									<input id="cases_data_type_radio" value="cases" type="radio" v-model="comparisonDataType"/>
-									<label for="cases_data_type_radio">Cases</label>
-									<br/>
-									<input id="recoveries_data_type_radio" value="recoveries" type="radio" v-model="comparisonDataType"/>
-									<label for="recoveries_data_type_radio">Recoveries</label>
-									<br/>
-									<input id="deaths_data_type_radio" value="deaths" type="radio" v-model="comparisonDataType"/>
-									<label for="deaths_data_type_radio">Deaths</label>
+						</div>
+					</div>
+
+					<div id="aggregation_configuration" class="aggregation-configuration">
+						<div id="config" class="settings-block pure-menu config">
+							<ul class="pure-menu-list">
+								<template v-if="!comparisonMode">
+									<li class="pure-menu-list-item">
+										<input id="cases_checkbox" type="checkbox" v-model="showCases"/>
+										<label for="cases_checkbox">Cases</label>
+										<br/>
+										<input id="recoveries_checkbox" type="checkbox" v-model="showRecoveries"/>
+										<label for="recoveries_checkbox">Recoveries</label>
+										<br/>
+										<input id="deaths_checkbox" type="checkbox" v-model="showDeaths"/>
+										<label for="deaths_checkbox">Deaths</label>
+									</li>
+								</template>
+								<template v-else>
+									<li class="pure-menu-list-item">
+										<input id="cases_data_type_radio" value="cases" type="radio" v-model="comparisonDataType"/>
+										<label for="cases_data_type_radio">Cases</label>
+										<br/>
+										<input id="recoveries_data_type_radio" value="recoveries" type="radio" v-model="comparisonDataType"/>
+										<label for="recoveries_data_type_radio">Recoveries</label>
+										<br/>
+										<input id="deaths_data_type_radio" value="deaths" type="radio" v-model="comparisonDataType"/>
+										<label for="deaths_data_type_radio">Deaths</label>
+									</li>
+								</template>
+								<li class="pure-menu-list-item" v-if="canShowLogScale">
+									<input type="radio" id="linear_scale_radio" name="scale" v-model="scale"
+										   value="linear"/>
+									<label for="linear_scale_radio">Linear Scale</label>
+									<input type="radio" id="log_scale_radio" name="scale" v-model="scale" value="log"
+										   :disabled="!canShowLogScale"/>
+									<label for="log_scale_radio">Log Scale</label>
 								</li>
-							</template>
-							<li class="pure-menu-list-item" v-if="canShowLogScale">
-								<input type="radio" id="linear_scale_radio" name="scale" v-model="scale"
-									   value="linear"/>
-								<label for="linear_scale_radio">Linear Scale</label>
-								<input type="radio" id="log_scale_radio" name="scale" v-model="scale" value="log"
-									   :disabled="!canShowLogScale"/>
-								<label for="log_scale_radio">Log Scale</label>
-							</li>
-							<li class="pure-menu-list-item" v-if="!comparisonMode">
-								<input type="radio" id="joint_axis_radio" name="axes" v-model="axes" value="joint"/>
-								<label for="joint_axis_radio">One Axis</label>
-								<input type="radio" id="separate_axes_radio" name="axes" v-model="axes" value="separate"
-									   :disabled="!canSeparateAxes"/>
-								<label for="separate_axes_radio">Two Axes</label>
-							</li>
-							<li class="pure-menu-list-item">
-								<input type="radio" id="total_radio" v-model="derivative"
-									   v-bind:value="false"/>
-								<label for="total_radio">Total</label>
-								<input type="radio" id="delta_radio" v-model="derivative"
-									   v-bind:value="true"/>
-								<label for="delta_radio">Daily Increase</label>
-							</li>
-							<li class="pure-menu-list-item" v-if="canShowRelation">
-								<input type="radio" id="relation_absolute_radio"  v-model="relationType"
-									   value="absolute"/>
-								<label for="relation_absolute_radio">Absolute</label>
-								<input type="radio" id="relation_relative:population_radio"  v-model="relationType"
-									   value="relative" v-bind:disabled="!canCalculateRelation"/>
-								<label for="relation_relative:population_radio">Relative to Population (‱)</label>
-							</li>
+								<li class="pure-menu-list-item" v-if="!comparisonMode">
+									<input type="radio" id="joint_axis_radio" name="axes" v-model="axes" value="joint"/>
+									<label for="joint_axis_radio">One Axis</label>
+									<input type="radio" id="separate_axes_radio" name="axes" v-model="axes" value="separate"
+										   :disabled="!canSeparateAxes"/>
+									<label for="separate_axes_radio">Two Axes</label>
+								</li>
+								<li class="pure-menu-list-item">
+									<input type="radio" id="total_radio" v-model="derivative"
+										   v-bind:value="false"/>
+									<label for="total_radio">Total</label>
+									<input type="radio" id="delta_radio" v-model="derivative"
+										   v-bind:value="true"/>
+									<label for="delta_radio">Daily Increase</label>
+								</li>
+								<li class="pure-menu-list-item" v-if="canShowRelation">
+									<input type="radio" id="relation_absolute_radio"  v-model="relationType"
+										   value="absolute"/>
+									<label for="relation_absolute_radio">Absolute</label>
+									<input type="radio" id="relation_relative:population_radio"  v-model="relationType"
+										   value="relative" v-bind:disabled="!canCalculateRelation"/>
+									<label for="relation_relative:population_radio">Relative to Population (‱)</label>
+								</li>
 
 							<li class="pure-menu-list-item" v-if="derivative">
 								<select id="derivative_type" v-model="derivativeType" class="select-css">
@@ -240,56 +246,56 @@
 						</ul>
 					</div>
 
-					<div id="details" class="settings-block" v-if="regression !== 'none'">
-						<div id="regression_details" class="pure-menu">
-							<ul class="pure-menu-list">
-								<li class="pure-menu-list-item">
-									<label>Extrapolation Size: {{extrapolationSize}}</label>
-									<input type="range" v-model="extrapolationSize" min="2" max="15"/>
-								</li>
-								<li class="pure-menu-list-item">
-									<label>Model Offset: {{modelOffset}}</label>
-									<input type="range" v-model="modelOffset" v-bind:min="regressionOffsetMinimum"
-										   v-bind:max="regressionOffsetMaximum"/>
-								</li>
-								<li class="pure-menu-list-item" v-if="regression === 'exponential'">Equation: f(x) =
-									{{regressionSeries.cases.equation[0]}}e<sup>{{regressionSeries.cases.equation[1]}}x</sup>
-								</li>
-								<li class="pure-menu-list-item" v-if="regression === 'logistic'">Equation: f(x) =
-									{{Math.round(regressionSeries.cases.parameterValues[0])}} / (1 +
-									{{Math.round(regressionSeries.cases.parameterValues[1])}}e<sup>{{Math.round(regressionSeries.cases.parameterValues[2]*100)/100}}x</sup>)
-								</li>
-								<li class="pure-menu-list-item" v-if="regression === 'exponential'">R<sup>2</sup>:
-									{{regressionSeries.cases.r2}}
-								</li>
-							</ul>
+						<div id="details" class="settings-block" v-if="regression !== 'none'">
+							<div id="regression_details" class="pure-menu">
+								<ul class="pure-menu-list">
+									<li class="pure-menu-list-item">
+										<label>Extrapolation Size: {{extrapolationSize}}</label>
+										<input type="range" v-model="extrapolationSize" min="2" max="15"/>
+									</li>
+									<li class="pure-menu-list-item">
+										<label>Model Offset: {{modelOffset}}</label>
+										<input type="range" v-model="modelOffset" v-bind:min="regressionOffsetMinimum"
+											   v-bind:max="regressionOffsetMaximum"/>
+									</li>
+									<li class="pure-menu-list-item" v-if="regression === 'exponential'">Equation: f(x) =
+										{{regressionSeries.cases.equation[0]}}e<sup>{{regressionSeries.cases.equation[1]}}x</sup>
+									</li>
+									<li class="pure-menu-list-item" v-if="regression === 'logistic'">Equation: f(x) =
+										{{Math.round(regressionSeries.cases.parameterValues[0])}} / (1 +
+										{{Math.round(regressionSeries.cases.parameterValues[1])}}e<sup>{{Math.round(regressionSeries.cases.parameterValues[2]*100)/100}}x</sup>)
+									</li>
+									<li class="pure-menu-list-item" v-if="regression === 'exponential'">R<sup>2</sup>:
+										{{regressionSeries.cases.r2}}
+									</li>
+								</ul>
+							</div>
 						</div>
+
+						<div class="settings-block" v-if="comparisonMode && false">
+							<div id="comparison_details" class="pure-menu">
+								<ul class="pure-menu-list">
+									<li class="pure-menu-list-item">
+										<label>Set B offset: </label>
+									</li>
+									<li class="pure-menu-list-item">
+										<label>Set C offset: </label>
+									</li>
+								</ul>
+							</div>
+						</div>
+
 					</div>
 
-					<div class="settings-block" v-if="comparisonMode && false">
-						<div id="comparison_details" class="pure-menu">
-							<ul class="pure-menu-list">
-								<li class="pure-menu-list-item">
-									<label>Set B offset: </label>
-								</li>
-								<li class="pure-menu-list-item">
-									<label>Set C offset: </label>
-								</li>
-							</ul>
-						</div>
-					</div>
-
-				</div>
-
-				<div class="chart_selector">
-					<div>
+					<div class="chart_selector">
 						<div>
-							<span v-bind:class="{active: !comparisonMode}"
-								  v-on:click="comparisonMode = false; activeSelectionSetIndex = 0;">{{aggregationLabel}}</span><span v-bind:class="{active: comparisonMode}"
-																							 v-on:click="comparisonMode = true">Compare</span>
+							<div>
+								<span v-bind:class="{active: !comparisonMode}"
+									  v-on:click="comparisonMode = false; activeSelectionSetIndex = 0;">{{aggregationLabel}}</span><span v-bind:class="{active: comparisonMode}"
+																								 v-on:click="comparisonMode = true">Compare</span>
+							</div>
 						</div>
 					</div>
-				</div>
 
 				<div class="chart_container">
 					<div class="graph-canvas-wrapper">
@@ -317,16 +323,16 @@
 					</template>
 				</div>
 
-				<div style="clear: both;"></div>
+					<div style="clear: both;"></div>
+
+				</div>
+
 
 			</div>
-
-
-		</div>
-		<!-- <div>
-			<span>Data: <a href="https://github.com/CSSEGISandData/COVID-19/tree/master/csse_covid_19_data/csse_covid_19_time_series">https://github.com/CSSEGISandData/COVID-19/tree/master/csse_covid_19_data/csse_covid_19_time_series</a></span>
-			<span>Source: <a href="https://github.com/arik-so/coronavirus/tree/gh-pages">https://github.com/arik-so/coronavirus/tree/gh-pages</a></span>
-		</div> -->
+			<!-- <div>
+				<span>Data: <a href="https://github.com/CSSEGISandData/COVID-19/tree/master/csse_covid_19_data/csse_covid_19_time_series">https://github.com/CSSEGISandData/COVID-19/tree/master/csse_covid_19_data/csse_covid_19_time_series</a></span>
+				<span>Source: <a href="https://github.com/arik-so/coronavirus/tree/gh-pages">https://github.com/arik-so/coronavirus/tree/gh-pages</a></span>
+			</div> -->
 
 		<div id="map_section" class="container">
 			<div class="map_selector">
@@ -368,43 +374,45 @@
 					</div>
 					<div style="clear: both;"></div>
 
-					<div class="canvas_container">
-						<covid-map v-bind:scope="mapScope"
+						<div class="canvas_container">
+							<covid-map v-bind:scope="mapScope"
+									   v-bind:map-date="mapDate"
+									   v-bind:map-data-source="mapDataSource"
+									   v-bind:map-data-reference="mapDataReference"></covid-map>
+						</div>
+
+						<!--<covid-map v-if="activeMap === 'World'"
+								   scope="World"
+								   key="world_map"
 								   v-bind:map-date="mapDate"
 								   v-bind:map-data-source="mapDataSource"
 								   v-bind:map-data-reference="mapDataReference"></covid-map>
-					</div>
 
-					<!--<covid-map v-if="activeMap === 'World'"
-							   scope="World"
-							   key="world_map"
-							   v-bind:map-date="mapDate"
-							   v-bind:map-data-source="mapDataSource"
-							   v-bind:map-data-reference="mapDataReference"></covid-map>
+						<covid-map v-if="activeMap === 'USA'"
+								   scope="USA"
+								   key="us_state_map"
+								   v-bind:map-date="mapDate"
+								   v-bind:map-data-source="mapDataSource"
+								   v-bind:map-data-reference="mapDataReference"></covid-map>
 
-					<covid-map v-if="activeMap === 'USA'"
-							   scope="USA"
-							   key="us_state_map"
-							   v-bind:map-date="mapDate"
-							   v-bind:map-data-source="mapDataSource"
-							   v-bind:map-data-reference="mapDataReference"></covid-map>
+						<covid-map v-if="activeMap === 'Europe'"
+								   scope="Europe"
+								   key="europe_map"
+								   v-bind:map-date="mapDate"
+								   v-bind:map-data-source="mapDataSource"
+								   v-bind:map-data-reference="mapDataReference"></covid-map>-->
 
-					<covid-map v-if="activeMap === 'Europe'"
-							   scope="Europe"
-							   key="europe_map"
-							   v-bind:map-date="mapDate"
-							   v-bind:map-data-source="mapDataSource"
-							   v-bind:map-data-reference="mapDataReference"></covid-map>-->
-
-					<div>
-						{{formatMapDate(mapDate)}} (adjust slider)
-						<br/>
-						<input style="width: 100%;" type="range" v-model="mapDate" v-bind:min="mapDateMinimum"
-							   v-bind:max="mapDateMaximum"/>
+						<div>
+							{{formatMapDate(mapDate)}} (adjust slider)
+							<br/>
+							<input style="width: 100%;" type="range" v-model="mapDate" v-bind:min="mapDateMinimum"
+								   v-bind:max="mapDateMaximum"/>
+						</div>
 					</div>
 				</div>
 			</div>
-		</div>
+
+		</template>
 
 	</div>
 
