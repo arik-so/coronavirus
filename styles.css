@@ -52,6 +52,12 @@ h1 {
 	margin: 0;
 }
 
+div.loading-section{
+	text-align: center;
+	padding-top: calc(50vh - 75px - 40px - 15px); /* 75px is half the footer, 40px is half the header */
+	font-size: 15px;
+}
+
 div.main {
 	min-height: 100vh;
 	/* will cover the 100% of viewport */

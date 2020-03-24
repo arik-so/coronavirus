@@ -323,6 +323,8 @@ for (const currentSet of selectionSets) {
 		el: '#app',
 		router,
 		data: {
+			loading: false,
+
 			suspendRouteWatching: false,
 
 			countryNames,
