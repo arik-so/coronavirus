@@ -385,6 +385,12 @@ for (const currentSet of selectionSets) {
 			}
 		},
 		methods: {
+			clearSelection: function () {
+				selectionSets[this.activeSelectionSetIndex].checkedCountries = [];
+				for (const countryCode of Object.keys(selectionSets[this.activeSelectionSetIndex].territorySelections)) {
+					selectionSets[this.activeSelectionSetIndex].territorySelections[countryCode] = [];
+				}
+			},
 			handleExportGraph: function (element, event) {
 				debugger
 				element.href = 'https://stackoverflow.com';

@@ -81,7 +81,7 @@
 										<span style="display: none;" v-show="!showCopyLink">Copied!</span>
 									</td>
 									<td width="100%"><input id="link_box" v-model="shareableLink"/></td>
-									<td><a href="" class="ssk ssk-twitter ssk-xs ssk-round"></a></td>
+									<td><a href="javascript:" class="ssk ssk-twitter ssk-xs ssk-round"></a></td>
 								</tr>
 							</table>
 						</div>
@@ -92,19 +92,18 @@
 			<div id="aggregation_section" class="container">
 
 				<div class="sidebar">
-					<div id="geography_picker" class="geography-picker" v-bind:class="{set_comparison: comparisonMode}">
+					<div id="geography_picker" class="geography-picker" v-bind:class="{set_comparison: true || comparisonMode}">
 
-						<template v-if="comparisonMode">
-							<div class="set_selector">
-								<div>
-									<div>
-										<span v-for="(dataSet, setIndex) in selectionSets"
-											  v-bind:class="{active: setIndex === activeSelectionSetIndex}"
-											  v-on:click="activeSelectionSetIndex = setIndex">{{dataSet.defaultSetName}}</span>
-									</div>
+						<div class="set_selector">
+							<div>
+								<span class="note"><a v-on:click="clearSelection">Clear Selection</a></span>
+								<div v-if="comparisonMode">
+									<span v-for="(dataSet, setIndex) in selectionSets"
+										  v-bind:class="{active: setIndex === activeSelectionSetIndex}"
+										  v-on:click="activeSelectionSetIndex = setIndex">{{dataSet.defaultSetName}}</span>
 								</div>
 							</div>
-						</template>
+						</div>
 
 						<div class="modifiers pure-menu pure-menu-scrollable custom-restricted settings-block">
 							<template v-for="(currentSelectionSet, setIndex) in selectionSets"
