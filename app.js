@@ -32,32 +32,10 @@ for (const currentSet of selectionSets) {
 
 	const cacheResetter = Math.round(Date.now() / (10 * 60 * 1000));
 
-	const confirmedCases = (await axios({
+	const combinedCases = (await axios({
 		method: 'get',
-		url: `docs/data/covid_confirmed.json?cache=${cacheResetter}`,
+		url: `docs/data/covid_combined.json?cache=${cacheResetter}`,
 	})).data;
-	const deadCases = (await axios({
-		method: 'get',
-		url: `docs/data/covid_dead.json?cache=${cacheResetter}`,
-	})).data;
-	const recoveredCases = (await axios({
-		method: 'get',
-		url: `docs/data/covid_recovered.json?cache=${cacheResetter}`,
-	})).data;
-
-	//
-	// const confirmedCasesUSA = (await axios({
-	// 	method: 'get',
-	// 	url: `docs/data/usa_covid_confirmed.json?cache=${cacheResetter}`,
-	// })).data;
-	// const deadCasesUSA = (await axios({
-	// 	method: 'get',
-	// 	url: `docs/data/usa_covid_dead.json?cache=${cacheResetter}`,
-	// })).data;
-	// const recoveredCasesUSA = (await axios({
-	// 	method: 'get',
-	// 	url: `docs/data/usa_covid_recovered.json?cache=${cacheResetter}`,
-	// })).data;
 
 	const countryPopulation = (await axios({
 		method: 'get',
@@ -68,7 +46,7 @@ for (const currentSet of selectionSets) {
 
 	const dateKeys = [];
 	const dateLabels = new Set();
-	for (const key of Object.keys(confirmedCases[0])) {
+	for (const key of Object.keys(combinedCases[0].entries.infected)) {
 		if (nonDataKeys.includes(key)) {
 			continue;
 		}
@@ -100,7 +78,8 @@ for (const currentSet of selectionSets) {
 	// const countriesByState = {}; // look up a state's country
 	// const countryStates = {}; // enumerate up all states in a country
 
-	for (const location of confirmedCases) {
+	for (const entry of combinedCases) {
+		const location = entry['location'];
 		// const currentCountry = location['Country/Region'];
 		const currentCountry = location['country']['long_name'];
 		const currentCode = location['country']['short_name'];
@@ -114,6 +93,9 @@ for (const currentSet of selectionSets) {
 		if (currentCode === 'US') {
 			const currentState = location['state']['long_name'];
 			const currentStateCode = location['state']['short_name'];
+			if (!currentState || !currentStateCode) {
+				continue; // we don't want or need the cruise ships in there
+			}
 			usaStateNames.add(currentState);
 			usaStateCodes.add(currentStateCode);
 
@@ -280,7 +262,7 @@ for (const currentSet of selectionSets) {
 		regression: ['none', 'exponential', 'logistic'],
 		comparisonDataType: ['cases', 'recoveries', 'deaths'],
 		mapDataSource: ['cases', 'recoveries', 'deaths'],
-		mapDataReference: ['absolute', 'relative:cases', 'relative:recoveries', 'relative:population'],
+		mapDataReference: ['absolute', 'relative:cases', 'relative:recoveries', 'relative:outcomes', 'relative:population'],
 		mapScope: ['World', 'USA', 'Europe', 'China'],
 		derivativeType: ['absolute', 'relative'],
 		relationType: ['absolute', 'relative']
@@ -297,8 +279,8 @@ for (const currentSet of selectionSets) {
 		regression: 'none',
 		modelOffset: 0,
 		extrapolationSize: 5,
-		mapDataSource: 'deaths',
-		mapDataReference: 'relative:outcomes',
+		mapDataSource: 'cases',
+		mapDataReference: 'absolute',
 		mapScope: 'World',
 		comparisonMode: false,
 		comparisonDataType: 'cases',
@@ -330,9 +312,7 @@ for (const currentSet of selectionSets) {
 			countryNames,
 			countryCodes,
 
-			cases: confirmedCases,
-			deaths: deadCases,
-			recoveries: recoveredCases,
+			allCases: combinedCases,
 
 			regressionOffsetMinimum: 0,
 			regressionOffsetMaximum: dateLabels.size - 3,
@@ -353,9 +333,7 @@ for (const currentSet of selectionSets) {
 				chinaProvinceTopographyFeatures,
 				chinaProvinceNamesByCode,
 				chinaProvinceCodesByName,
-				confirmedCases,
-				recoveredCases,
-				deadCases,
+				allCases: combinedCases,
 				dateKeys,
 				countryNames,
 				countryPopulation,
@@ -588,14 +566,17 @@ for (const currentSet of selectionSets) {
 			},
 			getCountryCodeForEntry: function (entry) {
 				// return entry['Country/Region'];
-				return entry['country']['short_name'] || entry['country']['long_name'];
+				if (!entry['location']) {
+					debugger
+				}
+				return entry['location']['country']['short_name'] || entry['location']['country']['long_name'];
 			},
 			getCountryForEntry: function (entry) {
 				// return entry['Country/Region'];
 				return entry['country']['long_name'];
 			},
 			getStateForEntry: function (entry) {
-				return entry['Province/State'];
+				return entry['location']['state']['long_name'];
 				// return entry['Province/State'];
 			},
 			toggleShare: function () {
@@ -677,7 +658,7 @@ for (const currentSet of selectionSets) {
 						return `${label}: ${Number(value).toLocaleString()}`;
 					}
 				};
-				if(this.developerMode) {
+				if (this.developerMode) {
 					chartConfig.options.animation = {
 						onComplete: () => {
 							const data = canvas.toDataURL('image/png');
@@ -736,19 +717,36 @@ for (const currentSet of selectionSets) {
 				};
 				pathUpdateTimeout = setTimeout(refreshRoute, 300);
 			},
-			parseRowEntryForDate: function (row, date) {
+			parseRowEntryForDate: function (row, date, group = 'infected', allowPropagation = false, allowNull = false) {
 				// const value = row[date];
-				const entry = row[date];
+				const groupEntries = row['entries'][group];
+				if (groupEntries && !groupEntries[date]) {
+					if (allowPropagation && date === this.todayKey) {
+						const availableDateKeys = Object.keys(groupEntries);
+						const lastAvailableDateKey = availableDateKeys[availableDateKeys.length - 1];
+						return groupEntries[lastAvailableDateKey]
+					} else if (!allowNull) {
+						throw new Error('value not available for date, though it was historically!');
+					}
+				}
+				const entry = groupEntries && groupEntries[date];
 				/*if (!Number.isSafeInteger(entry)) {
 					entry = 0;
 					console.log('Skipping count for entry:', this.getCountryForEntry(row), this.getStateForEntry(row), date, value);
 				}*/
+				if (isNaN(entry)) {
+					if (allowNull) {
+						return null;
+					}
+					throw new Error('value not available for date!');
+				}
 				return entry;
 			},
-			filterDatasetBySelectedCountries: function (data, setIndex = 0) {
+			filterDatasetBySelectedCountries: function (setIndex = 0, group = 'infected') {
 				const filteredData = [];
-				for (const currentLocation of data) {
-					const currentCountry = this.getCountryCodeForEntry(currentLocation);
+				for (const currentEntry of combinedCases) {
+					const currentLocation = currentEntry['location'];
+					const currentCountry = this.getCountryCodeForEntry(currentEntry);
 					if (countrySubdivisions[currentCountry]) {
 						// this country has territory subdivisions
 						const selectedTerritories = selectionSets[setIndex].territorySelections[currentCountry] || [];
@@ -766,12 +764,13 @@ for (const currentSet of selectionSets) {
 
 
 					let dateIndex = 0;
-					for (const key of Object.keys(currentLocation)) {
-						if (nonDataKeys.includes(key)) {
-							continue;
-						}
-
-						const currentCount = this.parseRowEntryForDate(currentLocation, key);
+					const groupEntries = currentEntry.entries[group];
+					if (!groupEntries) {
+						// perhaps this is a location without recovery data
+						continue;
+					}
+					for (const key of Object.keys(groupEntries)) {
+						const currentCount = this.parseRowEntryForDate(currentEntry, key, group, false, true);
 
 						filteredData[dateIndex] = filteredData[dateIndex] || 0;
 						filteredData[dateIndex] += currentCount;
@@ -793,7 +792,7 @@ for (const currentSet of selectionSets) {
 				}
 			},
 			fixMapDataConfiguration: function () {
-				if (this.mapScope === 'USA' && this.mapDataSource === 'recoveries') {
+				if (this.mapDataSource === 'recoveries' && !this.canShowMapSourceRecoveries) {
 					this.mapDataSource = 'cases';
 				}
 
@@ -898,6 +897,10 @@ for (const currentSet of selectionSets) {
 					this.updateGraph();
 				}
 			},
+			mapDate: function () {
+				// it has come to this
+				this.fixMapDataConfiguration();
+			},
 			mapDataSource: function () {
 				this.fixMapDataConfiguration();
 				this.updateLocation();
@@ -908,7 +911,6 @@ for (const currentSet of selectionSets) {
 			dataSets: {
 				immediate: true,
 				handler: function (newValue) {
-					console.log('dataSets changed');
 					chartConfig.data.datasets[CONFIRMED_DATASET_INDEX].data = newValue[0];
 					chartConfig.data.datasets[RECOVERED_DATASET_INDEX].data = newValue[1];
 					chartConfig.data.datasets[DEAD_DATASET_INDEX].data = newValue[2];
@@ -998,9 +1000,9 @@ for (const currentSet of selectionSets) {
 				console.log('redecorating');
 				const countryDecorations = {};
 				const emoji = {
-					cases: '🤒',
-					recoveries: '👍',
-					deaths: '☠️'
+					infected: '🤒',
+					recovered: '👍',
+					dead: '☠️'
 				};
 				for (const [group, data] of Object.entries(this.latestLocationTotals)) {
 					for (const [countryCode, value] of Object.entries(data)) {
@@ -1016,24 +1018,23 @@ for (const currentSet of selectionSets) {
 			},
 			latestLocationTotals: function () {
 				console.log('calculating location totals');
-				const rawData = {
-					cases: confirmedCases,
-					recoveries: recoveredCases,
-					deaths: deadCases
-				};
+				const rawData = combinedCases;
 
 				const locationTotals = {};
 				const dateKey = this.todayKey;
 
-				for (const [group, data] of Object.entries(rawData)) {
-					locationTotals[group] = {};
-					for (const currentLocation of data) {
-						// debugger
-						const currentCountry = this.getCountryCodeForEntry(currentLocation);
-						const currentState = this.getStateForEntry(currentLocation);
-						const currentCount = this.parseRowEntryForDate(currentLocation, dateKey);
+				for (const currentEntry of rawData) {
+					const currentCountry = this.getCountryCodeForEntry(currentEntry);
+					for (const group of Object.keys(currentEntry.entries)) {
+						if (!locationTotals[group]) {
+							locationTotals[group] = {};
+						}
+
+						const currentCount = this.parseRowEntryForDate(currentEntry, dateKey, group, true);
+						// init
 						locationTotals[group][currentCountry] = locationTotals[group][currentCountry] || 0;
 						locationTotals[group]['total'] = locationTotals[group]['total'] || 0;
+						// fill or amend
 						locationTotals[group][currentCountry] += currentCount;
 						locationTotals[group]['total'] += currentCount;
 					}
@@ -1094,19 +1095,19 @@ for (const currentSet of selectionSets) {
 				// return (this.axes === 'joint');
 			},
 			canShowMapSourceRecoveries: function () {
-				return this.mapScope !== 'USA';
+				return this.mapScope !== 'USA' && this.mapDate <= 60;
 			},
 			canShowMapRelativeToCases: function () {
 				return this.mapDataSource !== 'cases';
 			},
 			canShowMapRelativeToRecoveries: function () {
-				if (this.mapScope === 'USA') {
+				if (this.mapScope === 'USA' || this.mapDate > 60) {
 					return false; // currently unavailable for the US
 				}
 				return this.mapDataSource === 'deaths';
 			},
 			canShowMapRelativeToOutcomes: function () {
-				if (this.mapScope === 'USA') {
+				if (this.mapScope === 'USA' || this.mapDate > 60) {
 					return false; // currently unavailable for the US
 				}
 				return this.mapDataSource !== 'cases';
@@ -1116,10 +1117,17 @@ for (const currentSet of selectionSets) {
 				countries.sort();
 
 				// move the cruise ship first and china second
+				let targetIndex = 0;
 				const diamondCruiseShipIndex = countries.indexOf('Diamond Princess Cruise Ship');
-				this.moveArrayEntry(countries, diamondCruiseShipIndex, 0);
+				if (diamondCruiseShipIndex !== -1) {
+					this.moveArrayEntry(countries, diamondCruiseShipIndex, targetIndex);
+					targetIndex++;
+				}
 				const grandCruiseShipIndex = countries.indexOf('Grand Princess Cruise Ship');
-				this.moveArrayEntry(countries, grandCruiseShipIndex, 1);
+				if (grandCruiseShipIndex !== -1) {
+					this.moveArrayEntry(countries, grandCruiseShipIndex, targetIndex);
+					targetIndex++;
+				}
 
 				/* const chinaIndex = countries.indexOf('China');
 				this.moveArrayEntry(countries, chinaIndex, 2);
@@ -1157,27 +1165,27 @@ for (const currentSet of selectionSets) {
 				const dateLabel = Array.from(dateLabels)[dateLabels.size - 1 - elapsedDays];
 				return elapsedDays + ` (${dateLabel})`;
 			},
-			comparisonDataSource: function () {
+			comparisonDataGroup: function () {
 				if (this.comparisonDataType === 'cases') {
-					return this.cases;
+					return 'infected';
 				} else if (this.comparisonDataType === 'recoveries') {
-					return this.recoveries;
+					return 'recovered';
 				} else if (this.comparisonDataType === 'deaths') {
-					return this.deaths;
+					return 'dead';
 				}
 				console.error('invalid comparison data type');
 				return [];
 			},
 			rawTimeSeries: function () {
 				if (!this.comparisonMode) {
-					const confirmedYValues = this.filterDatasetBySelectedCountries(this.cases);
-					const recoveredYValues = this.filterDatasetBySelectedCountries(this.recoveries);
-					const deadYValues = this.filterDatasetBySelectedCountries(this.deaths);
+					const confirmedYValues = this.filterDatasetBySelectedCountries(0, 'infected');
+					const recoveredYValues = this.filterDatasetBySelectedCountries(0, 'recovered');
+					const deadYValues = this.filterDatasetBySelectedCountries(0, 'dead');
 					return [confirmedYValues, recoveredYValues, deadYValues];
 				} else {
-					const setA = this.filterDatasetBySelectedCountries(this.comparisonDataSource, 0);
-					const setB = this.filterDatasetBySelectedCountries(this.comparisonDataSource, 1);
-					const setC = this.filterDatasetBySelectedCountries(this.comparisonDataSource, 2);
+					const setA = this.filterDatasetBySelectedCountries(0, this.comparisonDataGroup);
+					const setB = this.filterDatasetBySelectedCountries(1, this.comparisonDataGroup);
+					const setC = this.filterDatasetBySelectedCountries(2, this.comparisonDataGroup);
 					return [setA, setB, setC];
 				}
 			},
@@ -1305,9 +1313,9 @@ for (const currentSet of selectionSets) {
 
 				if (!this.comparisonMode) {
 					// we are drilling down into different data types from one set
-					let confirmedYValues = this.filterDatasetBySelectedCountries(this.cases);
-					let deadYValues = this.filterDatasetBySelectedCountries(this.deaths);
-					let recoveredYValues = this.filterDatasetBySelectedCountries(this.recoveries);
+					let confirmedYValues = this.filterDatasetBySelectedCountries(0, 'infected');
+					let deadYValues = this.filterDatasetBySelectedCountries(0, 'recovered');
+					let recoveredYValues = this.filterDatasetBySelectedCountries(0, 'dead');
 
 					if (this.derivative) {
 						confirmedYValues = this.calculateDerivative(confirmedYValues);
@@ -1343,9 +1351,9 @@ for (const currentSet of selectionSets) {
 					return [confirmedYValues, deadYValues, recoveredYValues];
 				} else {
 					// we are aggregating sets
-					let setA = this.filterDatasetBySelectedCountries(this.comparisonDataSource, 0);
-					let setB = this.filterDatasetBySelectedCountries(this.comparisonDataSource, 1);
-					let setC = this.filterDatasetBySelectedCountries(this.comparisonDataSource, 2);
+					let setA = this.filterDatasetBySelectedCountries(0, this.comparisonDataGroup);
+					let setB = this.filterDatasetBySelectedCountries(1, this.comparisonDataGroup);
+					let setC = this.filterDatasetBySelectedCountries(2, this.comparisonDataGroup);
 
 					if (this.derivative) {
 						[setA, setB, setC] = [setA, setB, setC].map(s => this.calculateDerivative(s));
@@ -1371,10 +1379,14 @@ for (const currentSet of selectionSets) {
 				const recoveredSeries = series[1];
 				const deadSeries = series[2];
 
+				const lastInfectionValue = confirmedSeries[confirmedSeries.length - 1];
+				const lastRecoveryValue = recoveredSeries[recoveredSeries.length - 1];
+				const lastDeathValue = deadSeries[deadSeries.length - 1];
+
 				return {
-					cases: Number(confirmedSeries[confirmedSeries.length - 1]).toLocaleString(),
-					deaths: Number(deadSeries[deadSeries.length - 1]).toLocaleString(),
-					recoveries: Number(recoveredSeries[recoveredSeries.length - 1]).toLocaleString(),
+					cases: lastInfectionValue !== undefined ? Number(lastInfectionValue).toLocaleString() : null,
+					recoveries: lastRecoveryValue !== undefined ? Number(lastRecoveryValue).toLocaleString() : null,
+					deaths: lastDeathValue !== undefined ? Number(lastDeathValue).toLocaleString() : null
 				};
 			},
 

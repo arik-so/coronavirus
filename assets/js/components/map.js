@@ -38,6 +38,15 @@ Vue.component('covid-map', {
 		}
 	},
 	computed: {
+		isUsingRecoveries: function () {
+			if (this.mapDataSource === 'recoveries') {
+				return true;
+			}
+			if (['relative:recoveries', 'relative:outcomes'].includes(this.mapDataReference)) {
+				return true;
+			}
+			return false;
+		},
 		europeanCountryCodes: function () {
 			// return {
 			// 	iso: ['GB', 'DE', 'IT'],
@@ -187,29 +196,29 @@ Vue.component('covid-map', {
 
 			return {labels, outline, data, projection, maintainAspectRatio, aspectRatio};
 		},
-		mapRawData: function () {
-			let dataSource = this.$parent.$data.raw.confirmedCases;
+		mapRawDataGroup: function () {
+			let dataGroup = 'infected';
 			if (this.mapDataSource === 'recoveries') {
-				dataSource = this.$parent.$data.raw.recoveredCases;
+				dataGroup = 'recovered';
 			} else if (this.mapDataSource === 'deaths') {
-				dataSource = this.$parent.$data.raw.deadCases;
+				dataGroup = 'dead';
 			}
-			return dataSource;
+			return dataGroup;
 		},
 		mapCountryValues: function () {
 			console.log('recalculating');
-			const dataSource = this.mapRawData;
+			const dataGroup = this.mapRawDataGroup;
 
 			let denominators = null;
 			if (this.mapDataReference.startsWith('relative:') && this.mapDataReference !== 'relative:population') {
-				let comparisonDataSource = this.$parent.$data.raw.confirmedCases;
+				let comparisonDataGroup = 'infected';
 				if (this.mapDataReference === 'relative:recoveries') {
-					comparisonDataSource = this.$parent.$data.raw.recoveredCases;
+					comparisonDataGroup = 'recovered';
 				} else if (this.mapDataReference === 'relative:outcomes') {
 					if (this.mapDataSource === 'recoveries') {
-						comparisonDataSource = this.$parent.$data.raw.deadCases;
+						comparisonDataGroup = 'dead';
 					} else {
-						comparisonDataSource = this.$parent.$data.raw.recoveredCases;
+						comparisonDataGroup = 'recovered';
 					}
 				}
 
@@ -217,12 +226,13 @@ Vue.component('covid-map', {
 				for (let i = this.$parent.$data.mapDateMinimum; i <= this.$parent.$data.mapDateMaximum; i++) {
 					const dateKey = this.$parent.$data.raw.dateKeys[i];
 					const totalByCountries = {};
-					for (const currentHistory of comparisonDataSource) {
+					for (const currentHistory of this.$parent.raw.allCases) {
 						if (this.shouldSkipEntry(currentHistory)) {
 							continue;
 						}
 						const locationCode = this.getCodeForEntry(currentHistory);
-						const currentDelta = currentHistory[dateKey];
+						const referenceMetric = currentHistory.entries[comparisonDataGroup];
+						const currentDelta = (referenceMetric && referenceMetric[dateKey]) || 0;
 						totalByCountries[locationCode] = totalByCountries[locationCode] || 0;
 						totalByCountries[locationCode] += currentDelta;
 					}
@@ -234,7 +244,7 @@ Vue.component('covid-map', {
 			for (let i = this.$parent.$data.mapDateMinimum; i <= this.$parent.$data.mapDateMaximum; i++) {
 				const dateKey = this.$parent.$data.raw.dateKeys[i];
 				const totalByCountries = {};
-				for (const currentHistory of dataSource) {
+				for (const currentHistory of this.$parent.raw.allCases) {
 					if (this.shouldSkipEntry(currentHistory)) {
 						continue;
 					}
@@ -257,7 +267,7 @@ Vue.component('covid-map', {
 						denominator
 					};
 
-					const currentDelta = currentHistory[dateKey];
+					const currentDelta = currentHistory.entries[dataGroup][dateKey];
 					totalByCountries[locationCode].enumerator += currentDelta;
 
 					if (this.mapDataReference === 'relative:outcomes') {
@@ -272,7 +282,11 @@ Vue.component('covid-map', {
 		},
 		mapHistoricalCountryHigh: function () {
 			let maximum = 0;
-			const countryTotal = this.mapCountryValues[this.$parent.$data.mapDateMaximum];
+			let referenceDate = this.$parent.$data.mapDateMaximum;
+			if (this.isUsingRecoveries) {
+				referenceDate = 60; // March 22nd
+			}
+			const countryTotal = this.mapCountryValues[referenceDate];
 			// console.dir(countryTotal);
 			for (const [key, {enumerator, denominator}] of Object.entries(countryTotal)) {
 				if (denominator === 0 || !Number.isSafeInteger(denominator)) {
@@ -298,21 +312,23 @@ Vue.component('covid-map', {
 
 		},
 		getCodeForEntry: function (entry) {
+			const location = entry['location'];
 			if (this.scope === 'USA' || this.scope === 'China') {
-				return entry['state']['short_name'];
+				return location['state']['short_name'];
 			}
-			return entry['country']['short_name'] || entry['country']['long_name'];
+			return location['country']['short_name'] || location['country']['long_name'];
 		},
 		shouldSkipEntry: function (entry) {
+			const location = entry['location'];
 			if (this.scope === 'World') {
 				return false;
-			} else if (this.scope === 'USA' && entry['country']['short_name'] !== 'US') {
+			} else if (this.scope === 'USA' && location['country']['short_name'] !== 'US') {
 				return true;
-			} else if (this.scope === 'China' && entry['country']['short_name'] !== 'CN') {
+			} else if (this.scope === 'China' && location['country']['short_name'] !== 'CN') {
 				return true;
 			} else if (this.scope === 'Europe') {
 				const europe = this.europeanCountryCodes;
-				return !europe.iso.includes(entry['country']['short_name']);
+				return !europe.iso.includes(location['country']['short_name']);
 			}
 			return false;
 		},

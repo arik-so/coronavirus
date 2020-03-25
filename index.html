@@ -298,7 +298,7 @@
 
 					<div class="chart_selector">
 						<div>
-							<span class="note">We're <a href="https://github.com/CSSEGISandData/COVID-19/issues/1250#issuecomment-602949194" target="_blank">desperately awaiting</a> March 23rd data from Johns Hopkins. Please bear with us.</span>
+							<span class="note">Johns Hopkins <a href="https://github.com/CSSEGISandData/COVID-19/issues/1250" target="_blank">stopped reporting</a> recovery data. We're looking for a new source.</span>
 							<div>
 								<span v-bind:class="{active: !comparisonMode}"
 									  v-on:click="comparisonMode = false; activeSelectionSetIndex = 0;">{{aggregationLabel}}</span><span
@@ -319,14 +319,14 @@
 						</template>
 						<template v-if="showSelectionTotals">
 							<div v-if="!derivative">
-								<span>🤒 Infected: {{aggregatedTotals.cases}}</span>
-								<span>👍 Recovered: {{aggregatedTotals.recoveries}}</span>
-								<span>☠️ Dead: {{aggregatedTotals.deaths}}</span>
+								<span v-if="aggregatedTotals.cases !== null">🤒 Infected: {{aggregatedTotals.cases}}</span>
+								<span v-if="aggregatedTotals.recoveries !== null">👍 Recovered: {{aggregatedTotals.recoveries}}</span>
+								<span v-if="aggregatedTotals.deaths !== null">☠️ Dead: {{aggregatedTotals.deaths}}</span>
 							</div>
 							<div v-if="derivative">
-								<span>🤒 New Infections: {{aggregatedTotals.cases}}</span>
-								<span>👍 New Recoveries: {{aggregatedTotals.recoveries}}</span>
-								<span>☠️ New Deaths: {{aggregatedTotals.deaths}}</span>
+								<span v-if="aggregatedTotals.cases !== null">🤒 New Infections: {{aggregatedTotals.cases}}</span>
+								<span v-if="aggregatedTotals.recoveries !== null">👍 New Recoveries: {{aggregatedTotals.recoveries}}</span>
+								<span v-if="aggregatedTotals.deaths !== null">☠️ New Deaths: {{aggregatedTotals.deaths}}</span>
 							</div>
 							<div>
 								<span>Days since most new infections: {{athElapsedDays}}</span>
@@ -363,7 +363,7 @@
 									<select id="map_data_source" v-model="mapDataSource" class="select-css">
 										<option value="cases">Cases</option>
 										<option value="recoveries" v-bind:disabled="!canShowMapSourceRecoveries">
-											Recoveries
+											Recoveries <template v-if="!canShowMapSourceRecoveries && mapScope !== 'USA'">(only until March 22nd)</template>
 										</option>
 										<option value="deaths">Deaths</option>
 									</select>
@@ -378,11 +378,11 @@
 										</option>
 										<option value="relative:outcomes" v-if="canShowMapRelativeToOutcomes">Relative
 											to
-											Known Outcomes
+											Known Outcomes <template v-if="!canShowMapRelativeToOutcomes && mapScope !== 'USA'">(only until March 22nd)</template>
 										</option>
 										<option value="relative:recoveries" v-if="canShowMapRelativeToRecoveries">
 											Relative
-											to Recoveries
+											to Recoveries <template v-if="!canShowMapRelativeToRecoveries && mapScope !== 'USA'">(only until March 22nd)</template>
 										</option>
 									</select>
 								</li>
@@ -434,7 +434,7 @@
 
 	<div id="footer" class="footer">
 		<div class="container footer-container">
-			<p>Last updated: 3/22/2020 at 5pm PST</p>
+			<p>Last updated: 3/25/2020 at 4am PST</p>
 			<p><a href="https://github.com/arik-so/coronavirus/tree/gh-pages" target="_blank">Github</a> | <a
 				href="https://github.com/CSSEGISandData/COVID-19/tree/master/csse_covid_19_data/csse_covid_19_time_series"
 				target="_blank">Data</a> (Latest known inaccuracy: <a
