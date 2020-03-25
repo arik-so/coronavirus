@@ -267,7 +267,8 @@ Vue.component('covid-map', {
 						denominator
 					};
 
-					const currentDelta = currentHistory.entries[dataGroup][dateKey];
+					const currentReferenceMetric = currentHistory.entries[dataGroup];
+					const currentDelta = (currentReferenceMetric && currentReferenceMetric[dateKey]) || 0;
 					totalByCountries[locationCode].enumerator += currentDelta;
 
 					if (this.mapDataReference === 'relative:outcomes') {
