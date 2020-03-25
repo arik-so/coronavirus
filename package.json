@@ -22,10 +22,12 @@
 	},
 	"homepage": "https://github.com/arik-so/coronavirus#readme",
 	"devDependencies": {
+		"@types/moment": "^2.13.0",
 		"@types/node": "^12.12.11",
 		"@types/request-promise-native": "^1.0.17",
 		"bower": "^1.8.8",
 		"browserify": "^16.5.0",
+		"moment": "^2.24.0",
 		"typescript": "^3.7.2"
 	},
 	"dependencies": {
