@@ -306,6 +306,7 @@ for (const currentSet of selectionSets) {
 		router,
 		data: {
 			loading: false,
+			showMap: true,
 
 			suspendRouteWatching: false,
 
@@ -367,6 +368,10 @@ for (const currentSet of selectionSets) {
 				title: 'Coronavirus tracker by @arikaleph and @elliebee',
 				text: ''
 			});
+			/* setTimeout(() => {
+				// only start working on the map once the chart is shown
+				this.showMap = true;
+			}, 250); */
 			this.$nextTick(() => {
 				this.createChart();
 			});

@@ -344,88 +344,93 @@
 				<span>Source: <a href="https://github.com/arik-so/coronavirus/tree/gh-pages">https://github.com/arik-so/coronavirus/tree/gh-pages</a></span>
 			</div> -->
 
-			<div id="map_section" class="container">
-				<div class="map_selector">
-					<div class="sidebar">
-						<div>
-						<span v-for="currentMap in mapScopes" v-bind:class="{active: currentMap === mapScope}"
-							  v-on:click="mapScope = currentMap">{{currentMap}}</span>
+
+			<template v-if="showMap">
+				<div id="map_section" class="container">
+					<div class="map_selector">
+						<div class="sidebar">
+							<div>
+							<span v-for="currentMap in mapScopes" v-bind:class="{active: currentMap === mapScope}"
+								  v-on:click="mapScope = currentMap">{{currentMap}}</span>
+							</div>
 						</div>
 					</div>
-				</div>
-				<div class="sidebar">
-					<div class="map_container">
-						<div style="/*float: right;*/">
-							<ul class="pure-menu-list">
-								<li class="pure-menu-list-item">
-									Metric:
-									<select id="map_data_source" v-model="mapDataSource" class="select-css">
-										<option value="cases">Cases</option>
-										<option value="recoveries" v-bind:disabled="!canShowMapSourceRecoveries">
-											Recoveries <template v-if="!canShowMapSourceRecoveries && mapScope !== 'USA'">(only until March 22nd)</template>
-										</option>
-										<option value="deaths">Deaths</option>
-									</select>
-								</li>
-								<li class="pure-menu-list-item">
-									Reference:
-									<select id="map_data_reference" v-model="mapDataReference" class="select-css">
-										<option value="absolute">Absolute</option>
-										<option value="relative:population">Relative to Population</option>
-										<option value="relative:cases" v-if="canShowMapRelativeToCases">Relative to
-											Cases
-										</option>
-										<option value="relative:outcomes" v-if="canShowMapRelativeToOutcomes">Relative
-											to
-											Known Outcomes <template v-if="!canShowMapRelativeToOutcomes && mapScope !== 'USA'">(only until March 22nd)</template>
-										</option>
-										<option value="relative:recoveries" v-if="canShowMapRelativeToRecoveries">
-											Relative
-											to Recoveries <template v-if="!canShowMapRelativeToRecoveries && mapScope !== 'USA'">(only until March 22nd)</template>
-										</option>
-									</select>
-								</li>
-							</ul>
-						</div>
-						<div style="clear: both;"></div>
+					<div class="sidebar">
+						<div class="map_container">
+							<div style="/*float: right;*/">
+								<ul class="pure-menu-list">
+									<li class="pure-menu-list-item">
+										Metric:
+										<select id="map_data_source" v-model="mapDataSource" class="select-css">
+											<option value="cases">Cases</option>
+											<option value="recoveries" v-bind:disabled="!canShowMapSourceRecoveries">
+												Recoveries <template v-if="!canShowMapSourceRecoveries && mapScope !== 'USA'">(only until March 22nd)</template>
+											</option>
+											<option value="deaths">Deaths</option>
+										</select>
+									</li>
+									<li class="pure-menu-list-item">
+										Reference:
+										<select id="map_data_reference" v-model="mapDataReference" class="select-css">
+											<option value="absolute">Absolute</option>
+											<option value="relative:population">Relative to Population</option>
+											<option value="relative:cases" v-if="canShowMapRelativeToCases">Relative to
+												Cases
+											</option>
+											<option value="relative:outcomes" v-if="canShowMapRelativeToOutcomes">Relative
+												to
+												Known Outcomes <template v-if="!canShowMapRelativeToOutcomes && mapScope !== 'USA'">(only until March 22nd)</template>
+											</option>
+											<option value="relative:recoveries" v-if="canShowMapRelativeToRecoveries">
+												Relative
+												to Recoveries <template v-if="!canShowMapRelativeToRecoveries && mapScope !== 'USA'">(only until March 22nd)</template>
+											</option>
+										</select>
+									</li>
+								</ul>
+							</div>
+							<div style="clear: both;"></div>
 
-						<div class="canvas_container">
-							<covid-map v-bind:scope="mapScope"
+
+							<div class="canvas_container">
+								<covid-map v-bind:scope="mapScope"
+										   v-bind:key="mapScope"
+										   v-bind:map-date="mapDate"
+										   v-bind:map-data-source="mapDataSource"
+										   v-bind:map-data-reference="mapDataReference"></covid-map>
+							</div>
+
+							<!--<covid-map v-if="activeMap === 'World'"
+									   scope="World"
+									   key="world_map"
 									   v-bind:map-date="mapDate"
 									   v-bind:map-data-source="mapDataSource"
 									   v-bind:map-data-reference="mapDataReference"></covid-map>
-						</div>
 
-						<!--<covid-map v-if="activeMap === 'World'"
-								   scope="World"
-								   key="world_map"
-								   v-bind:map-date="mapDate"
-								   v-bind:map-data-source="mapDataSource"
-								   v-bind:map-data-reference="mapDataReference"></covid-map>
+							<covid-map v-if="activeMap === 'USA'"
+									   scope="USA"
+									   key="us_state_map"
+									   v-bind:map-date="mapDate"
+									   v-bind:map-data-source="mapDataSource"
+									   v-bind:map-data-reference="mapDataReference"></covid-map>
 
-						<covid-map v-if="activeMap === 'USA'"
-								   scope="USA"
-								   key="us_state_map"
-								   v-bind:map-date="mapDate"
-								   v-bind:map-data-source="mapDataSource"
-								   v-bind:map-data-reference="mapDataReference"></covid-map>
+							<covid-map v-if="activeMap === 'Europe'"
+									   scope="Europe"
+									   key="europe_map"
+									   v-bind:map-date="mapDate"
+									   v-bind:map-data-source="mapDataSource"
+									   v-bind:map-data-reference="mapDataReference"></covid-map>-->
 
-						<covid-map v-if="activeMap === 'Europe'"
-								   scope="Europe"
-								   key="europe_map"
-								   v-bind:map-date="mapDate"
-								   v-bind:map-data-source="mapDataSource"
-								   v-bind:map-data-reference="mapDataReference"></covid-map>-->
-
-						<div>
-							{{formatMapDate(mapDate)}} (adjust slider)
-							<br/>
-							<input style="width: 100%;" type="range" v-model="mapDate" v-bind:min="mapDateMinimum"
-								   v-bind:max="mapDateMaximum"/>
+							<div>
+								{{formatMapDate(mapDate)}} (adjust slider)
+								<br/>
+								<input style="width: 100%;" type="range" v-model="mapDate" v-bind:min="mapDateMinimum"
+									   v-bind:max="mapDateMaximum"/>
+							</div>
 						</div>
 					</div>
 				</div>
-			</div>
+			</template>
 
 		</template>
 
