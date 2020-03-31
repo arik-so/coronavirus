@@ -237,12 +237,18 @@
 									<label for="relation_relative:population_radio">Relative to Population (‱)</label>
 								</li>
 
-								<li class="pure-menu-list-item" v-if="derivative">
-									<select id="derivative_type" v-model="derivativeType" class="select-css">
-										<option value="absolute">Absolute Increase</option>
-										<option value="relative">Relative Increase</option>
-									</select>
-								</li>
+								<template v-if="derivative">
+									<li class="pure-menu-list-item" >
+										<label>Smoothing: {{blurDerivative}}</label><br/>
+										<input type="range" v-model="blurDerivative" min="1" max="14"/>
+									</li>
+									<li class="pure-menu-list-item" >
+										<select id="derivative_type" v-model="derivativeType" class="select-css">
+											<option value="absolute">Absolute Increase</option>
+											<option value="relative">Relative Increase</option>
+										</select>
+									</li>
+								</template>
 								<li class="pure-menu-list-item" v-if="canShowRegression">
 									<select id="regression" v-model="regression"
 											:disabled="!canShowRegression" class="select-css">

@@ -285,7 +285,8 @@ for (const currentSet of selectionSets) {
 		comparisonMode: false,
 		comparisonDataType: 'cases',
 		derivativeType: 'absolute',
-		relationType: 'absolute'
+		relationType: 'absolute',
+		blurDerivative: 1
 	};
 	// only accessor for the country computed value
 	const parametrizableKeys = ['countries', 'setB', 'setC', ...Object.keys(params)];
@@ -556,22 +557,50 @@ for (const currentSet of selectionSets) {
 				}
 				return setPopulation;
 			},
-			calculateDerivative: function (values, forceAbsolute = false) {
+			calculateDerivative: function (values, forceAbsolute = false, ignoreBlur = false) {
 				const derivative = [];
 				let previousValue = 0;
+				let trailingBlurInput = [];
 				for (const currentValue of values) {
-					let change = currentValue - previousValue;
+
+					const absoluteChange = currentValue - previousValue;
+					const relativeChange = previousValue !== 0 ? currentValue / previousValue : null;
+
+					let preciseChange = absoluteChange;
 					if (this.derivativeType === 'relative' && !forceAbsolute) {
-						if (previousValue === 0) {
-							change = null;
-						} /*else if (currentValue === 0) {
-							change = 0;
-						} */ else {
-							change = Math.round((currentValue / previousValue) * 10000) / 100 - 100;
-						}
+						preciseChange = relativeChange;
 					}
-					derivative.push(change);
+
 					previousValue = currentValue;
+					trailingBlurInput.push(preciseChange);
+
+					// if the precise change doesn't work, we need to move on
+					if (preciseChange === null) {
+						trailingBlurInput = [];
+					}
+
+					if (trailingBlurInput.length < this.blurDerivative && !ignoreBlur) {
+						derivative.push(null);
+						continue;
+					}
+
+					let change = preciseChange;
+					if (this.blurDerivative > 1 && !ignoreBlur) {
+
+						if (this.derivativeType === 'relative' && !forceAbsolute) {
+							// multiply all entries and calculate the root
+							const product = trailingBlurInput.reduce((p, c) => p * c, 1);
+							const preFinalChange = Math.pow(product, 1 / this.blurDerivative);
+							change = Math.round((preFinalChange) * 10000) / 100 - 100;
+						} else {
+							const sum = trailingBlurInput.reduce((p, c) => p + c, 0);
+							change = sum / this.blurDerivative;
+						}
+
+						trailingBlurInput.shift(); // the beginning is currently irrelevant
+					}
+
+					derivative.push(change);
 				}
 				return derivative;
 			},
@@ -745,7 +774,7 @@ for (const currentSet of selectionSets) {
 					entry = 0;
 					console.log('Skipping count for entry:', this.getCountryForEntry(row), this.getStateForEntry(row), date, value);
 				}*/
-				if (isNaN(entry)) {
+				if (!Number.isSafeInteger(entry)) {
 					if (allowNull) {
 						return null;
 					}
@@ -782,6 +811,13 @@ for (const currentSet of selectionSets) {
 					}
 					for (const key of Object.keys(groupEntries)) {
 						const currentCount = this.parseRowEntryForDate(currentEntry, key, group, false, true);
+
+						/*
+						if (currentCount === null) {
+							// the data isn't available after this date
+							break
+						}
+						*/
 
 						filteredData[dateIndex] = filteredData[dateIndex] || 0;
 						filteredData[dateIndex] += currentCount;
@@ -1077,7 +1113,7 @@ for (const currentSet of selectionSets) {
 						break;
 					}
 					const setPopulation = this.calculateSetPopulation(currentSet);
-					if (isNaN(setPopulation)) {
+					if (!Number.isSafeInteger(setPopulation)) {
 						return false;
 					}
 				}
@@ -1169,7 +1205,7 @@ for (const currentSet of selectionSets) {
 			},
 			athElapsedDays: function () {
 				const rawCases = this.rawTimeSeries[0];
-				const derivative = this.calculateDerivative(rawCases, true);
+				const derivative = this.calculateDerivative(rawCases, true, true);
 				const maxValue = Math.max(...derivative);
 				const reverseChronologicalDerivative = derivative.reverse();
 				const elapsedDays = reverseChronologicalDerivative.indexOf(maxValue);
@@ -1384,7 +1420,7 @@ for (const currentSet of selectionSets) {
 
 				let series = this.rawTimeSeries;
 				if (this.derivative) {
-					series = series.map(s => this.calculateDerivative(s, true));
+					series = series.map(s => this.calculateDerivative(s, true, true));
 				}
 				const confirmedSeries = series[0];
 				const recoveredSeries = series[1];
