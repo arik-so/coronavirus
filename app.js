@@ -598,6 +598,8 @@ for (const currentSet of selectionSets) {
 						}
 
 						trailingBlurInput.shift(); // the beginning is currently irrelevant
+					} else if (this.derivativeType === 'relative' && !forceAbsolute) {
+						change = Math.round((preciseChange) * 10000) / 100 - 100;
 					}
 
 					derivative.push(change);
