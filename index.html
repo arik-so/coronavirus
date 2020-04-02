@@ -286,14 +286,22 @@
 							</div>
 						</div>
 
-						<div class="settings-block" v-if="comparisonMode && false">
+						<div class="settings-block" v-if="comparisonMode">
 							<div id="comparison_details" class="pure-menu">
 								<ul class="pure-menu-list">
 									<li class="pure-menu-list-item">
-										<label>Set B offset: </label>
+										<label>{{selectionSets[1].setName}} offset:</label> {{offsetB}}
+										<br/>
+										<input type="range" v-model="offsetB" v-bind:min="setOffsetMinimum" v-bind:max="setOffsetMaximum" />
 									</li>
 									<li class="pure-menu-list-item">
-										<label>Set C offset: </label>
+										<label>{{selectionSets[2].setName}} offset:</label> {{offsetC}}
+										<br/>
+										<input type="range" v-model="offsetC" v-bind:min="setOffsetMinimum" v-bind:max="setOffsetMaximum" />
+									</li>
+									<li class="pure-menu-list-item">
+										<input v-on:click="normalizeOffset()" type="button" value="Normalize">
+										<input v-on:click="resetOffset()" type="button" value="Reset">
 									</li>
 								</ul>
 							</div>

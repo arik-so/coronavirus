@@ -286,7 +286,9 @@ for (const currentSet of selectionSets) {
 		comparisonDataType: 'cases',
 		derivativeType: 'absolute',
 		relationType: 'absolute',
-		blurDerivative: 1
+		blurDerivative: 1,
+		offsetB: 0,
+		offsetC: 0
 	};
 	// only accessor for the country computed value
 	const parametrizableKeys = ['countries', 'setB', 'setC', ...Object.keys(params)];
@@ -318,6 +320,10 @@ for (const currentSet of selectionSets) {
 
 			regressionOffsetMinimum: 0,
 			regressionOffsetMaximum: dateLabels.size - 3,
+
+			setOffsetMinimum: -dateLabels.size + 3,
+			setOffsetMaximum: dateLabels.size - 3,
+			setOffsetMaxLength: 0,
 
 			// pass to country-selector for component control
 			selectionSets,
@@ -557,6 +563,94 @@ for (const currentSet of selectionSets) {
 				}
 				return setPopulation;
 			},
+			calculateOffsetArrays(arrays, offsets) {
+				if (!Array.isArray(arrays) || !Array.isArray(offsets)) {
+					return arrays;
+				}
+
+				if (arrays.length - offsets.length !== 1) {
+					// the first array should remain in place, and subsequent arrays should be the ones to move
+					return arrays;
+				}
+
+				const actionableOffsets = offsets.map((offset, i) => {
+					const referencedValues = arrays[i + 1];
+					if (referencedValues.length < 1) {
+						return 0;
+					}
+					return offset;
+				});
+				const lowestOffset = Math.min(0, ...actionableOffsets);
+
+				const offsetArrays = [];
+				let maxLength = 0;
+				for (const [i, currentValues] of arrays.entries()) {
+					let currentOffset = 0;
+					if (i > 0) {
+						currentOffset = actionableOffsets[i - 1];
+					}
+					const prepensionLength = currentOffset - lowestOffset;
+					const prepension = Array(prepensionLength).fill(null);
+					const modifiedArray = [...prepension, ...currentValues];
+					maxLength = Math.max(modifiedArray.length, maxLength);
+					offsetArrays.push(modifiedArray);
+				}
+				return {
+					values: offsetArrays,
+					maxLength
+				};
+			},
+			resetOffset: function () {
+				this.offsetB = 0;
+				this.offsetC = 0;
+			},
+			normalizeOffset: function () {
+				if (!this.comparisonMode) {
+					return;
+				}
+				const values = this.rawTimeSeries;
+				// map entries to index/length pairs, filter zero lengths, and extract just the indices
+				const relevantIndices = values.map((c, i) => ({
+					index: i,
+					length: c.length
+				})).filter(v => v.length > 0).map(c => c.index);
+				if (relevantIndices.length < 2) {
+					return this.resetOffset();
+				}
+				const minima = values.filter((v, i) => relevantIndices.includes(i)).map(c => (Math.min(...c)));
+				const referenceMinimum = Math.max(100, Math.max(...minima));
+				// console.dir(relevantIndices);
+				// console.log(referenceMinimum);
+				const anchorIndices = values.map(v => {
+					// find index of first entry >= reference minimum
+					for (const [i, value] of v.entries()) {
+						if (value >= referenceMinimum) {
+							return i;
+						}
+					}
+				});
+
+				let offsetAnchorIndex = -1;
+				const offsets = [];
+				for (const [i, currentAnchorIndex] of anchorIndices.entries()) {
+					if (!Number.isSafeInteger(currentAnchorIndex)) {
+						offsets[i] = 0;
+						continue;
+					}
+					if (offsetAnchorIndex < 0) {
+						offsetAnchorIndex = currentAnchorIndex;
+						offsets[i] = 0;
+						continue;
+					}
+					const delta = offsetAnchorIndex - currentAnchorIndex;
+					offsets[i] = delta;
+				}
+
+				// console.dir(anchorIndices);
+				// console.dir(offsets);
+				this.offsetB = offsets[1];
+				this.offsetC = offsets[2];
+			},
 			calculateDerivative: function (values, forceAbsolute = false, ignoreBlur = false) {
 				const derivative = [];
 				let previousValue = 0;
@@ -728,6 +822,9 @@ for (const currentSet of selectionSets) {
 				clearTimeout(graphUpdateTimeout);
 				const repaintGraph = () => {
 					this.graph.update();
+					// this.$nextTick(() => {
+					// 	delete chartConfig.options.animation;
+					// });
 				};
 				graphUpdateTimeout = setTimeout(repaintGraph, 5);
 			},
@@ -938,6 +1035,12 @@ for (const currentSet of selectionSets) {
 					chartConfig.data.datasets[2].label = defaultChartConfig.data.datasets[2].label;
 				}
 			},
+			offsetB: function () {
+				// chartConfig.options.animation = {duration: 0};
+			},
+			offsetC: function () {
+				// chartConfig.options.animation = {duration: 0};
+			},
 			setLabels: function (newValue) {
 				if (this.comparisonMode) {
 					chartConfig.data.datasets[0].label = newValue[0];
@@ -985,6 +1088,10 @@ for (const currentSet of selectionSets) {
 						}
 					}
 
+					if (this.comparisonMode && (this.offsetB !== 0 || this.offsetC !== 0)) {
+						chartConfig.data.labels = Array(this.setOffsetMaxLength).fill(null).map((l, i) => `Day ${i + 1}`);
+					}
+
 					this.updateGraph();
 					this.updateLocation();
 				}
@@ -1011,15 +1118,15 @@ for (const currentSet of selectionSets) {
 			}
 		},
 		computed: {
+			chartLabels: function () {
+				if (this.comparisonMode) {
+					return Array.from(dateLabels).reverse();
+				}
+				return Array.from(dateLabels);
+			},
 			aggregationLabel: function () {
 				if (this.selectionSets[0].setName !== this.selectionSets[0].defaultSetName) {
 					const customSetName = this.selectionSets[0].setName;
-					// const normalizedSetName = customSetName.normalize('NFC');
-					// const ascii = /^[ -~]+$/;
-					// if (ascii.test(customSetName)) {
-					// no emoji fuckery
-					// return customSetName;
-					// }
 					const emoji = /(?:[\u2700-\u27bf]|(?:\ud83c[\udde6-\uddff]){2}|[\ud800-\udbff][\udc00-\udfff]|[\u0023-\u0039]\ufe0f?\u20e3|\u3299|\u3297|\u303d|\u3030|\u24c2|\ud83c[\udd70-\udd71]|\ud83c[\udd7e-\udd7f]|\ud83c\udd8e|\ud83c[\udd91-\udd9a]|\ud83c[\udde6-\uddff]|[\ud83c\ude01-\ude02]|\ud83c\ude1a|\ud83c\ude2f|[\ud83c\ude32-\ude3a]|[\ud83c\ude50-\ude51]|\u203c|\u2049|[\u25aa-\u25ab]|\u25b6|\u25c0|[\u25fb-\u25fe]|\u00a9|\u00ae|\u2122|\u2139|\ud83c\udc04|[\u2600-\u26FF]|\u2b05|\u2b06|\u2b07|\u2b1b|\u2b1c|\u2b50|\u2b55|\u231a|\u231b|\u2328|\u23cf|[\u23e9-\u23f3]|[\u23f8-\u23fa]|\ud83c\udccf|\u2934|\u2935|[\u2190-\u21ff])/;
 					if (!emoji.test(customSetName)) {
 						return customSetName;
@@ -1232,17 +1339,25 @@ for (const currentSet of selectionSets) {
 					const deadYValues = this.filterDatasetBySelectedCountries(0, 'dead');
 					return [confirmedYValues, recoveredYValues, deadYValues];
 				} else {
-					const setA = this.filterDatasetBySelectedCountries(0, this.comparisonDataGroup);
-					const setB = this.filterDatasetBySelectedCountries(1, this.comparisonDataGroup);
-					const setC = this.filterDatasetBySelectedCountries(2, this.comparisonDataGroup);
+					let setA = this.filterDatasetBySelectedCountries(0, this.comparisonDataGroup);
+					let setB = this.filterDatasetBySelectedCountries(1, this.comparisonDataGroup);
+					let setC = this.filterDatasetBySelectedCountries(2, this.comparisonDataGroup);
 					return [setA, setB, setC];
 				}
+			},
+			offsetTimeSeries: function () {
+				if (this.comparisonMode && (this.offsetB !== 0 || this.offsetC !== 0)) {
+					const offsetArrays = this.calculateOffsetArrays(this.rawTimeSeries, [this.offsetB, this.offsetC]);
+					this.setOffsetMaxLength = offsetArrays.maxLength;
+					return offsetArrays.values;
+				}
+				return this.rawTimeSeries;
 			},
 			totalTimeSeries: function () {
 				if (this.relationType === 'relative') {
 					// divide each one by the population
 					const relativeTimeSeries = [];
-					for (const [index, currentSeries] of this.rawTimeSeries.entries()) {
+					for (const [index, currentSeries] of this.offsetTimeSeries.entries()) {
 						let currentRelativeSeries = [];
 						const currentDivisor = this.setPopulations[index];
 						for (const currentValue of currentSeries) {
@@ -1253,7 +1368,7 @@ for (const currentSet of selectionSets) {
 					}
 					return relativeTimeSeries;
 				}
-				return this.rawTimeSeries;
+				return this.offsetTimeSeries;
 			},
 			setPopulations: function () {
 				if (!this.canCalculateRelation) {
@@ -1271,7 +1386,7 @@ for (const currentSet of selectionSets) {
 				return populations;
 			},
 			derivedTimeSeries: function () {
-				return this.rawTimeSeries.map(s => this.calculateDerivative(s));
+				return this.offsetTimeSeries.map(s => this.calculateDerivative(s));
 			},
 			regressionSeries: function () {
 				const confirmedYValues = this.rawTimeSeries[0];
@@ -1409,6 +1524,13 @@ for (const currentSet of selectionSets) {
 					}
 
 					console.log('calculated new sets');
+
+					// calculate offset values
+					if (this.offsetB !== 0 || this.offsetC !== 0) {
+						const offsetArrays = this.calculateOffsetArrays([setA, setB, setC], [this.offsetB, this.offsetC]);
+						[setA, setB, setC] = offsetArrays.values;
+						this.setOffsetMaxLength = offsetArrays.maxLength;
+					}
 
 					chartConfig.data.datasets[0].data = setA;
 					chartConfig.data.datasets[1].data = setB;
