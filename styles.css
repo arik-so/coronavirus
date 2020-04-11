@@ -134,9 +134,9 @@ div.geography-picker {
 	width: 300px;
 }
 
-div.geography-picker:not(.set_comparison) {
+/*div.geography-picker:not(.set_comparison) {
 	margin-top: 10px;
-}
+}*/
 
 div.geography-picker.set_comparison > div.settings-block {
 	border-top-left-radius: 0;
