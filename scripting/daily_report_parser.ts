@@ -3,7 +3,8 @@ import * as fs from 'fs';
 import ParserUtility, {AddressComponent, Aggregation, CSVEntry, LocationDetails} from './ParserUtility';
 import LocationUtility from './LocationUtility';
 
-const INITIAL_REPORT = '03-23-2020';
+const config = require('./extraction_config.json');
+const INITIAL_REPORT = config.date;
 
 async function processSingleDayDelta(reportDate: string) {
 	const reportCsv = `${__dirname}/../docs/data/fetcher/COVID-19/csse_covid_19_data/csse_covid_19_daily_reports/${reportDate}.csv`;
@@ -88,7 +89,8 @@ async function processSingleDayDelta(reportDate: string) {
 		entries: deltasByGroup,
 		sequence: deltaSequence
 	};
-	fs.writeFileSync(deltaJson, JSON.stringify(output, null, 4));
+	const outputString = config.daily.beautify_output ? JSON.stringify(output, null, 4) : JSON.stringify(output);
+	fs.writeFileSync(deltaJson, outputString);
 }
 
 (async () => {

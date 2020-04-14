@@ -1,17 +1,22 @@
 import * as fs from 'fs';
 import * as moment from 'moment';
-import ParserUtility, {Aggregation, LocationDetails, Metric, TimeseriesEntry} from './ParserUtility';
+import ParserUtility, {Aggregation, Metric, TimeseriesEntry} from './ParserUtility';
 
-const REPORT_EXTENSION_DATE = '03-24-2020';
-const TIME_SERIES_KEY_FORMAT = 'M/D/YY';
+const config = require('./extraction_config.json');
+
+const REPORT_EXTENSION_DATE = config.date; // first: '03-18-2020'
+const TIME_SERIES_KEY_FORMAT = config.timeseries.key_date_format;
+
+const SKIP_US_RECOVERIES = config.timeseries.skip_us_recoveries;
 
 // infected, recovered, dead
-const metrics = [Metric.Infected, Metric.Dead];
+const metrics = [Metric.Infected, Metric.Recovered, Metric.Dead];
 
-const LEGACY = false;
-const BEAUTIFY = true;
+const LEGACY = config.timeseries.legacy_series_input;
+const BEAUTIFY = config.timeseries.beautify_output;
 
 (async () => {
+	console.log('Date:', REPORT_EXTENSION_DATE);
 	const firstMoment = moment('2020-01-22');
 	const reportExtensionMoment = moment(REPORT_EXTENSION_DATE);
 	const lastReportMoment = moment(REPORT_EXTENSION_DATE).subtract(1, 'day');
@@ -24,7 +29,8 @@ const BEAUTIFY = true;
 	const inJson = `${__dirname}/output/covid_timeseries_${jsonInputDateKey}.json`;
 	const outJson = `${__dirname}/output/covid_timeseries_${jsonOutputDateKey}.json`;
 
-	const legacyJson = `${__dirname}/input/covid_legacy_timeseries_03-22-2020.json`;
+	// const legacyJson = `${__dirname}/input/covid_legacy_timeseries_03-22-2020.json`;
+	const legacyJson = `${__dirname}/input/covid_legacy_timeseries_03-17-2020.json`;
 
 	const jsonInputFile = LEGACY ? legacyJson : inJson;
 	const oldTimeseriesData: TimeseriesEntry[] = JSON.parse(fs.readFileSync(jsonInputFile).toString('utf-8'));
@@ -47,7 +53,7 @@ const BEAUTIFY = true;
 
 		const locationDetails = entry.location;
 		const aggregationKey = ParserUtility.getAggregationKey(locationDetails);
-		const debugInfo = entry.localeHash;
+		const debugInfo = ParserUtility.getDebuggingInformationForLocation(locationDetails);
 
 		processedAggregationKeys[aggregationKey] = true;
 
@@ -58,6 +64,10 @@ const BEAUTIFY = true;
 		}
 
 		for (const currentMetric of metrics) {
+			if (SKIP_US_RECOVERIES && currentMetric === Metric.Recovered && locationDetails.country.short_name === 'US') {
+				continue;
+			}
+
 			const metricEntry = entry.entries[currentMetric];
 			if (metricEntry[timeseriesDateKey] !== undefined) {
 				console.error('Timeseries already contains date key:', timeseriesDateKey);
@@ -68,12 +78,45 @@ const BEAUTIFY = true;
 				return;
 			}
 
+			const previousValue = entry.entries[currentMetric][timeseriesPreviousDateKey];
+
+			if (currentMetric === Metric.Recovered && locationDetails.state && locationDetails.state.long_name === 'California') {
+				debugger
+			}
+
 			if (delta) {
-				const relevantDelta = delta[currentMetric];
-				entry.entries[currentMetric][timeseriesDateKey] = relevantDelta;
+				const newValue = delta[currentMetric];
+				/*
+				if (!Number.isSafeInteger(previousValue)) {
+					// previous value is unsafe integer
+					console.error(`Last ${currentMetric} value was non-numeric ${previousValue}, overriding in lieu of new value ${newValue} // ${debugInfo}`);
+					entry.entries[currentMetric][timeseriesDateKey] = previousValue;
+					continue;
+				}
+				if (newValue < previousValue) {
+					console.log(`Attempting to undo time: ${currentMetric} ${previousValue} -> ${newValue} // ${debugInfo}`);
+					if (newValue <= 0) {
+						// the entire record is being eliminated!
+						console.log('\tDisallowing record elimination, null going forward');
+						// assuming data is unreliable going forward
+						entry.entries[currentMetric][timeseriesDateKey] = null;
+						continue;
+					}
+					const valueDelta = previousValue - newValue;
+					const fraction = newValue / previousValue;
+					if (fraction < 0.6 && valueDelta > 1) {
+						console.log('\tDisallowing data manipulation (removing 40% of the value exceeding 1), null going forward');
+						// assuming data is unreliable going forward
+						entry.entries[currentMetric][timeseriesDateKey] = null;
+						continue;
+					}
+					console.log('\tAssuming non-malicious record correction.');
+				}
+				*/
+				entry.entries[currentMetric][timeseriesDateKey] = newValue;
 			} else {
-				entry.entries[currentMetric][timeseriesDateKey] = entry.entries[currentMetric][timeseriesPreviousDateKey];
-				console.error('No new information available for location, extend from previous known date:', debugInfo);
+				console.error(`No new information available for location, extend previous value: ${currentMetric} ${previousValue} // ${debugInfo}`);
+				entry.entries[currentMetric][timeseriesDateKey] = previousValue;
 			}
 		}
 		newTimeseriesData.push(entry);
@@ -103,6 +146,11 @@ const BEAUTIFY = true;
 		};
 
 		for (const currentMetric of metrics) {
+
+			if (SKIP_US_RECOVERIES && currentMetric === Metric.Recovered && locationDetails.country.short_name === 'US') {
+				continue;
+			}
+
 			template.entries[currentMetric] = {
 				...emptyTimeseries,
 				[timeseriesDateKey]: delta[currentMetric]
@@ -110,7 +158,7 @@ const BEAUTIFY = true;
 		}
 
 		// this is a new entry!
-		debugger
+		// debugger
 
 		newTimeseriesData.push(template);
 	}

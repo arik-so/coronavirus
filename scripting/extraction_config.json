@@ -1,0 +1,12 @@
+{
+	"date": "04-13-2020",
+	"daily": {
+		"beautify_output": true
+	},
+	"timeseries": {
+		"skip_us_recoveries": true,
+		"key_date_format": "M/D/YY",
+		"legacy_series_input": false,
+		"beautify_output": false
+	}
+}

@@ -409,6 +409,31 @@ export default class LocationUtility {
 				long_name: 'Diamond Princess Cruise Ship'
 			}
 		},
+		'0.0,0.0|Diamond Princess': {
+			country: {
+				long_name: 'Diamond Princess Cruise Ship'
+			}
+		},
+		'0,0|Diamond Princess': {
+			country: {
+				long_name: 'Diamond Princess Cruise Ship'
+			}
+		},
+		'0.0,0.0|,,MS Zaandam': {
+			country: {
+				long_name: 'MS Zaandam Cruise Ship'
+			}
+		},
+		'0,0|MS Zaandam': {
+			country: {
+				long_name: 'MS Zaandam Cruise Ship'
+			}
+		},
+		'0,0|,,MS Zaandam': {
+			country: {
+				long_name: 'MS Zaandam Cruise Ship'
+			}
+		},
 		'35.4498,139.6649|Diamond Princess, Cruise Ship': {
 			country: {
 				long_name: 'Diamond Princess Cruise Ship'
@@ -569,11 +594,34 @@ export default class LocationUtility {
 		'0.0,0.0|Recovered, US': {
 			skip: true
 		},
+		'0,0|Recovered, Canada': {
+			skip: true
+		},
+		'0,0|Recovered, US': {
+			skip: true
+		},
 		'0.0,0.0|Unassigned, Wuhan Evacuee, US': {
 			skip: true
 		},
 		'0,0|Unassigned, Wuhan Evacuee, US': {
 			skip: true
+		},
+		'42.602636,20.902977|Kosovo': {
+			country: {
+				long_name: 'Kosovo'
+			}
+		},
+		'24.2155,-12.8858|,,Western Sahara': {
+			country: {
+				long_name: 'Western Sahara',
+				short_name: 'EH'
+			}
+		},
+		'24.2155,-12.8858|Western Sahara': {
+			country: {
+				long_name: 'Western Sahara',
+				short_name: 'EH'
+			}
 		}
 	};
 }

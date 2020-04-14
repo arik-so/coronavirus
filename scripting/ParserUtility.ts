@@ -38,6 +38,12 @@ export default class {
 		return `${entry.Country_Region}, ${entry.Province_State}, ${entry.Admin2}: (${entry.Lat},${entry.Long_}) (FIPS: ${entry.FIPS}) [${this.getLocationKeyForEntry(entry)}]`;
 	}
 
+	static getDebuggingInformationForLocation(location: LocationDetails): string {
+		const hash = this.getAggregationHash(location);
+		// ATTENTION! Long_ may be spelled with a trailing underscore! Check each day to verify it's still there
+		return `${location.country && location.country.long_name}, ${location.state && location.state.long_name}, ${location.county && location.county.long_name} (${hash})`;
+	}
+
 	static normalizeEntry(entry: CSVEntry | object): CSVEntry {
 		// @ts-ignore
 		const response: CSVEntry = {
@@ -89,7 +95,9 @@ export enum Metric {
 	Dead = 'dead'
 }
 
-export interface Timeseries { [key: string]: number }
+export interface Timeseries {
+	[key: string]: number
+}
 
 export interface TimeseriesEntry {
 	localeHash: string,
@@ -110,7 +118,6 @@ export interface Aggregation {
 }
 
 
-
 export interface CSVEntry {
 	FIPS: string;
 	Admin2: string;
@@ -126,7 +133,6 @@ export interface CSVEntry {
 
 export interface ProcessedCSVEntry extends CSVEntry, LocationDetails {
 }
-
 
 
 export interface AddressComponent {
