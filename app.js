@@ -436,9 +436,13 @@ for (const currentSet of selectionSets) {
 
 				let endIndex = data.length + this.graphEndOffset;
 				if (this.comparisonMode && (this.offsetB !== 0 || this.offsetC !== 0)) {
-					let realEndIndex = this.setOffsetMaxLength + this.graphEndOffset;
+					const realEndIndex = this.setOffsetMaxLength + this.graphEndOffset;
+					endIndex = Math.min(data.length, realEndIndex);
+				} else {
+					const realEndIndex = this.chartLabels.length + this.graphEndOffset;
 					endIndex = Math.min(data.length, realEndIndex);
 				}
+
 				if (this.regression !== 'none' && !this.comparisonMode) {
 					// don't trim from the end in regression mode
 					endIndex = undefined;
