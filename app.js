@@ -288,7 +288,9 @@ for (const currentSet of selectionSets) {
 		relationType: 'absolute',
 		blurDerivative: 1,
 		offsetB: 0,
-		offsetC: 0
+		offsetC: 0,
+		graphStartOffset: 0,
+		graphEndOffset: 0
 	};
 	// only accessor for the country computed value
 	const parametrizableKeys = ['countries', 'setB', 'setC', ...Object.keys(params)];
@@ -323,7 +325,7 @@ for (const currentSet of selectionSets) {
 
 			setOffsetMinimum: -dateLabels.size + 3,
 			setOffsetMaximum: dateLabels.size - 3,
-			setOffsetMaxLength: 0,
+			_setOffsetMaxLength: 0,
 
 			// pass to country-selector for component control
 			selectionSets,
@@ -359,7 +361,7 @@ for (const currentSet of selectionSets) {
 			showCopyLink: true,
 
 			developerMode: false,
-			graphExportURL: null
+			graphExportURL: null,
 		},
 		created: function () {
 			/*for (const countryCode of Object.keys(countrySubdivisions)) {
@@ -379,6 +381,22 @@ for (const currentSet of selectionSets) {
 				// only start working on the map once the chart is shown
 				this.showMap = true;
 			}, 250); */
+
+			const sliderMax = this.chartLabels.length - 1;
+			$('#graph-range-slider').slider({
+				range: true,
+				min: 0,
+				max: sliderMax,
+				values: [this.graphStartOffset, sliderMax + this.graphEndOffset],
+				slide: (event, ui) => {
+					const leftValue = ui.values[0];
+					const rightValue = ui.values[1];
+					this.graphStartOffset = leftValue;
+					// it needs to be recalculated dynamically, so no variable reuse here
+					this.graphEndOffset = rightValue - this.chartLabels.length + 1;
+				}
+			});
+
 			this.$nextTick(() => {
 				this.createChart();
 			});
@@ -407,7 +425,26 @@ for (const currentSet of selectionSets) {
 				debugger
 				element.href = 'https://stackoverflow.com';
 				return true;
-				return true;
+			},
+			trim: function (data) {
+				if (!Array.isArray(data)) {
+					return data;
+				}
+				if (data.length < 3) {
+					return data;
+				}
+
+				let endIndex = data.length + this.graphEndOffset;
+				if (this.comparisonMode && (this.offsetB !== 0 || this.offsetC !== 0)) {
+					let realEndIndex = this.setOffsetMaxLength + this.graphEndOffset;
+					endIndex = Math.min(data.length, realEndIndex);
+				}
+				if (this.regression !== 'none' && !this.comparisonMode) {
+					// don't trim from the end in regression mode
+					endIndex = undefined;
+				}
+
+				return data.slice(this.graphStartOffset, endIndex)
 			},
 			handleRoute: function (newRoute, oldRoute) {
 
@@ -500,6 +537,16 @@ for (const currentSet of selectionSets) {
 						extrapolation = Math.max(extrapolation, 0);
 						extrapolation = Math.min(extrapolation, 15);
 						this[key] = extrapolation;
+					} else if (['graphStartOffset', 'graphEndOffset'].includes(key)) {
+						let parsedValue = parseInt(value);
+						if (key === 'graphStartOffset') {
+							// parsedValue = Math.min(parsedValue, this.chartLabels.length - 1);
+							parsedValue = Math.max(parsedValue, 0);
+						} else if (key === 'graphEndOffset') {
+							// parsedValue = Math.max(parsedValue, -1 * this.chartLabels.length + 1);
+							parsedValue = Math.min(parsedValue, 0);
+						}
+						this[key] = parsedValue;
 					} else {
 						const currentValidValues = validValues[key];
 						if (!Array.isArray(currentValidValues)) {
@@ -703,7 +750,7 @@ for (const currentSet of selectionSets) {
 			getCountryCodeForEntry: function (entry) {
 				// return entry['Country/Region'];
 				if (!entry['location']) {
-					debugger
+					// debugger
 				}
 				return entry['location']['country']['short_name'] || entry['location']['country']['long_name'];
 			},
@@ -1024,6 +1071,21 @@ for (const currentSet of selectionSets) {
 					this.axes = 'joint';
 				}
 			},
+			'chartLabels.length': function (newValue, oldValue) {
+				$('#graph-range-slider').slider('option', 'max', newValue - 1);
+				let [lowerBound, upperBound] = $('#graph-range-slider').slider('option', 'values');
+				const oldOffset = upperBound - oldValue;
+				let newUpperBound = oldOffset + newValue;
+				if (lowerBound > newValue) {
+					lowerBound = 0;
+					this.graphStartOffset = 0;
+				}
+				if (newUpperBound < 1) {
+					this.graphEndOffset = 0;
+					newUpperBound = newValue - 1;
+				}
+				$('#graph-range-slider').slider('option', 'values', [lowerBound, newUpperBound]);
+			},
 			comparisonMode: function (newValue) {
 				if (newValue) {
 					chartConfig.data.datasets[0].label = selectionSets[0].setName;
@@ -1060,36 +1122,24 @@ for (const currentSet of selectionSets) {
 			mapDataReference: function () {
 				this.updateLocation();
 			},
-			dataSets: {
+			trimmedDataSets: {
 				immediate: true,
 				handler: function (newValue) {
 					chartConfig.data.datasets[CONFIRMED_DATASET_INDEX].data = newValue[0];
 					chartConfig.data.datasets[RECOVERED_DATASET_INDEX].data = newValue[1];
 					chartConfig.data.datasets[DEAD_DATASET_INDEX].data = newValue[2];
 
+					chartConfig.data.labels = this.trimmedChartLabels;
+
 					if (this.regression !== 'none' && !this.comparisonMode) {
-						// show regression
-						chartConfig.data.labels = Array.from(dateLabels);
 						// console.dir(chartConfig.data.datasets[CONFIRMED_REGRESSION_DATASET_INDEX]);
 						chartConfig.data.datasets[CONFIRMED_REGRESSION_DATASET_INDEX] = placeholderRegressionDataset;
 						chartConfig.data.datasets[CONFIRMED_REGRESSION_DATASET_INDEX].data = newValue[3];
 						// console.dir(chartConfig.data.datasets[CONFIRMED_REGRESSION_DATASET_INDEX]);
-
-						const regressionDateLabels = Array.from(dateLabels);
-						const extrapolationSize = Math.round(this.extrapolationSize);
-						for (let x = 1; x <= extrapolationSize; x++) {
-							regressionDateLabels.push(`+${x}`);
-						}
-						chartConfig.data.labels = regressionDateLabels;
 					} else {
-						chartConfig.data.labels = Array.from(dateLabels);
 						if (chartConfig.data.datasets[CONFIRMED_REGRESSION_DATASET_INDEX]) {
 							chartConfig.data.datasets.pop();
 						}
-					}
-
-					if (this.comparisonMode && (this.offsetB !== 0 || this.offsetC !== 0)) {
-						chartConfig.data.labels = Array(this.setOffsetMaxLength).fill(null).map((l, i) => `Day ${i + 1}`);
 					}
 
 					this.updateGraph();
@@ -1119,10 +1169,39 @@ for (const currentSet of selectionSets) {
 		},
 		computed: {
 			chartLabels: function () {
-				if (this.comparisonMode) {
-					return Array.from(dateLabels).reverse();
+				if (this.comparisonMode && (this.offsetB !== 0 || this.offsetC !== 0)) {
+					return Array(this.setOffsetMaxLength).fill(null).map((l, i) => `Day ${i + 1}`);
 				}
-				return Array.from(dateLabels);
+				const fitLabels = Array.from(dateLabels);
+				if (this.regression !== 'none' && !this.comparisonMode) {
+					const extrapolationSize = Math.round(this.extrapolationSize);
+					for (let x = 1; x <= extrapolationSize; x++) {
+						fitLabels.push(`+${x}`);
+					}
+				}
+				return fitLabels;
+			},
+			trimmedChartLabels: function () {
+				return this.trim(this.chartLabels)
+			},
+			setOffsetMaxLength: function () {
+				if (this.comparisonMode && (this.offsetB !== 0 || this.offsetC !== 0)) {
+					const _ = this.offsetTimeSeries; // only function that goes in and computes the necessary offset
+					return this._setOffsetMaxLength;
+				}
+				return 0;
+			},
+			graphRange: function () {
+				const labels = this.chartLabels;
+				let endLabel = labels[labels.length - 1 + this.graphEndOffset];
+				if (this.regression !== 'none' && !this.comparisonMode) {
+					endLabel = 'N/A'
+				}
+
+				return {
+					start: labels[this.graphStartOffset],
+					end: endLabel
+				};
 			},
 			aggregationLabel: function () {
 				if (this.selectionSets[0].setName !== this.selectionSets[0].defaultSetName) {
@@ -1332,6 +1411,10 @@ for (const currentSet of selectionSets) {
 				console.error('invalid comparison data type');
 				return [];
 			},
+			/**
+			 * Raw data
+			 * @returns {[[], [], []]|[[], [], []]}
+			 */
 			rawTimeSeries: function () {
 				if (!this.comparisonMode) {
 					const confirmedYValues = this.filterDatasetBySelectedCountries(0, 'infected');
@@ -1345,14 +1428,22 @@ for (const currentSet of selectionSets) {
 					return [setA, setB, setC];
 				}
 			},
+			/**
+			 * Time series offset by each set's specified amount
+			 * @returns {computed.rawTimeSeries|[]}
+			 */
 			offsetTimeSeries: function () {
 				if (this.comparisonMode && (this.offsetB !== 0 || this.offsetC !== 0)) {
 					const offsetArrays = this.calculateOffsetArrays(this.rawTimeSeries, [this.offsetB, this.offsetC]);
-					this.setOffsetMaxLength = offsetArrays.maxLength;
+					this._setOffsetMaxLength = offsetArrays.maxLength;
 					return offsetArrays.values;
 				}
 				return this.rawTimeSeries;
 			},
+			/**
+			 * Time series to be used when not deriving
+			 * @returns {computed.offsetTimeSeries|[]}
+			 */
 			totalTimeSeries: function () {
 				if (this.relationType === 'relative') {
 					// divide each one by the population
@@ -1385,9 +1476,17 @@ for (const currentSet of selectionSets) {
 				}
 				return populations;
 			},
+			/**
+			 * Time series used when looking at derivatives/changes
+			 * @returns {*}
+			 */
 			derivedTimeSeries: function () {
 				return this.offsetTimeSeries.map(s => this.calculateDerivative(s));
 			},
+			/**
+			 * Time series with regression applied to it
+			 * @returns {{extrapolation: [], cases: {equation: [number, number], parameterValues: [number, number, number]}}|{regressionError: *, extrapolation: [], cases: {equation: [number, number], parameterValues: [number, number, number]}}}
+			 */
 			regressionSeries: function () {
 				const confirmedYValues = this.rawTimeSeries[0];
 				const confirmedExtrapolationBasis = confirmedYValues.slice(this.modelOffset);
@@ -1449,6 +1548,7 @@ for (const currentSet of selectionSets) {
 
 				return regressionDetails;
 			},
+
 			dataSets: function () {
 				const factualData = this.derivative ? this.derivedTimeSeries : this.totalTimeSeries;
 				const dataSets = [...factualData];
@@ -1462,6 +1562,7 @@ for (const currentSet of selectionSets) {
 						dataSets.push(this.regressionSeries.extrapolation);
 					}
 				}
+
 				if (!this.comparisonMode) {
 					if (!this.showCases) {
 						dataSets[0] = [];
@@ -1475,69 +1576,75 @@ for (const currentSet of selectionSets) {
 				}
 				return dataSets;
 
-				if (!this.comparisonMode) {
-					// we are drilling down into different data types from one set
-					let confirmedYValues = this.filterDatasetBySelectedCountries(0, 'infected');
-					let deadYValues = this.filterDatasetBySelectedCountries(0, 'recovered');
-					let recoveredYValues = this.filterDatasetBySelectedCountries(0, 'dead');
-
-					if (this.derivative) {
-						confirmedYValues = this.calculateDerivative(confirmedYValues);
-						deadYValues = this.calculateDerivative(deadYValues);
-						recoveredYValues = this.calculateDerivative(recoveredYValues);
-					}
-
-					if (this.showCases) {
-						chartConfig.data.datasets[CONFIRMED_DATASET_INDEX].data = confirmedYValues;
-					} else {
-						chartConfig.data.datasets[CONFIRMED_DATASET_INDEX].data = [];
-					}
-
-					if (this.showDeaths) {
-						chartConfig.data.datasets[DEAD_DATASET_INDEX].data = deadYValues;
-					} else {
-						chartConfig.data.datasets[DEAD_DATASET_INDEX].data = [];
-					}
-
-					if (this.showRecoveries) {
-						chartConfig.data.datasets[RECOVERED_DATASET_INDEX].data = recoveredYValues;
-					} else {
-						chartConfig.data.datasets[RECOVERED_DATASET_INDEX].data = [];
-					}
-
-					if (this.regression === 'none') {
-						chartConfig.data.labels = Array.from(dateLabels);
-						if (chartConfig.data.datasets[CONFIRMED_REGRESSION_DATASET_INDEX]) {
-							chartConfig.data.datasets.pop();
-						}
-					}
-
-					return [confirmedYValues, deadYValues, recoveredYValues];
-				} else {
-					// we are aggregating sets
-					let setA = this.filterDatasetBySelectedCountries(0, this.comparisonDataGroup);
-					let setB = this.filterDatasetBySelectedCountries(1, this.comparisonDataGroup);
-					let setC = this.filterDatasetBySelectedCountries(2, this.comparisonDataGroup);
-
-					if (this.derivative) {
-						[setA, setB, setC] = [setA, setB, setC].map(s => this.calculateDerivative(s));
-					}
-
-					console.log('calculated new sets');
-
-					// calculate offset values
-					if (this.offsetB !== 0 || this.offsetC !== 0) {
-						const offsetArrays = this.calculateOffsetArrays([setA, setB, setC], [this.offsetB, this.offsetC]);
-						[setA, setB, setC] = offsetArrays.values;
-						this.setOffsetMaxLength = offsetArrays.maxLength;
-					}
-
-					chartConfig.data.datasets[0].data = setA;
-					chartConfig.data.datasets[1].data = setB;
-					chartConfig.data.datasets[2].data = setC;
-
-					return [setA, setB, setC];
-				}
+				// if (!this.comparisonMode) {
+				// 	// we are drilling down into different data types from one set
+				// 	let confirmedYValues = this.filterDatasetBySelectedCountries(0, 'infected');
+				// 	let deadYValues = this.filterDatasetBySelectedCountries(0, 'recovered');
+				// 	let recoveredYValues = this.filterDatasetBySelectedCountries(0, 'dead');
+				//
+				// 	if (this.derivative) {
+				// 		confirmedYValues = this.calculateDerivative(confirmedYValues);
+				// 		deadYValues = this.calculateDerivative(deadYValues);
+				// 		recoveredYValues = this.calculateDerivative(recoveredYValues);
+				// 	}
+				//
+				// 	if (this.showCases) {
+				// 		chartConfig.data.datasets[CONFIRMED_DATASET_INDEX].data = confirmedYValues;
+				// 	} else {
+				// 		chartConfig.data.datasets[CONFIRMED_DATASET_INDEX].data = [];
+				// 	}
+				//
+				// 	if (this.showDeaths) {
+				// 		chartConfig.data.datasets[DEAD_DATASET_INDEX].data = deadYValues;
+				// 	} else {
+				// 		chartConfig.data.datasets[DEAD_DATASET_INDEX].data = [];
+				// 	}
+				//
+				// 	if (this.showRecoveries) {
+				// 		chartConfig.data.datasets[RECOVERED_DATASET_INDEX].data = recoveredYValues;
+				// 	} else {
+				// 		chartConfig.data.datasets[RECOVERED_DATASET_INDEX].data = [];
+				// 	}
+				//
+				// 	if (this.regression === 'none') {
+				// 		chartConfig.data.labels = Array.from(dateLabels);
+				// 		if (chartConfig.data.datasets[CONFIRMED_REGRESSION_DATASET_INDEX]) {
+				// 			chartConfig.data.datasets.pop();
+				// 		}
+				// 	}
+				//
+				// 	return [confirmedYValues, deadYValues, recoveredYValues];
+				// } else {
+				// 	// we are aggregating sets
+				// 	let setA = this.filterDatasetBySelectedCountries(0, this.comparisonDataGroup);
+				// 	let setB = this.filterDatasetBySelectedCountries(1, this.comparisonDataGroup);
+				// 	let setC = this.filterDatasetBySelectedCountries(2, this.comparisonDataGroup);
+				//
+				// 	if (this.derivative) {
+				// 		[setA, setB, setC] = [setA, setB, setC].map(s => this.calculateDerivative(s));
+				// 	}
+				//
+				// 	console.log('calculated new sets');
+				//
+				// 	// calculate offset values
+				// 	if (this.offsetB !== 0 || this.offsetC !== 0) {
+				// 		const offsetArrays = this.calculateOffsetArrays([setA, setB, setC], [this.offsetB, this.offsetC]);
+				// 		[setA, setB, setC] = offsetArrays.values;
+				// 		this._setOffsetMaxLength = offsetArrays.maxLength;
+				// 	}
+				//
+				// 	chartConfig.data.datasets[0].data = setA;
+				// 	chartConfig.data.datasets[1].data = setB;
+				// 	chartConfig.data.datasets[2].data = setC;
+				//
+				// 	return [setA, setB, setC];
+				// }
+			},
+			trimmedDataSets: function () {
+				const dataSets = this.dataSets;
+				return dataSets.map(set => {
+					return this.trim(set);
+				});
 			},
 			aggregatedTotals: function () {
 				// console.log('aggregating totals');

@@ -268,12 +268,12 @@ label.country_label > span.country_decoration > span:not(:last-child) {
 	padding-right: 5px;
 }
 
-div.chart_container > div {
+div.chart_container > div:not(#graph-range-control) {
 	text-align: center;
 	padding-bottom: 10px;
 }
 
-div.map_selector > div > div > span, div.chart_container > div > span, div.chart_selector > div > div > span, div.set_selector > div > div > span {
+div.map_selector > div > div > span, div.chart_container > div:not(#graph-range-control) > span, div.chart_selector > div > div > span, div.set_selector > div > div > span {
 	display: inline-block;
 	padding: 12px;
 	padding-bottom: 9px;
@@ -304,11 +304,11 @@ span.note > a {
 	cursor: pointer;
 }
 
-div.chart_container > div > span:first-child {
+div.chart_container > div:not(#graph-range-control) > span:first-child {
 	padding-left: 0;
 }
 
-div.chart_container > div > span:last-child {
+div.chart_container > div:not(#graph-range-control) > span:last-child {
 	padding-right: 0;
 }
 
@@ -493,7 +493,7 @@ label {
 		border-top-left-radius: 0;
 	}
 
-	div.chart_container > div > span {
+	div.chart_container > div:not(#graph-range-control) > span {
 		padding: 6px;
 	}
 
@@ -782,4 +782,26 @@ input[type=checkbox]:indeterminate:after {
 
 .select-css option {
 	font-weight: normal;
+}
+
+div#graph-range-control {
+	margin-bottom: 5px;
+}
+
+div#graph-range-control > div#graph-range-slider {
+	margin-bottom: 7px;
+	background-color: #f5f7fb;
+}
+
+div#graph-range-control > div:not(#graph-range-slider) {
+	padding-left: 2px;
+	padding-right: 2px;
+}
+
+div#graph-range-control > div#graph-range-slider > div {
+	background-color: rgba(80, 120, 226, 0.4);
+}
+
+div#graph-range-control > div#graph-range-slider > span {
+	outline: none;
 }

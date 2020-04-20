@@ -24,11 +24,14 @@
 	<link rel="stylesheet" href="https://unpkg.com/purecss@1.0.1/build/grids-responsive-min.css">
 	<link href="https://fonts.googleapis.com/css?family=Spartan:300,400&display=swap" rel="stylesheet">
 	<link rel="stylesheet" href="bower_components/social-share-kit/dist/css/social-share-kit.css" type="text/css">
+	<link rel="stylesheet" href="assets/css/jquery-ui.min.css" type="text/css">
 	<script src="libs/axios/dist/axios.min.js"></script>
 	<script src="libs/vue/dist/vue.min.js"></script>
 	<script src="libs/vue-router/dist/vue-router.min.js"></script>
 	<script src="libs/chart.js/dist/Chart.bundle.min.js"></script>
 	<script src="assets/js/Chart.Geo.min.js"></script>
+	<script src="assets/js/jquery.min.js"></script>
+	<script src="assets/js/jquery-ui.min.js"></script>
 	<script src="libs/regression-js/dist/regression.min.js"></script>
 	<script src="bower_components/moment/min/moment.min.js"></script>
 	<script src="assets/js/lm_fitter.js"></script>
@@ -324,6 +327,12 @@
 					<div class="chart_container">
 						<div class="graph-canvas-wrapper">
 							<canvas id="graph_canvas" style="width: 100%;" xclass="pure-u-5-6"></canvas>
+						</div>
+						<div id="graph-range-control">
+							<div id="graph-range-slider"></div>
+							<div style="float: left;">{{graphRange.start}}</div>
+							<div style="float: right;">{{graphRange.end}}</div>
+							<div style="clear:both;"></div>
 						</div>
 						<template v-if="developerMode">
 							<div style="text-align: right;">
