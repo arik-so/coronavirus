@@ -373,10 +373,16 @@ for (const currentSet of selectionSets) {
 		},
 		mounted: function () {
 			console.log('mounted vue');
-			SocialShareKit.init({
-				title: 'Coronavirus tracker by @arikaleph and @elliebee',
-				text: ''
-			});
+
+			try {
+				SocialShareKit.init({
+					title: 'Coronavirus tracker by @arikaleph and @elliebee',
+					text: ''
+				});
+			} catch (e) {
+				console.error('Failed to initialize social share kit:');
+				console.trace(e);
+			}
 			/* setTimeout(() => {
 				// only start working on the map once the chart is shown
 				this.showMap = true;
@@ -809,6 +815,7 @@ for (const currentSet of selectionSets) {
 				});
 			},
 			createChart: function () {
+				console.log('creating chart!');
 				const canvas = document.getElementById('graph_canvas');
 				const context = canvas.getContext('2d');
 				chartConfig.options.scales.yAxes[0].ticks.callback = (value) => {
@@ -872,6 +879,10 @@ for (const currentSet of selectionSets) {
 				// update router
 				clearTimeout(graphUpdateTimeout);
 				const repaintGraph = () => {
+					if(!this.graph){
+						console.error('graph not defined!');
+						return;
+					}
 					this.graph.update();
 					// this.$nextTick(() => {
 					// 	delete chartConfig.options.animation;
