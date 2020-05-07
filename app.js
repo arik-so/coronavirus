@@ -592,17 +592,16 @@ for (const currentSet of selectionSets) {
 			},
 			calculateSetPopulation: function (set) {
 				let setPopulation = 0;
+				let setIsEmpty = true;
 				const skipTerritories = {};
 				const territoryMappers = {CN: 'China', US: 'USA'};
 				for (const currentCountryCode of set.checkedCountries) {
+					setIsEmpty = false;
 					if (countrySubdivisions[currentCountryCode]) {
 						// we'll deal with territories later
 						skipTerritories[currentCountryCode] = true;
 					}
-					const currentCountryPopulation = countryPopulation[currentCountryCode];
-					if (!currentCountryPopulation) {
-						return NaN;
-					}
+					const currentCountryPopulation = countryPopulation[currentCountryCode] || 0;
 					setPopulation += currentCountryPopulation;
 				}
 				for (const [currentCountryCode, territoryCodes] of Object.entries(set.territorySelections)) {
@@ -611,12 +610,13 @@ for (const currentSet of selectionSets) {
 					}
 					const countryKey = territoryMappers[currentCountryCode];
 					for (const currentTerritoryCode of territoryCodes) {
-						const currentTerritoryPopulation = countryPopulation[countryKey][currentTerritoryCode];
-						if (!currentTerritoryPopulation) {
-							return NaN;
-						}
+						setIsEmpty = false;
+						const currentTerritoryPopulation = countryPopulation[countryKey][currentTerritoryCode] || 0;
 						setPopulation += currentTerritoryPopulation;
 					}
+				}
+				if (!setIsEmpty && !setPopulation) {
+					return NaN;
 				}
 				return setPopulation;
 			},
