@@ -121,7 +121,9 @@ export default class LocationUtility {
 						{
 							// @ts-ignore
 							error: 'NO_LOOKUP_RESULT',
-							types: ['country', 'political']
+							types: ['country', 'political'],
+							lookupKey,
+							locationKey
 						}
 					];
 					// console.trace(e);
@@ -570,6 +572,86 @@ export default class LocationUtility {
 				long_name: 'Diamond Princess'
 			}
 		},
+		'0,0|Air Force, US Military, US': {
+			country: {
+				long_name: 'United States',
+				short_name: 'US'
+			},
+			state: {
+				long_name: 'Air Force'
+			},
+			skip: true
+		},
+		'0,0|Army, US Military, US': {
+			country: {
+				long_name: 'United States',
+				short_name: 'US'
+			},
+			state: {
+				long_name: 'Army'
+			},
+			skip: true
+		},
+		'0,0|Inmates, Federal Bureau of Prisons, US': {
+			country: {
+				long_name: 'United States',
+				short_name: 'US'
+			},
+			state: {
+				long_name: 'Prisons'
+			},
+			skip: true
+		},
+		'0,0|Staff, Federal Bureau of Prisons, US': {
+			country: {
+				long_name: 'United States',
+				short_name: 'US'
+			},
+			state: {
+				long_name: 'Prisons'
+			},
+			skip: true
+		},
+		'0,0|Navy, US Military, US': {
+			country: {
+				long_name: 'United States',
+				short_name: 'US'
+			},
+			state: {
+				long_name: 'Navy'
+			},
+			skip: true
+		},
+		'0,0|Marine Corps, US Military, US': {
+			country: {
+				long_name: 'United States',
+				short_name: 'US'
+			},
+			state: {
+				long_name: 'Marine Corps'
+			},
+			skip: true
+		},
+		'0,0|Unassigned, US Military, US': {
+			country: {
+				long_name: 'United States',
+				short_name: 'US'
+			},
+			state: {
+				long_name: 'Military'
+			},
+			skip: true
+		},
+		'0,0|Veteran Hospitals, US': {
+			country: {
+				long_name: 'United States',
+				short_name: 'US'
+			},
+			state: {
+				long_name: 'Veteran Hospitals'
+			},
+			skip: true
+		},
 		'0,0|External territories, Australia': {
 			country: {
 				long_name: 'Australia',
@@ -622,6 +704,72 @@ export default class LocationUtility {
 				long_name: 'Western Sahara',
 				short_name: 'EH'
 			}
-		}
+		},
+		'0,0|Unknown, Germany': {
+			country: {
+				long_name: 'Germany',
+				short_name: 'DE'
+			}
+		},
+		'0,0|Unknown, Brazil': {
+			country: {
+				long_name: 'Brazil',
+				short_name: 'BR'
+			}
+		},
+		'0,0|Unknown, Chile': {
+			country: {
+				long_name: 'Chile',
+				short_name: 'CL'
+			}
+		},
+		'0,0|Unknown, Spain': {
+			country: {
+				long_name: 'Spain',
+				short_name: 'ES'
+			}
+		},
+		'25.768923,126.668016|Okinawa, Japan': {
+			country: {
+				long_name: 'Japan',
+				short_name: 'JP'
+			}
+		},
+		'0,0|Port Quarantine, Japan': {
+			country: {
+				long_name: 'Japan',
+				short_name: 'JP'
+			}
+		},
+		'0,0|Unknown, Japan': {
+			country: {
+				long_name: 'Japan',
+				short_name: 'JP'
+			}
+		},
+		'0,0|Unknown, Peru': {
+			country: {
+				long_name: 'Peru',
+				short_name: 'PE'
+			}
+		},
+		'0,0|Unknown, Colombia': {
+			country: {
+				long_name: 'Colombia',
+				short_name: 'CO'
+			}
+		},
+		'45.2835,34.2008|Crimea Republic*, Ukraine': {
+			country: {
+				long_name: 'Ukraine',
+				short_name: 'UA'
+			}
+		},
+		'44.6054,33.522|Sevastopol*, Ukraine': {
+			country: {
+				long_name: 'Ukraine',
+				short_name: 'UA'
+			}
+		},
 	};
 }
