@@ -78,10 +78,19 @@ for (const currentSet of selectionSets) {
 	// const countriesByState = {}; // look up a state's country
 	// const countryStates = {}; // enumerate up all states in a country
 
+	const excludedTerritories = new Set([
+		'Diamond Princess Cruise Ship',
+		'Grand Princess Cruise Ship',
+		'MS Zaandam Cruise Ship'
+	]);
+
 	for (const entry of combinedCases) {
 		const location = entry['location'];
 		// const currentCountry = location['Country/Region'];
 		const currentCountry = location['country']['long_name'];
+		if (excludedTerritories.has(currentCountry)) {
+			continue;
+		}
 		const currentCode = location['country']['short_name'];
 		countryNames.add(currentCountry);
 		countryCodes.add(currentCode);
@@ -248,13 +257,14 @@ for (const currentSet of selectionSets) {
 	})).data;
 
 	const defaultCheckedCountries = new Set(canonicalCountries);
-	defaultCheckedCountries.delete('HK'); // Hong Kong
-	defaultCheckedCountries.delete('MO'); // Macao
-	defaultCheckedCountries.delete('CN'); // China
-	defaultCheckedCountries.delete('Diamond Princess Cruise Ship');
-	defaultCheckedCountries.delete('Grand Princess Cruise Ship');
-	defaultCheckedCountries.delete('IR'); // Iran
-	defaultCheckedCountries.delete('US'); // USA
+
+	// defaultCheckedCountries.delete('HK'); // Hong Kong
+	// defaultCheckedCountries.delete('MO'); // Macao
+	// defaultCheckedCountries.delete('CN'); // China
+	// defaultCheckedCountries.delete('Diamond Princess Cruise Ship');
+	// defaultCheckedCountries.delete('Grand Princess Cruise Ship');
+	// defaultCheckedCountries.delete('IR'); // Iran
+	// defaultCheckedCountries.delete('US'); // USA
 
 	const validValues = {
 		axes: ['join'/*, 'separate'*/],
@@ -360,7 +370,7 @@ for (const currentSet of selectionSets) {
 			showShare: false,
 			showCopyLink: true,
 
-			developerMode: false,
+			developerMode: true,
 			graphExportURL: null,
 		},
 		created: function () {
@@ -879,7 +889,7 @@ for (const currentSet of selectionSets) {
 				// update router
 				clearTimeout(graphUpdateTimeout);
 				const repaintGraph = () => {
-					if(!this.graph){
+					if (!this.graph) {
 						console.error('graph not defined!');
 						return;
 					}
