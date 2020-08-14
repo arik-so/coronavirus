@@ -370,7 +370,7 @@ for (const currentSet of selectionSets) {
 			showShare: false,
 			showCopyLink: true,
 
-			developerMode: true,
+			developerMode: false,
 			graphExportURL: null,
 		},
 		created: function () {
