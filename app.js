@@ -1354,15 +1354,19 @@ for (const currentSet of selectionSets) {
 				return !!this.showCases && !this.derivative && !this.comparisonMode;
 			},
 			canShowRelation: function () {
-				if (this.derivative && this.derivativeType === 'relative') {
-					// the relativity is in relation to previous data points, not external values
-					return false;
-				}
+				// if (this.derivative && this.derivativeType === 'relative') {
+				// 	// the relativity is in relation to previous data points, not external values
+				// 	return false;
+				// }
 				return true;
 				// return !this.derivative;
 			},
 			canCalculateRelation: function () {
 				if (!this.canShowRelation) {
+					return false;
+				}
+				if (this.derivative && this.derivativeType === 'relative') {
+					// the relativity is in relation to previous data points, not external values
 					return false;
 				}
 				for (const [index, currentSet] of selectionSets.entries()) {
