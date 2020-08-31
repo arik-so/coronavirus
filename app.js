@@ -452,7 +452,7 @@ for (const currentSet of selectionSets) {
 				}
 
 				let endIndex = data.length + this.graphEndOffset;
-				if (this.comparisonMode && this.nonEmptySetCount >= 2 && (this.offsetB !== 0 || this.offsetC !== 0)) {
+				if (this.comparisonMode && this.unalignedSetCount >= 2 && (this.offsetB !== 0 || this.offsetC !== 0)) {
 					const realEndIndex = this.setOffsetMaxLength + this.graphEndOffset;
 					endIndex = Math.min(data.length, realEndIndex);
 				} else {
@@ -1206,7 +1206,7 @@ for (const currentSet of selectionSets) {
 		},
 		computed: {
 			chartLabels: function () {
-				if (this.comparisonMode && this.nonEmptySetCount >= 2 && (this.offsetB !== 0 || this.offsetC !== 0)) {
+				if (this.comparisonMode && this.unalignedSetCount >= 2 && (this.offsetB !== 0 || this.offsetC !== 0)) {
 					// console.log('day-based chart labels');
 					// check that at least two sets are not empty
 
@@ -1232,19 +1232,28 @@ for (const currentSet of selectionSets) {
 				}
 				return 0;
 			},
-			nonEmptySetCount: function () {
-				return this.selectionSets.map(s => {
+			/**
+			 * Count all the non-empty sets that have differing offsets from one another
+			 * @returns {number}
+			 */
+			unalignedSetCount: function () {
+				const offsets = [0, this.offsetB, this.offsetC];
+				const offsetValues = new Set();
+				this.selectionSets.map((s, i) => {
+					const currentOffset = offsets[i];
 					const countrySelectionCount = s.checkedCountries.length;
 					if (countrySelectionCount > 0) {
-						return 1;
+						offsetValues.add(currentOffset);
+						return;
 					}
 					for (const [_, territories] of Object.entries(s.territorySelections)) {
 						if (territories.length > 0) {
-							return 1;
+							offsetValues.add(currentOffset);
+							return;
 						}
 					}
-					return 0;
-				}).reduce((p, c) => p + c, 0);
+				});
+				return offsetValues.size;
 			},
 			graphRange: function () {
 				const labels = this.chartLabels;
@@ -1493,7 +1502,7 @@ for (const currentSet of selectionSets) {
 			 * @returns {computed.rawTimeSeries|[]}
 			 */
 			offsetTimeSeries: function () {
-				if (this.comparisonMode && (this.offsetB !== 0 || this.offsetC !== 0)) {
+				if (this.comparisonMode && this.unalignedSetCount >= 2 && (this.offsetB !== 0 || this.offsetC !== 0)) {
 					const offsetArrays = this.calculateOffsetArrays(this.rawTimeSeries, [this.offsetB, this.offsetC]);
 					this._setOffsetMaxLength = offsetArrays.maxLength;
 					return offsetArrays.values;
