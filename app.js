@@ -21,6 +21,7 @@ for (const currentSet of selectionSets) {
 		CN: false
 	};
 	currentSet.checkedCountries = [];
+	currentSet.isEmpty = true;
 }
 
 (async () => {
@@ -451,7 +452,7 @@ for (const currentSet of selectionSets) {
 				}
 
 				let endIndex = data.length + this.graphEndOffset;
-				if (this.comparisonMode && (this.offsetB !== 0 || this.offsetC !== 0)) {
+				if (this.comparisonMode && this.nonEmptySetCount >= 2 && (this.offsetB !== 0 || this.offsetC !== 0)) {
 					const realEndIndex = this.setOffsetMaxLength + this.graphEndOffset;
 					endIndex = Math.min(data.length, realEndIndex);
 				} else {
@@ -1115,6 +1116,7 @@ for (const currentSet of selectionSets) {
 				$('#graph-range-slider').slider('option', 'values', [lowerBound, newUpperBound]);
 			},
 			comparisonMode: function (newValue) {
+				// newValue is a boolean
 				if (newValue) {
 					chartConfig.data.datasets[0].label = selectionSets[0].setName;
 					chartConfig.data.datasets[1].label = selectionSets[1].setName;
@@ -1125,11 +1127,18 @@ for (const currentSet of selectionSets) {
 					chartConfig.data.datasets[2].label = defaultChartConfig.data.datasets[2].label;
 				}
 			},
-			offsetB: function () {
+			offsetB: function (newValue) {
 				// chartConfig.options.animation = {duration: 0};
+				if (typeof newValue !== 'number') {
+					this.offsetB = parseInt(newValue);
+				}
+
 			},
-			offsetC: function () {
+			offsetC: function (newValue) {
 				// chartConfig.options.animation = {duration: 0};
+				if (typeof newValue !== 'number') {
+					this.offsetC = parseInt(newValue);
+				}
 			},
 			setLabels: function (newValue) {
 				if (this.comparisonMode) {
@@ -1157,8 +1166,6 @@ for (const currentSet of selectionSets) {
 					chartConfig.data.datasets[RECOVERED_DATASET_INDEX].data = newValue[1];
 					chartConfig.data.datasets[DEAD_DATASET_INDEX].data = newValue[2];
 
-					chartConfig.data.labels = this.trimmedChartLabels;
-
 					if (this.regression !== 'none' && !this.comparisonMode) {
 						// console.dir(chartConfig.data.datasets[CONFIRMED_REGRESSION_DATASET_INDEX]);
 						chartConfig.data.datasets[CONFIRMED_REGRESSION_DATASET_INDEX] = placeholderRegressionDataset;
@@ -1169,6 +1176,8 @@ for (const currentSet of selectionSets) {
 							chartConfig.data.datasets.pop();
 						}
 					}
+
+					chartConfig.data.labels = this.trimmedChartLabels;
 
 					this.updateGraph();
 					this.updateLocation();
@@ -1197,9 +1206,13 @@ for (const currentSet of selectionSets) {
 		},
 		computed: {
 			chartLabels: function () {
-				if (this.comparisonMode && (this.offsetB !== 0 || this.offsetC !== 0)) {
+				if (this.comparisonMode && this.nonEmptySetCount >= 2 && (this.offsetB !== 0 || this.offsetC !== 0)) {
+					// console.log('day-based chart labels');
+					// check that at least two sets are not empty
+
 					return Array(this.setOffsetMaxLength).fill(null).map((l, i) => `Day ${i + 1}`);
 				}
+				// console.log('normal chart labels');
 				const fitLabels = Array.from(dateLabels);
 				if (this.regression !== 'none' && !this.comparisonMode) {
 					const extrapolationSize = Math.round(this.extrapolationSize);
@@ -1218,6 +1231,20 @@ for (const currentSet of selectionSets) {
 					return this._setOffsetMaxLength;
 				}
 				return 0;
+			},
+			nonEmptySetCount: function () {
+				return this.selectionSets.map(s => {
+					const countrySelectionCount = s.checkedCountries.length;
+					if (countrySelectionCount > 0) {
+						return 1;
+					}
+					for (const [_, territories] of Object.entries(s.territorySelections)) {
+						if (territories.length > 0) {
+							return 1;
+						}
+					}
+					return 0;
+				}).reduce((p, c) => p + c, 0);
 			},
 			graphRange: function () {
 				const labels = this.chartLabels;

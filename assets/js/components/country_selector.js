@@ -73,6 +73,9 @@ Vue.component('country-selector', {
 		},
 		setName: function (newValue) {
 			this.setData.setName = newValue || this.setData.defaultSetName;
+		},
+		isEmpty: function (newValue) {
+			this.setData.isEmpty = newValue;
 		}
 	},
 	computed: {
@@ -87,6 +90,19 @@ Vue.component('country-selector', {
 			}
 			// no change otherwise
 			return this.setData.selectAll;
+		},
+		isEmpty: function () {
+			// console.log('computing emptiness');
+			const countrySelectionCount = this.setData.checkedCountries.length;
+			if (countrySelectionCount > 0) {
+				return false;
+			}
+			for (const [countryCode, territories] of Object.entries(this.setData.territorySelections)) {
+				if (territories.length > 0) {
+					return false;
+				}
+			}
+			return true;
 		},
 		partialSelection: function () {
 			const countrySelectionCount = this.setData.checkedCountries.length;
