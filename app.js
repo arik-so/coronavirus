@@ -851,6 +851,9 @@ for (const currentSet of selectionSets) {
 								}
 								return `${label} Increase: ${localeString}%`;
 							} else {
+								if (this.relationType === 'relative') {
+									return `New ${label}: ${Number(value).toLocaleString()}‱`;
+								}
 								return `New ${label}: ${Number(value).toLocaleString()}`;
 							}
 						}
@@ -1315,7 +1318,12 @@ for (const currentSet of selectionSets) {
 				return !!this.showCases && !this.derivative && !this.comparisonMode;
 			},
 			canShowRelation: function () {
-				return !this.derivative;
+				if (this.derivative && this.derivativeType === 'relative') {
+					// the relativity is in relation to previous data points, not external values
+					return false;
+				}
+				return true;
+				// return !this.derivative;
 			},
 			canCalculateRelation: function () {
 				if (!this.canShowRelation) {
@@ -1506,7 +1514,22 @@ for (const currentSet of selectionSets) {
 			 * @returns {*}
 			 */
 			derivedTimeSeries: function () {
-				return this.offsetTimeSeries.map(s => this.calculateDerivative(s));
+				const derivedTimeSeries = this.offsetTimeSeries.map(s => this.calculateDerivative(s));
+				if (this.relationType === 'relative') {
+					// divide each one by the population
+					const relativeTimeSeries = [];
+					for (const [index, currentSeries] of derivedTimeSeries.entries()) {
+						let currentRelativeSeries = [];
+						const currentDivisor = this.setPopulations[index];
+						for (const currentValue of currentSeries) {
+							const relativeValue = Math.round(currentValue / currentDivisor * 100000000) / 10000;
+							currentRelativeSeries.push(relativeValue);
+						}
+						relativeTimeSeries.push(currentRelativeSeries);
+					}
+					return relativeTimeSeries;
+				}
+				return derivedTimeSeries;
 			},
 			/**
 			 * Time series with regression applied to it
