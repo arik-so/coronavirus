@@ -6,9 +6,14 @@ import LocationUtility from './LocationUtility';
 const config = require('./extraction_config.json');
 const INITIAL_REPORT = config.date;
 
+const REPORT_INPUT_DIRECTORY = `${__dirname}/../docs/data/fetcher/COVID-19/csse_covid_19_data/csse_covid_19_daily_reports`;
+const DELTA_OUTPUT_DIRECTORY = `${__dirname}/output`;
+
+let hasFailedLocationLookups = false;
+
 async function processSingleDayDelta(reportDate: string) {
-	const reportCsv = `${__dirname}/../docs/data/fetcher/COVID-19/csse_covid_19_data/csse_covid_19_daily_reports/${reportDate}.csv`;
-	const deltaJson = `${__dirname}/output/delta_${reportDate}.json`;
+	const reportCsv = `${REPORT_INPUT_DIRECTORY}/${reportDate}.csv`;
+	const deltaJson = `${DELTA_OUTPUT_DIRECTORY}/delta_${reportDate}.json`;
 
 	const locationDebuggingJson = `${__dirname}/location_debugging.json`;
 
@@ -23,7 +28,13 @@ async function processSingleDayDelta(reportDate: string) {
 		if (locationReferences[locationKey]) {
 			continue;
 		}
-		const locationDetails = await LocationUtility.getLocationDetailsForEntry(currentEntry);
+		let locationDetails;
+		try {
+			locationDetails = await LocationUtility.getLocationDetailsForEntry(currentEntry);
+		} catch (e) {
+			hasFailedLocationLookups = true;
+			continue;
+		}
 		locationReferences[locationKey] = locationDetails;
 		locationDebugging[ParserUtility.getDebuggingInformationForCSVEntry(currentEntry)] = locationDetails;
 	}
@@ -83,9 +94,14 @@ async function processSingleDayDelta(reportDate: string) {
 		deltasByGroup[aggregationKey] = aggregation;
 	}
 
+	if (hasFailedLocationLookups) {
+		// don't save anything
+		return;
+	}
+
 	// const date = moment(INITIAL_REPORT);
 	const output = {
-		date: INITIAL_REPORT,
+		date: reportDate,
 		entries: deltasByGroup,
 		sequence: deltaSequence
 	};
@@ -93,10 +109,35 @@ async function processSingleDayDelta(reportDate: string) {
 	fs.writeFileSync(deltaJson, outputString);
 }
 
+async function processTimeRange(startDate: string) {
+	const contents = fs.readdirSync(REPORT_INPUT_DIRECTORY);
+	const startTimestamp = new Date(startDate).getTime();
+	const reportFiles = contents.filter(filename => {
+		if (!filename.endsWith('.csv')) {
+			return false;
+		}
+		const date = filename.substr(0, filename.length - 4);
+		const timestamp = new Date(date).getTime();
+		return timestamp >= startTimestamp;
+	});
+
+	// const promises = [];
+
+	for (const currentFile of reportFiles){
+		const date = currentFile.substr(0, currentFile.length-4);
+		const currentProcessing = processSingleDayDelta(date);
+		await currentProcessing;
+		// promises.push(currentProcessing);
+	}
+
+	// await Promise.all(promises);
+}
+
 (async () => {
 	const confirmedJson = `${__dirname}/../docs/data/covid_confirmed.json`;
 
-	await processSingleDayDelta(INITIAL_REPORT);
+	// await processSingleDayDelta(INITIAL_REPORT);
+	await processTimeRange(INITIAL_REPORT);
 
 	return;
 	const dailySeriesFolder = `${__dirname}/../docs/data/fetcher/COVID-19/csse_covid_19_data/csse_covid_19_daily_reports/`;
