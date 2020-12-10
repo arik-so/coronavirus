@@ -114,7 +114,8 @@ export default class LocationUtility {
 					if (e.message.includes('whatsoever')) {
 						console.error('No lookup results at all:', debuggingInformation);
 						console.error(locationKey);
-						process.exit(1);
+						throw e;
+						// process.exit(1);
 					}
 
 					addressComponents = [
@@ -518,6 +519,12 @@ export default class LocationUtility {
 				long_name: 'Diamond Princess'
 			}
 		},
+		'0,0|Repatriated Travellers, Canada': {
+			country: {
+				long_name: 'Canada',
+				short_name: 'CA'
+			}
+		},
 		'0,0|Diamond Princess, Canada': {
 			country: {
 				long_name: 'Canada',
@@ -769,6 +776,78 @@ export default class LocationUtility {
 			country: {
 				long_name: 'Ukraine',
 				short_name: 'UA'
+			}
+		},
+		'35.792146,74.982138|Gilgit-Baltistan, Pakistan': {
+			country: {
+				long_name: 'Pakistan',
+				short_name: 'PK'
+			}
+		},
+		'34.027401,73.947253|Azad Jammu and Kashmir, Pakistan': {
+			country: {
+				long_name: 'Pakistan',
+				short_name: 'PK'
+			}
+		},
+		'33.75943,76.612638|Jammu and Kashmir, India': {
+			skip: true
+		},
+		'0,0|undefined, undefined': {
+			skip: true
+		},
+		'0,0|Unknown, Belgium': {
+			country: {
+				long_name: 'Belgium',
+				short_name: 'BE'
+			}
+		},
+		'0,0|Unknown, Mexico': {
+			country: {
+				long_name: 'Mexico',
+				short_name: 'MX'
+			}
+		},
+		'34.1526,77.5771|Ladakh, India': {
+			country: {
+				long_name: 'India',
+				short_name: 'IN'
+			}
+		},
+		'13.6999972,72.18333259999999|Lakshadweep, India': {
+			country: {
+				long_name: 'India',
+				short_name: 'IN'
+			}
+		},
+		'13.6999972,72.1833326|Lakshadweep, India': {
+			country: {
+				long_name: 'India',
+				short_name: 'IN'
+			}
+		},
+		'0,0|Unknown, India': {
+			country: {
+				long_name: 'India',
+				short_name: 'IN'
+			}
+		},
+		'0,0|Unknown, United Kingdom': {
+			country: {
+				long_name: 'United Kingdom',
+				short_name: 'GB'
+			}
+		},
+		'0,0|Unknown, Netherlands': {
+			country: {
+				long_name: 'Netherlands',
+				short_name: 'NL'
+			}
+		},
+		'18.175457,-67.336525|Mayaguez, Puerto Rico, US': {
+			country: {
+				long_name: 'Puerto Rico',
+				short_name: 'PR'
 			}
 		},
 	};
