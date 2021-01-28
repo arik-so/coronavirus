@@ -605,6 +605,7 @@ for (const currentSet of selectionSets) {
 				let setPopulation = 0;
 				const skipTerritories = {};
 				const territoryMappers = {CN: 'China', US: 'USA'};
+				const incalculable = new Set();
 				for (const currentCountryCode of set.checkedCountries) {
 					if (countrySubdivisions[currentCountryCode]) {
 						// we'll deal with territories later
@@ -612,9 +613,15 @@ for (const currentSet of selectionSets) {
 					}
 					const currentCountryPopulation = countryPopulation[currentCountryCode];
 					if (!currentCountryPopulation) {
-						return NaN;
+						const countryName = countryNamesByCode[currentCountryCode];
+						incalculable.add({code: currentCountryCode, name: countryName});
+						// return NaN;
 					}
 					setPopulation += currentCountryPopulation;
+				}
+				if(incalculable.size > 0){
+					console.dir(Array.from(incalculable));
+					return NaN;
 				}
 				for (const [currentCountryCode, territoryCodes] of Object.entries(set.territorySelections)) {
 					if (skipTerritories[currentCountryCode]) {
