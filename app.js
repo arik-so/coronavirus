@@ -47,13 +47,25 @@ for (const currentSet of selectionSets) {
 
 	const dateKeys = [];
 	const dateLabels = new Set();
-	for (const key of Object.keys(combinedCases[0].entries.infected)) {
+	const entryKeys = Object.keys(combinedCases[0].entries.infected);
+	const todayDate = new Date();
+	for (const key of entryKeys) {
 		if (nonDataKeys.includes(key)) {
 			continue;
 		}
 		// const dateObject = Date.parse(key);
 		dateKeys.push(key);
-		const dateString = moment(key).format('MMM Do');
+		const dateMoment = moment(key);
+		let format = 'MMM Do';
+		// more than a year ago?
+		const isEarlierYear = dateMoment.year() < todayDate.getFullYear();
+		const isEarlierMonth = dateMoment.month() < todayDate.getMonth();
+		const isCurrentMonth = dateMoment.month() === todayDate.getMonth();
+		const isEarlierDay = dateMoment.date() <= todayDate.getDate();
+		if(isEarlierYear && (isEarlierMonth || (isCurrentMonth && isEarlierDay))){
+			format = 'MMM Do \'YY';
+		}
+		const dateString = dateMoment.format(format);
 		dateLabels.add(dateString);
 	}
 
